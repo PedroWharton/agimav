@@ -1,0 +1,38 @@
+// Agimav web — Prisma schema
+// Phase 0: auth-only models. Phase 1 will translate the full 38-table Agimav23b.py
+// SQLite schema (see Agimav23b.py init_db_schema at line 68 of the Python source).
+
+generator client {
+  provider = "prisma-client"
+  output   = "../lib/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model Rol {
+  id       Int       @id @default(autoincrement())
+  nombre   String    @unique
+  usuarios Usuario[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("roles")
+}
+
+model Usuario {
+  id           Int     @id @default(autoincrement())
+  nombre       String
+  email        String  @unique
+  passwordHash String
+  rolId        Int?
+  rol          Rol?    @relation(fields: [rolId], references: [id])
+  estado       String  @default("activo")
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("usuarios")
+}

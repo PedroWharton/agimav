@@ -1,0 +1,44 @@
+{
+  "app": {
+    "nombre": "Agimav",
+    "tagline": "Gestión de flota agrícola"
+  },
+  "nav": {
+    "maquinaria": "Maquinaria",
+    "inventario": "Inventario",
+    "compras": "Compras",
+    "mantenimiento": "Mantenimiento",
+    "ordenesTrabajo": "Órdenes de Trabajo",
+    "estadisticas": "Estadísticas",
+    "listados": "Listados",
+    "opciones": "Opciones",
+    "cerrarSesion": "Cerrar sesión"
+  },
+  "auth": {
+    "login": {
+      "titulo": "Iniciar sesión",
+      "subtitulo": "Ingresá tus credenciales para continuar",
+      "email": "Email",
+      "password": "Contraseña",
+      "submit": "Entrar",
+      "submitting": "Entrando…",
+      "error": "Email o contraseña incorrectos"
+    },
+    "logout": {
+      "titulo": "Cerrar sesión"
+    }
+  },
+  "placeholder": {
+    "proximamente": "Próximamente",
+    "descripcionModulo": {
+      "maquinaria": "Catálogo de máquinas, estructura jerárquica por tipo y horómetros.",
+      "inventario": "Stock de repuestos e insumos, movimientos y alertas.",
+      "compras": "Requisiciones, aprobaciones, órdenes de compra, recepciones y facturación.",
+      "mantenimiento": "Mantenimientos correctivos y preventivos, plantillas e historial.",
+      "ordenesTrabajo": "Órdenes de trabajo con insumos y trazabilidad.",
+      "estadisticas": "Dashboards, análisis ABC, evolución de precios USD y métricas de maquinaria.",
+      "listados": "Maestros de usuarios, proveedores, localidades y unidades productivas.",
+      "opciones": "Copias de seguridad, importación y exportación de datos."
+    }
+  }
+}
