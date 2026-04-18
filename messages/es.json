@@ -26,6 +26,176 @@
     },
     "logout": {
       "titulo": "Cerrar sesión"
+    },
+    "invitacion": {
+      "titulo": "Definí tu contraseña",
+      "subtitulo": "Hola {nombre}. Elegí una contraseña para activar tu cuenta.",
+      "subtituloSinNombre": "Elegí una contraseña para activar tu cuenta.",
+      "password": "Contraseña",
+      "passwordConfirmacion": "Repetir contraseña",
+      "requisito": "Mínimo 8 caracteres.",
+      "submit": "Guardar y continuar",
+      "submitting": "Guardando…",
+      "exito": "Contraseña definida. Ya podés iniciar sesión.",
+      "errorInvalido": "El enlace no es válido o ya fue utilizado.",
+      "errorExpirado": "El enlace caducó. Pedile al administrador que genere uno nuevo.",
+      "errorPasswordCorta": "Mínimo 8 caracteres.",
+      "errorPasswordNoCoincide": "Las contraseñas no coinciden.",
+      "errorGenerico": "No se pudo guardar. Reintentá.",
+      "volverLogin": "Volver a iniciar sesión"
+    }
+  },
+  "inventario": {
+    "titulo": "Inventario",
+    "descripcion": "Catálogo de insumos, repuestos y consumibles.",
+    "singular": "item",
+    "plural": "items",
+    "nuevoItem": "Nuevo item",
+    "editarItem": "Editar item",
+    "buscarPlaceholder": "Buscar código o descripción…",
+    "resultadosCount": "{total, plural, one {# item} other {# items}}{bajo, plural, =0 {} other { · # bajo mínimo}}",
+    "filtros": {
+      "categoria": "Categoría",
+      "localidad": "Localidad",
+      "todos": "Todos",
+      "bajoMinimo": "Bajo mínimo"
+    },
+    "campos": {
+      "codigo": "Código",
+      "descripcion": "Descripción",
+      "categoria": "Categoría",
+      "localidad": "Localidad",
+      "unidadProductiva": "Unidad productiva",
+      "unidadMedida": "Unidad de medida",
+      "stock": "Stock",
+      "stockMinimo": "Stock mínimo",
+      "valorUnitario": "Valor unitario",
+      "valorTotal": "Valor total"
+    },
+    "avisos": {
+      "stockSoloMovimientos": "Para ajustar stock, usá \"Registrar movimiento\" desde la fila.",
+      "stockNegativo": "Stock negativo — revisar",
+      "nadaBajoMinimo": "Nada bajo mínimo ahora mismo.",
+      "sinResultadosFiltrados": "No hay resultados. Limpiá los filtros.",
+      "vacio": "No hay items en inventario.",
+      "vacioAdmin": "No hay items en inventario. Creá el primero.",
+      "codigoDuplicado": "Ya existe un item con código \"{codigo}\".",
+      "eliminarPregunta": "¿Eliminar el item \"{nombre}\"?",
+      "eliminarEnUsoMovs": "No se puede eliminar: tiene {count, plural, one {# movimiento} other {# movimientos}}.",
+      "eliminarEnUsoRefs": "No se puede eliminar: está en uso en otros módulos."
+    },
+    "movimientos": {
+      "titulo": "Movimientos de inventario",
+      "descripcion": "Historial de entradas y salidas.",
+      "tituloItem": "Movimientos — {item}",
+      "registrar": "Registrar movimiento",
+      "registrado": "Movimiento registrado.",
+      "verHistorial": "Ver historial",
+      "verTodo": "Ver todo el historial",
+      "ultimos": "Últimos movimientos",
+      "sinMovimientos": "Sin movimientos registrados.",
+      "columnas": {
+        "fecha": "Fecha",
+        "item": "Item",
+        "tipo": "Tipo",
+        "cantidad": "Cantidad",
+        "valorUnitario": "Valor u.",
+        "origen": "Origen",
+        "usuario": "Usuario",
+        "motivo": "Motivo"
+      },
+      "tipos": {
+        "entrada": "Entrada",
+        "salida": "Salida",
+        "ajustePrecio": "Ajuste de precio"
+      },
+      "campos": {
+        "tipo": "Tipo",
+        "cantidad": "Cantidad",
+        "valorUnitario": "Valor unitario",
+        "nuevoValor": "Nuevo valor unitario",
+        "total": "Total",
+        "motivo": "Motivo",
+        "observaciones": "Observaciones"
+      },
+      "filtros": {
+        "tipo": "Tipo",
+        "modulo": "Módulo",
+        "desde": "Desde",
+        "hasta": "Hasta",
+        "item": "Item"
+      },
+      "total": "{count, plural, one {# movimiento} other {# movimientos}}",
+      "exportar": "Exportar",
+      "exportarError": "No se pudo exportar.",
+      "limpiar": "Limpiar",
+      "todos": "Todos",
+      "breadcrumb": "Inventario",
+      "codigoLabel": "Código {codigo}",
+      "kpis": {
+        "stock": "Stock",
+        "valorUnitario": "Valor unitario",
+        "valorTotal": "Valor total"
+      },
+      "avisos": {
+        "stockActual": "Stock actual: {stock}",
+        "stockResultante": "Quedaría: {stock}",
+        "negativoConfirmar": "Esta salida dejaría el stock en {stock}. Confirmá que es correcto."
+      }
+    },
+    "exportar": "Exportar",
+    "exportarError": "No se pudo exportar.",
+    "importar": {
+      "titulo": "Importar",
+      "descripcion": "Actualizar el catálogo de items desde un archivo Excel.",
+      "dropZone": "Arrastrá un .xlsx aquí o elegí un archivo.",
+      "elegirArchivo": "Elegir archivo",
+      "formatoEsperado": "Formato esperado",
+      "formatoAyuda": "Se requieren las columnas Código y Descripción. Las demás son opcionales.",
+      "formatoStock": "El stock no se importa — usá \"Registrar movimiento\" para ajustarlo.",
+      "cancelar": "Cancelar",
+      "volver": "Anterior",
+      "importar": "Importar",
+      "cerrar": "Cerrar",
+      "ignorarInvalidos": "Ignorar filas inválidas e importar el resto.",
+      "masFilas": "… y {count} filas más.",
+      "errorTamaño": "El archivo supera los 2 MB.",
+      "errorDemasiadasFilas": "El archivo tiene demasiadas filas (máx 5.000).",
+      "errorArchivoVacio": "El archivo está vacío.",
+      "errorParseo": "No se pudo leer el archivo.",
+      "errorColumnasRequeridas": "Faltan las columnas Código y/o Descripción.",
+      "errorTieneInvalidos": "Hay filas inválidas. Marcá \"Ignorar filas inválidas\" para continuar.",
+      "errorDuplicateCodigo": "Conflicto de código duplicado.",
+      "errorForbidden": "No tenés permisos para importar.",
+      "errorDesconocido": "Ocurrió un error al importar.",
+      "estado": {
+        "new": "Nuevo",
+        "updated": "Actualizado",
+        "unchanged": "Sin cambios",
+        "invalid": "Inválido"
+      },
+      "motivo": {
+        "falta_codigo": "Falta código",
+        "falta_descripcion": "Falta descripción",
+        "codigo_demasiado_largo": "Código demasiado largo",
+        "descripcion_demasiado_larga": "Descripción demasiado larga",
+        "codigo_duplicado_en_archivo": "Código duplicado en el archivo",
+        "stock_minimo_invalido": "Stock mínimo no numérico",
+        "stock_minimo_negativo": "Stock mínimo negativo",
+        "valor_unitario_invalido": "Valor unitario no numérico",
+        "valor_unitario_negativo": "Valor unitario negativo"
+      },
+      "columnas": {
+        "estado": "Estado",
+        "codigo": "Código",
+        "descripcion": "Descripción",
+        "detalle": "Detalle"
+      },
+      "resultado": {
+        "titulo": "Importación completada",
+        "aplicados": "{count, plural, one {# item aplicado} other {# items aplicados}}.",
+        "ignorados": "{count, plural, one {# fila ignorada} other {# filas ignoradas}}."
+      }
     }
   },
   "placeholder": {
@@ -39,6 +209,142 @@
       "estadisticas": "Dashboards, análisis ABC, evolución de precios USD y métricas de maquinaria.",
       "listados": "Maestros de usuarios, proveedores, localidades y unidades productivas.",
       "opciones": "Copias de seguridad, importación y exportación de datos."
+    }
+  },
+  "listados": {
+    "index": {
+      "titulo": "Listados",
+      "descripcion": "Datos maestros del sistema"
+    },
+    "common": {
+      "buscar": "Buscar…",
+      "crear": "Nuevo",
+      "editar": "Editar",
+      "ver": "Ver",
+      "guardar": "Guardar",
+      "guardando": "Guardando…",
+      "cancelar": "Cancelar",
+      "desactivar": "Desactivar",
+      "reactivar": "Reactivar",
+      "eliminar": "Eliminar",
+      "campoRequerido": "Este campo es obligatorio",
+      "resultados": "{count, plural, one {# resultado} other {# resultados}}",
+      "sinResultados": "No hay resultados para \"{query}\"",
+      "vacio": "No hay {entidad} aún",
+      "vacioAdmin": "No hay {entidad} aún. Creá el primero.",
+      "estadoActivo": "Activo",
+      "estadoInactivo": "Inactivo",
+      "filtroEstado": "Estado",
+      "filtroActivos": "Activos",
+      "filtroInactivos": "Inactivos",
+      "filtroTodos": "Todos",
+      "descartarCambios": "¿Descartar cambios sin guardar?",
+      "errorGuardar": "No se pudo guardar. Reintentá en unos segundos.",
+      "errorForbidden": "No tenés permisos para esta acción.",
+      "duplicado": "Ya existe un registro con ese nombre.",
+      "creadoExitoso": "{entidad} \"{nombre}\" creado.",
+      "actualizadoExitoso": "{entidad} \"{nombre}\" actualizado.",
+      "desactivadoExitoso": "{entidad} \"{nombre}\" desactivado.",
+      "reactivadoExitoso": "{entidad} \"{nombre}\" reactivado.",
+      "eliminadoExitoso": "{entidad} \"{nombre}\" eliminado."
+    },
+    "roles": {
+      "titulo": "Roles",
+      "descripcion": "Roles del sistema para permisos",
+      "singular": "Rol",
+      "plural": "roles",
+      "nombre": "Nombre",
+      "usuariosCount": "Usuarios",
+      "eliminarPregunta": "¿Eliminar el rol \"{nombre}\"?",
+      "eliminarAviso": "Esta acción no se puede deshacer.",
+      "eliminarEnUso": "No se puede eliminar \"{nombre}\": {count, plural, one {# usuario tiene} other {# usuarios tienen}} este rol. Reasignalos primero."
+    },
+    "unidadesMedida": {
+      "titulo": "Unidades de medida",
+      "descripcion": "Unidades usadas en inventario y compras",
+      "singular": "Unidad",
+      "plural": "unidades de medida",
+      "nombre": "Nombre",
+      "abreviacion": "Abreviación",
+      "eliminarPregunta": "¿Eliminar la unidad \"{nombre}\"?",
+      "eliminarEnUso": "No se puede eliminar \"{nombre}\": hay {count, plural, one {# ítem} other {# ítems}} de inventario que la usan."
+    },
+    "tiposUnidad": {
+      "titulo": "Tipos de unidad productiva",
+      "descripcion": "Tipos para clasificar unidades productivas",
+      "singular": "Tipo",
+      "plural": "tipos de unidad",
+      "nombre": "Nombre",
+      "unidadesCount": "Unidades",
+      "eliminarPregunta": "¿Eliminar el tipo \"{nombre}\"?",
+      "eliminarEnUso": "No se puede eliminar \"{nombre}\": {count, plural, one {# unidad productiva lo usa} other {# unidades productivas lo usan}}."
+    },
+    "localidades": {
+      "titulo": "Localidades",
+      "descripcion": "Localidades de proveedores y unidades productivas",
+      "singular": "Localidad",
+      "plural": "localidades",
+      "nombre": "Nombre",
+      "eliminarPregunta": "¿Eliminar la localidad \"{nombre}\"?",
+      "eliminarEnUso": "No se puede eliminar \"{nombre}\": {count, plural, one {# registro la referencia} other {# registros la referencian}}."
+    },
+    "usuarios": {
+      "titulo": "Usuarios",
+      "descripcion": "Usuarios del sistema y sus roles",
+      "singular": "Usuario",
+      "plural": "usuarios",
+      "nombre": "Nombre",
+      "email": "Email",
+      "rol": "Rol",
+      "estado": "Estado",
+      "sinRol": "Sin rol",
+      "invitacion": {
+        "titulo": "Enlace de invitación",
+        "ayudaNuevo": "Enviale este enlace al usuario para que defina su contraseña. Caduca el {fecha}.",
+        "ayudaRegenerar": "Enlace nuevo generado. Caduca el {fecha}. Los enlaces anteriores dejaron de funcionar.",
+        "copiar": "Copiar enlace",
+        "copiado": "Enlace copiado al portapapeles.",
+        "copiarError": "No se pudo copiar. Copiá manualmente.",
+        "regenerar": "Regenerar enlace",
+        "regenerado": "Enlace nuevo listo para copiar.",
+        "cerrar": "Listo",
+        "expiracion": "Caduca el {fecha}",
+        "confirmarRegenerar": "¿Regenerar el enlace?",
+        "confirmarRegenerarDesc": "Los enlaces anteriores dejarán de funcionar."
+      },
+      "errores": {
+        "noAutoBaja": "No podés desactivarte a vos mismo.",
+        "ultimoAdmin": "No podés desactivar al último administrador.",
+        "emailDuplicado": "Ya existe un usuario con ese email."
+      }
+    },
+    "proveedores": {
+      "titulo": "Proveedores",
+      "descripcion": "Listado de proveedores con datos fiscales",
+      "singular": "Proveedor",
+      "plural": "proveedores",
+      "nombre": "Nombre",
+      "cuit": "CUIT",
+      "condicionIva": "Condición IVA",
+      "localidad": "Localidad",
+      "email": "Email",
+      "telefono": "Teléfono",
+      "direccion": "Dirección",
+      "direccionFiscal": "Dirección fiscal",
+      "contacto": "Contacto",
+      "estado": "Estado",
+      "cuitInvalido": "El formato del CUIT debe ser 30-12345678-9."
+    },
+    "unidadesProductivas": {
+      "titulo": "Unidades productivas",
+      "descripcion": "Unidades productivas de Cervi por localidad y tipo",
+      "singular": "Unidad productiva",
+      "plural": "unidades productivas",
+      "nombre": "Nombre",
+      "localidad": "Localidad",
+      "tipo": "Tipo",
+      "eliminarPregunta": "¿Eliminar la unidad \"{nombre}\"?",
+      "eliminarEnUso": "No se puede eliminar \"{nombre}\": hay registros que la referencian."
     }
   }
 }

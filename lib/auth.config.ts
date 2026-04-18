@@ -14,6 +14,7 @@ export const authConfig = {
       const pathname = nextUrl.pathname;
       const isPublic =
         pathname.startsWith("/login") ||
+        pathname.startsWith("/invitacion") ||
         pathname.startsWith("/api/auth") ||
         pathname === "/favicon.ico";
       if (isPublic) return true;

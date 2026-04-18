@@ -23,8 +23,10 @@ model Rol {
   nombre   String    @unique
   usuarios Usuario[]
 
-  createdAt DateTime @default(now()) @map("created_at")
-  updatedAt DateTime @updatedAt @map("updated_at")
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+  createdById Int?     @map("created_by")
+  createdBy   Usuario? @relation("RolCreatedBy", fields: [createdById], references: [id], onDelete: SetNull)
 
   @@map("roles")
 }
@@ -45,16 +47,53 @@ model Usuario {
   ordenesTrabajoResponsable OrdenTrabajo[]   @relation("OrdenTrabajoResponsable")
   mantenimientosResponsable Mantenimiento[]
 
-  createdAt DateTime @default(now()) @map("created_at")
-  updatedAt DateTime @updatedAt @map("updated_at")
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+  createdById Int?     @map("created_by")
+  createdBy   Usuario? @relation("UsuarioCreatedBy", fields: [createdById], references: [id], onDelete: SetNull)
+
+  rolesCreados                Rol[]              @relation("RolCreatedBy")
+  usuariosCreados             Usuario[]          @relation("UsuarioCreatedBy")
+  unidadesMedidaCreadas       UnidadMedida[]     @relation("UnidadMedidaCreatedBy")
+  localidadesCreadas          Localidad[]        @relation("LocalidadCreatedBy")
+  tiposUnidadCreados          TipoUnidad[]       @relation("TipoUnidadCreatedBy")
+  unidadesProductivasCreadas  UnidadProductiva[] @relation("UnidadProductivaCreatedBy")
+  proveedoresCreados          Proveedor[]        @relation("ProveedorCreatedBy")
+  inventariosCreados          Inventario[]       @relation("InventarioCreatedBy")
+  movimientosCreados          InventarioMovimiento[] @relation("InventarioMovimientoCreatedBy")
+
+  inviteTokens         UsuarioInviteToken[] @relation("UsuarioInviteTokenUsuario")
+  inviteTokensEmitidos UsuarioInviteToken[] @relation("UsuarioInviteTokenCreatedBy")
 
   @@map("usuarios")
+}
+
+/// One-time link the admin generates for onboarding or password reset.
+/// The user opens /invitacion/<token> and sets their own password. No SMTP —
+/// admin copies the URL and distributes it out of band.
+model UsuarioInviteToken {
+  token       String   @id
+  usuarioId   Int      @map("usuario_id")
+  usuario     Usuario  @relation("UsuarioInviteTokenUsuario", fields: [usuarioId], references: [id], onDelete: Cascade)
+  createdAt   DateTime @default(now()) @map("created_at")
+  expiresAt   DateTime @map("expires_at")
+  usedAt      DateTime? @map("used_at")
+  createdById Int?     @map("created_by")
+  createdBy   Usuario? @relation("UsuarioInviteTokenCreatedBy", fields: [createdById], references: [id], onDelete: SetNull)
+
+  @@index([usuarioId, usedAt])
+  @@map("usuario_invite_tokens")
 }
 
 model UnidadMedida {
   id          Int    @id @default(autoincrement())
   nombre      String @unique
   abreviacion String
+
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+  createdById Int?     @map("created_by")
+  createdBy   Usuario? @relation("UnidadMedidaCreatedBy", fields: [createdById], references: [id], onDelete: SetNull)
 
   @@map("unidades_medida")
 }
@@ -67,6 +106,11 @@ model Localidad {
   proveedores         Proveedor[]
   ordenesTrabajo      OrdenTrabajo[]
 
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+  createdById Int?     @map("created_by")
+  createdBy   Usuario? @relation("LocalidadCreatedBy", fields: [createdById], references: [id], onDelete: SetNull)
+
   @@map("localidades")
 }
 
@@ -75,6 +119,11 @@ model TipoUnidad {
   nombre   String @unique
 
   unidadesProductivas UnidadProductiva[]
+
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+  createdById Int?     @map("created_by")
+  createdBy   Usuario? @relation("TipoUnidadCreatedBy", fields: [createdById], references: [id], onDelete: SetNull)
 
   @@map("tipos_unidad")
 }
@@ -90,6 +139,11 @@ model UnidadProductiva {
   ordenesTrabajo          OrdenTrabajo[]
   mantenimientosUnidad    Mantenimiento[] @relation("MantenimientoUnidadProductiva")
   mantenimientosTaller    Mantenimiento[] @relation("MantenimientoTallerAsignado")
+
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+  createdById Int?     @map("created_by")
+  createdBy   Usuario? @relation("UnidadProductivaCreatedBy", fields: [createdById], references: [id], onDelete: SetNull)
 
   @@map("unidades_productivas")
 }
@@ -113,6 +167,11 @@ model Proveedor {
   facturas              Factura[]
   preciosHistoricos     PrecioHistorico[]
   mantenimientoInsumos  MantenimientoInsumo[]
+
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+  createdById Int?     @map("created_by")
+  createdBy   Usuario? @relation("ProveedorCreatedBy", fields: [createdById], references: [id], onDelete: SetNull)
 
   @@index([localidadId])
   @@map("proveedores")
@@ -146,6 +205,11 @@ model Inventario {
   mantenimientoInsumos   MantenimientoInsumo[]
   preciosHistoricos      PrecioHistorico[]
 
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+  createdById Int?     @map("created_by")
+  createdBy   Usuario? @relation("InventarioCreatedBy", fields: [createdById], references: [id], onDelete: SetNull)
+
   @@map("inventario")
 }
 
@@ -164,11 +228,13 @@ model InventarioMovimiento {
   idOrigen      Int?     @map("id_origen")
   observaciones String?
 
-  createdAt DateTime @default(now()) @map("created_at")
+  createdAt   DateTime @default(now()) @map("created_at")
+  createdById Int?     @map("created_by")
+  createdBy   Usuario? @relation("InventarioMovimientoCreatedBy", fields: [createdById], references: [id], onDelete: SetNull)
 
-  @@index([idItem])
-  @@index([fecha])
-  @@index([moduloOrigen])
+  @@index([idItem, fecha(sort: Desc)])
+  @@index([fecha(sort: Desc)])
+  @@index([moduloOrigen, fecha(sort: Desc)])
   @@map("inventario_movimientos")
 }
 

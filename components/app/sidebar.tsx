@@ -7,7 +7,9 @@ import { useTranslations } from "next-intl";
 import { cn } from "@/lib/utils";
 import { navItems } from "@/lib/nav";
 
-export function Sidebar() {
+export type SidebarBadges = Partial<Record<string, number>>;
+
+export function Sidebar({ badges }: { badges?: SidebarBadges }) {
   const pathname = usePathname();
   const t = useTranslations();
 
@@ -24,6 +26,7 @@ export function Sidebar() {
           const active =
             pathname === item.href || pathname.startsWith(`${item.href}/`);
           const Icon = item.icon;
+          const badgeCount = badges?.[item.href];
           return (
             <Link
               key={item.href}
@@ -36,7 +39,12 @@ export function Sidebar() {
               )}
             >
               <Icon className="size-4 shrink-0" />
-              <span>{t(item.labelKey)}</span>
+              <span className="flex-1">{t(item.labelKey)}</span>
+              {badgeCount && badgeCount > 0 ? (
+                <span className="inline-flex min-w-5 items-center justify-center rounded-full bg-destructive/15 px-1.5 text-xs font-medium text-destructive tabular-nums">
+                  {badgeCount}
+                </span>
+              ) : null}
             </Link>
           );
         })}

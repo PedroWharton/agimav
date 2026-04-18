@@ -10,6 +10,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { Breadcrumbs } from "@/components/app/breadcrumbs";
 
 export async function Topbar() {
   const session = await auth();
@@ -26,7 +27,9 @@ export async function Topbar() {
     .toUpperCase();
 
   return (
-    <header className="h-14 shrink-0 flex items-center justify-end gap-3 border-b border-border bg-background px-4 md:px-6">
+    <header className="h-14 shrink-0 flex items-center justify-between gap-3 border-b border-border bg-background px-4 md:px-6">
+      <Breadcrumbs />
+      <div className="flex items-center gap-3">
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
           <button
@@ -68,6 +71,7 @@ export async function Topbar() {
           </form>
         </DropdownMenuContent>
       </DropdownMenu>
+      </div>
     </header>
   );
 }
