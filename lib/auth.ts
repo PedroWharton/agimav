@@ -28,7 +28,7 @@ export const { auth, handlers, signIn, signOut } = NextAuth({
           where: { email },
           include: { rol: true },
         });
-        if (!user || user.estado !== "activo") return null;
+        if (!user || user.estado !== "activo" || !user.passwordHash) return null;
 
         const ok = await bcrypt.compare(password, user.passwordHash);
         if (!ok) return null;

@@ -1,6 +1,9 @@
 // Agimav web — Prisma schema
-// Phase 0: auth-only models. Phase 1 will translate the full 38-table Agimav23b.py
-// SQLite schema (see Agimav23b.py init_db_schema at line 68 of the Python source).
+// Translation of the live flota7.db SQLite schema to Postgres.
+// SQLite is the authoritative source (Python init_db_schema drifts from reality).
+// Legacy integer ids are preserved verbatim during migration. After import the
+// migration script reseeds Postgres sequences so future autoincremented inserts
+// don't collide with imported ids.
 
 generator client {
   provider = "prisma-client"
@@ -11,28 +14,736 @@ datasource db {
   provider = "postgresql"
 }
 
+// ──────────────────────────────────────────────────────────────────────────────
+// Listados / master data
+// ──────────────────────────────────────────────────────────────────────────────
+
 model Rol {
   id       Int       @id @default(autoincrement())
   nombre   String    @unique
   usuarios Usuario[]
 
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
 
   @@map("roles")
 }
 
+/// Cervi's legacy usuarios table has only (id, nombre, rol_id, estado).
+/// Web app adds email + passwordHash (nullable) so imported users can be
+/// assigned credentials gradually by an admin.
 model Usuario {
   id           Int     @id @default(autoincrement())
   nombre       String
-  email        String  @unique
-  passwordHash String
-  rolId        Int?
+  email        String? @unique
+  passwordHash String? @map("password_hash")
+  rolId        Int?    @map("rol_id")
   rol          Rol?    @relation(fields: [rolId], references: [id])
   estado       String  @default("activo")
 
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  ordenesTrabajoSolicitadas OrdenTrabajo[]   @relation("OrdenTrabajoSolicitante")
+  ordenesTrabajoResponsable OrdenTrabajo[]   @relation("OrdenTrabajoResponsable")
+  mantenimientosResponsable Mantenimiento[]
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
 
   @@map("usuarios")
+}
+
+model UnidadMedida {
+  id          Int    @id @default(autoincrement())
+  nombre      String @unique
+  abreviacion String
+
+  @@map("unidades_medida")
+}
+
+model Localidad {
+  id       Int    @id @default(autoincrement())
+  nombre   String @unique
+
+  unidadesProductivas UnidadProductiva[]
+  proveedores         Proveedor[]
+  ordenesTrabajo      OrdenTrabajo[]
+
+  @@map("localidades")
+}
+
+model TipoUnidad {
+  id       Int    @id @default(autoincrement())
+  nombre   String @unique
+
+  unidadesProductivas UnidadProductiva[]
+
+  @@map("tipos_unidad")
+}
+
+model UnidadProductiva {
+  id           Int    @id @default(autoincrement())
+  nombre       String
+  localidadId  Int?   @map("localidad_id")
+  tipoUnidadId Int?   @map("tipo_unidad_id")
+  localidad    Localidad?  @relation(fields: [localidadId], references: [id])
+  tipoUnidad   TipoUnidad? @relation(fields: [tipoUnidadId], references: [id])
+
+  ordenesTrabajo          OrdenTrabajo[]
+  mantenimientosUnidad    Mantenimiento[] @relation("MantenimientoUnidadProductiva")
+  mantenimientosTaller    Mantenimiento[] @relation("MantenimientoTallerAsignado")
+
+  @@map("unidades_productivas")
+}
+
+model Proveedor {
+  id              Int     @id @default(autoincrement())
+  nombre          String
+  contacto        String?
+  estado          String  @default("activo")
+  localidadId     Int?    @map("localidad_id")
+  localidad       Localidad? @relation(fields: [localidadId], references: [id])
+  direccion       String?
+  email           String?
+  telefono        String?
+  cuit            String?
+  condicionIva    String? @map("condicion_iva")
+  nombreContacto  String? @map("nombre_contacto")
+  direccionFiscal String? @map("direccion_fiscal")
+
+  ordenesCompra         OrdenCompra[]
+  facturas              Factura[]
+  preciosHistoricos     PrecioHistorico[]
+  mantenimientoInsumos  MantenimientoInsumo[]
+
+  @@index([localidadId])
+  @@map("proveedores")
+}
+
+// ──────────────────────────────────────────────────────────────────────────────
+// Inventario
+// ──────────────────────────────────────────────────────────────────────────────
+
+/// Inventario keeps denormalized TEXT fields (localidad, unidad_productiva, unidad_medida, proveedor)
+/// matching the legacy table. Later modules can migrate these to real FKs.
+model Inventario {
+  id                Int     @id @default(autoincrement())
+  codigo            String? @unique
+  descripcion       String?
+  categoria         String?
+  localidad         String?
+  unidadProductiva  String? @map("unidad_productiva")
+  stock             Float   @default(0)
+  stockMinimo       Float   @default(0) @map("stock_minimo")
+  unidadMedida      String? @map("unidad_medida")
+  valorTotal        Float   @default(0) @map("valor_total")
+  valorUnitario     Float   @default(0) @map("valor_unitario")
+  proveedor         String?
+
+  movimientos            InventarioMovimiento[]
+  requisicionesDetalle   RequisicionDetalle[]
+  maquinaNodos           MaquinaNodo[]
+  otInsumos              OtInsumo[]
+  plantillaInsumos       PlantillaInsumo[]
+  mantenimientoInsumos   MantenimientoInsumo[]
+  preciosHistoricos      PrecioHistorico[]
+
+  @@map("inventario")
+}
+
+model InventarioMovimiento {
+  id            Int      @id @default(autoincrement())
+  idItem        Int      @map("id_item")
+  item          Inventario @relation(fields: [idItem], references: [id])
+  tipo          String
+  cantidad      Float
+  unidadMedida  String?  @map("unidad_medida")
+  valorUnitario Float    @default(0) @map("valor_unitario")
+  fecha         DateTime
+  usuario       String
+  motivo        String?
+  moduloOrigen  String?  @map("modulo_origen")
+  idOrigen      Int?     @map("id_origen")
+  observaciones String?
+
+  createdAt DateTime @default(now()) @map("created_at")
+
+  @@index([idItem])
+  @@index([fecha])
+  @@index([moduloOrigen])
+  @@map("inventario_movimientos")
+}
+
+model MovimientoDiario {
+  id                 Int      @id @default(autoincrement())
+  fecha              DateTime?
+  codigoItem         String?  @map("codigo_item")
+  descripcion        String?
+  cantidad           Float?
+  unidadMedida       String?  @map("unidad_medida")
+  usuario            String?
+  localidad          String?
+  sector             String?
+  proveedor          String?
+  factura            String?
+  monto              Float?
+  observaciones      String?
+  justificacion      String?
+  localidadId        Int?     @map("localidad_id")
+  unidadProductivaId Int?     @map("unidad_productiva_id")
+
+  @@map("movimientos_diarios")
+}
+
+// ──────────────────────────────────────────────────────────────────────────────
+// Maquinaria — structure (tipo → niveles → atributos)
+// ──────────────────────────────────────────────────────────────────────────────
+
+model MaquinariaTipo {
+  id             Int      @id @default(autoincrement())
+  nombre         String   @unique
+  estado         String   @default("activo")
+  unidadMedicion String?  @default("Horas") @map("unidad_medicion")
+  abrevUnidad    String?  @default("hs") @map("abrev_unidad")
+
+  niveles               TipoNivel[]
+  maquinarias           Maquinaria[]
+  tablaConfigs          TablaConfig[]
+  plantillas            PlantillaMantenimiento[]
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@map("maquinaria_tipos")
+}
+
+model TipoNivel {
+  id                 Int     @id @default(autoincrement())
+  tipoId             Int     @map("tipo_id")
+  tipo               MaquinariaTipo @relation(fields: [tipoId], references: [id], onDelete: Cascade)
+  nombre             String
+  parentLevelId      Int?    @map("parent_level_id")
+  parent             TipoNivel?  @relation("TipoNivelHierarchy", fields: [parentLevelId], references: [id], onDelete: Cascade)
+  hijos              TipoNivel[] @relation("TipoNivelHierarchy")
+  orden              Int     @default(0)
+  permiteInventario  Boolean @default(false) @map("permite_inventario")
+  activo             Boolean @default(true)
+
+  atributos     NivelAtributo[]
+  nodos         MaquinaNodo[]
+  tablaConfigs  TablaConfig[]
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@unique([tipoId, parentLevelId, nombre])
+  @@map("tipo_niveles")
+}
+
+model NivelAtributo {
+  id            Int      @id @default(autoincrement())
+  nivelId       Int      @map("nivel_id")
+  nivel         TipoNivel @relation(fields: [nivelId], references: [id], onDelete: Cascade)
+  nombre        String
+  dataType      String   @map("data_type")
+  requerido     Boolean  @default(false)
+  esPrincipal   Boolean  @default(false) @map("es_principal")
+  listOptions   String?  @map("list_options")
+  sourceRef     String?  @map("source_ref")
+  defaultValue  String?  @map("default_value")
+  activo        Boolean  @default(true)
+
+  valores       MaquinaAtributoValor[]
+  tablaConfigs  TablaConfig[]
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@unique([nivelId, nombre])
+  @@index([dataType, sourceRef, activo])
+  @@index([esPrincipal, activo])
+  @@map("nivel_atributos")
+}
+
+// ──────────────────────────────────────────────────────────────────────────────
+// Maquinaria — instances
+// ──────────────────────────────────────────────────────────────────────────────
+
+model Maquinaria {
+  id               Int      @id @default(autoincrement())
+  typeId           Int      @map("type_id")
+  tipo             MaquinariaTipo @relation(fields: [typeId], references: [id])
+  nroSerie         String?  @map("nro_serie")
+  estado           String   @default("Activo")
+  horasAcumuladas  Float    @default(0) @map("horas_acumuladas")
+
+  nodos            MaquinaNodo[]
+  registrosHoras   RegistroHorasMaquinaria[]
+  mantenimientos   Mantenimiento[]
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@index([typeId])
+  @@map("maquinaria")
+}
+
+model MaquinaNodo {
+  id                Int     @id @default(autoincrement())
+  maquinariaId      Int     @map("maquinaria_id")
+  maquinaria        Maquinaria @relation(fields: [maquinariaId], references: [id], onDelete: Cascade)
+  nivelDefId        Int     @map("nivel_def_id")
+  nivelDef          TipoNivel @relation(fields: [nivelDefId], references: [id], onDelete: Cascade)
+  parentNodeId      Int?    @map("parent_node_id")
+  parent            MaquinaNodo?  @relation("MaquinaNodoHierarchy", fields: [parentNodeId], references: [id], onDelete: Cascade)
+  hijos             MaquinaNodo[] @relation("MaquinaNodoHierarchy")
+  inventarioItemId  Int?    @map("inventario_item_id")
+  inventarioItem    Inventario? @relation(fields: [inventarioItemId], references: [id])
+  fechaInstalacion  DateTime? @map("fecha_instalacion")
+  fechaRetiro       DateTime? @map("fecha_retiro")
+  activo            Boolean @default(true)
+
+  atributos MaquinaAtributoValor[]
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@index([maquinariaId, activo, inventarioItemId])
+  @@index([parentNodeId])
+  @@map("maquina_nodos")
+}
+
+/// Discriminated attribute storage: exactly one of value_text/value_num/value_date is set
+/// depending on the atributo's data_type. App layer wraps this with a tagged union.
+model MaquinaAtributoValor {
+  id              Int      @id @default(autoincrement())
+  nodoId          Int      @map("nodo_id")
+  nodo            MaquinaNodo @relation(fields: [nodoId], references: [id], onDelete: Cascade)
+  atributoDefId   Int      @map("atributo_def_id")
+  atributoDef     NivelAtributo @relation(fields: [atributoDefId], references: [id], onDelete: Cascade)
+  valueText       String?  @map("value_text")
+  valueNum        Float?   @map("value_num")
+  valueDate       DateTime? @map("value_date")
+  lastUpdated     DateTime @default(now()) @map("last_updated")
+
+  @@unique([nodoId, atributoDefId])
+  @@index([nodoId])
+  @@index([nodoId, atributoDefId, valueText])
+  @@map("maquina_atributos_valores")
+}
+
+model RegistroHorasMaquinaria {
+  id                Int      @id @default(autoincrement())
+  idMaquinaria      Int      @map("id_maquinaria")
+  maquinaria        Maquinaria @relation(fields: [idMaquinaria], references: [id], onDelete: Cascade)
+  fechaRegistro     DateTime @default(now()) @map("fecha_registro")
+  horasAnterior     Float    @default(0) @map("horas_anterior")
+  horasNuevo        Float    @default(0) @map("horas_nuevo")
+  horasDiferencia   Float    @default(0) @map("horas_diferencia")
+  tipoActualizacion String?  @map("tipo_actualizacion")
+  observaciones     String?
+  usuario           String?
+
+  createdAt DateTime @default(now()) @map("created_at")
+
+  @@map("registro_horas_maquinaria")
+}
+
+/// Per-tipo column configuration for the maquinaria listing grid.
+/// Phase 4 may simplify this into a JSON-per-tipo representation.
+model TablaConfig {
+  id          Int    @id @default(autoincrement())
+  tipoId      Int    @map("tipo_id")
+  tipo        MaquinariaTipo @relation(fields: [tipoId], references: [id])
+  targetDepth Int    @map("target_depth")
+  orderIndex  Int    @map("order_index")
+  columnKind  String @map("column_kind")
+  builtinKey  String? @map("builtin_key")
+  attributeId Int?   @map("attribute_id")
+  attribute   NivelAtributo? @relation(fields: [attributeId], references: [id])
+  levelDefId  Int?   @map("level_def_id")
+  levelDef    TipoNivel? @relation(fields: [levelDefId], references: [id])
+  visible     Boolean @default(true)
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@map("tabla_config")
+}
+
+// ──────────────────────────────────────────────────────────────────────────────
+// Compras — requisiciones → OC → recepción → factura
+// ──────────────────────────────────────────────────────────────────────────────
+
+model Requisicion {
+  id                  Int      @id @default(autoincrement())
+  fechaCreacion       DateTime @default(now()) @map("fecha_creacion")
+  solicitante         String
+  unidadProductiva    String   @map("unidad_productiva")
+  localidad           String
+  prioridad           String   @default("Normal")
+  estado              String   @default("Borrador")
+  fechaTentativa      DateTime? @map("fecha_tentativa")
+  fechaLimite         DateTime? @map("fecha_limite")
+  notas               String?
+  creadoPor           String?   @map("creado_por")
+  fechaAprobacion     DateTime? @map("fecha_aprobacion")
+  aprobadoPor         String?   @map("aprobado_por")
+  fechaCancelacion    DateTime? @map("fecha_cancelacion")
+  canceladoPor        String?   @map("cancelado_por")
+  numeroOrdenInterna  String?   @map("numero_orden_interna")
+
+  detalle RequisicionDetalle[]
+
+  @@index([estado])
+  @@index([localidad])
+  @@index([numeroOrdenInterna])
+  @@map("requisiciones")
+}
+
+model RequisicionDetalle {
+  id             Int     @id @default(autoincrement())
+  requisicionId  Int     @map("requisicion_id")
+  requisicion    Requisicion @relation(fields: [requisicionId], references: [id], onDelete: Cascade)
+  itemId         Int     @map("item_id")
+  item           Inventario @relation(fields: [itemId], references: [id])
+  cantidad       Float
+  prioridadItem  String  @default("Normal") @map("prioridad_item")
+  notasItem      String? @map("notas_item")
+  estado         String  @default("Pendiente")
+
+  ocDetalle OrdenCompraDetalle[]
+
+  @@index([requisicionId])
+  @@index([itemId])
+  @@map("requisiciones_detalle")
+}
+
+model OrdenCompra {
+  id               Int      @id @default(autoincrement())
+  numeroOc         String?  @unique @map("numero_oc")
+  proveedorId      Int      @map("proveedor_id")
+  proveedor        Proveedor @relation(fields: [proveedorId], references: [id])
+  fechaEmision     DateTime @default(now()) @map("fecha_emision")
+  comprador        String?
+  estado           String   @default("Emitida")
+  totalEstimado    Float    @default(0) @map("total_estimado")
+  observaciones    String?
+  creadoPor        String?  @map("creado_por")
+  fechaCancelacion DateTime? @map("fecha_cancelacion")
+  canceladoPor     String?  @map("cancelado_por")
+
+  detalle     OrdenCompraDetalle[]
+  recepciones Recepcion[]
+
+  @@index([proveedorId])
+  @@index([estado])
+  @@map("ordenes_compra")
+}
+
+model OrdenCompraDetalle {
+  id                     Int      @id @default(autoincrement())
+  ocId                   Int      @map("oc_id")
+  oc                     OrdenCompra @relation(fields: [ocId], references: [id], onDelete: Cascade)
+  requisicionDetalleId   Int      @map("requisicion_detalle_id")
+  requisicionDetalle     RequisicionDetalle @relation(fields: [requisicionDetalleId], references: [id])
+  cantidadSolicitada     Float    @map("cantidad_solicitada")
+  cantidadRecibida       Float    @default(0) @map("cantidad_recibida")
+  precioUnitario         Float    @default(0) @map("precio_unitario")
+  total                  Float    @default(0)
+
+  recepcionDetalle RecepcionDetalle[]
+
+  @@index([ocId])
+  @@index([requisicionDetalleId])
+  @@map("ordenes_compra_detalle")
+}
+
+model Recepcion {
+  id              Int      @id @default(autoincrement())
+  ocId            Int      @map("oc_id")
+  oc              OrdenCompra @relation(fields: [ocId], references: [id])
+  numeroRemito    String   @map("numero_remito")
+  fechaRecepcion  DateTime @default(now()) @map("fecha_recepcion")
+  recibidoPor     String   @map("recibido_por")
+  observaciones   String?
+  creadoPor       String?  @map("creado_por")
+
+  detalle RecepcionDetalle[]
+
+  @@index([ocId])
+  @@map("recepciones")
+}
+
+model RecepcionDetalle {
+  id               Int      @id @default(autoincrement())
+  recepcionId      Int      @map("recepcion_id")
+  recepcion        Recepcion @relation(fields: [recepcionId], references: [id], onDelete: Cascade)
+  ocDetalleId      Int      @map("oc_detalle_id")
+  ocDetalle        OrdenCompraDetalle @relation(fields: [ocDetalleId], references: [id])
+  cantidadRecibida Float    @map("cantidad_recibida")
+  facturado        Boolean  @default(false)
+
+  facturaDetalle FacturaDetalle[]
+
+  @@index([recepcionId])
+  @@index([ocDetalleId])
+  @@map("recepciones_detalle")
+}
+
+model Factura {
+  id                     Int      @id @default(autoincrement())
+  numeroFactura          String   @unique @map("numero_factura")
+  proveedorId            Int      @map("proveedor_id")
+  proveedor              Proveedor @relation(fields: [proveedorId], references: [id])
+  fechaFactura           DateTime @map("fecha_factura")
+  total                  Float
+  usuario                String?
+  fechaRegistro          DateTime @default(now()) @map("fecha_registro")
+  subtotal               Float    @default(0)
+  descuentoComercial     Float    @default(0) @map("descuento_comercial")
+  descuentoFinanciero    Float    @default(0) @map("descuento_financiero")
+  recargo                Float    @default(0)
+  netoGravado            Float    @default(0) @map("neto_gravado")
+  ivaPorcentaje          Float    @default(21) @map("iva_porcentaje")
+  ivaMonto               Float    @default(0) @map("iva_monto")
+
+  detalle FacturaDetalle[]
+
+  @@index([proveedorId])
+  @@map("facturas")
+}
+
+model FacturaDetalle {
+  id                            Int      @id @default(autoincrement())
+  facturaId                     Int      @map("factura_id")
+  factura                       Factura  @relation(fields: [facturaId], references: [id], onDelete: Cascade)
+  recepcionDetalleId            Int      @map("recepcion_detalle_id")
+  recepcionDetalle              RecepcionDetalle @relation(fields: [recepcionDetalleId], references: [id])
+  precioUnitario                Float    @map("precio_unitario")
+  total                         Float
+  descuentoComercialPorcentaje  Float    @default(0) @map("descuento_comercial_porcentaje")
+
+  @@index([facturaId])
+  @@index([recepcionDetalleId])
+  @@map("factura_detalle")
+}
+
+// ──────────────────────────────────────────────────────────────────────────────
+// Precios & FX
+// ──────────────────────────────────────────────────────────────────────────────
+
+model PrecioHistorico {
+  id              Int      @id @default(autoincrement())
+  itemId          Int      @map("item_id")
+  item            Inventario @relation(fields: [itemId], references: [id])
+  proveedorId     Int      @map("proveedor_id")
+  proveedor       Proveedor @relation(fields: [proveedorId], references: [id])
+  fecha           DateTime
+  precioArs       Float    @map("precio_ars")
+  fuente          String?
+  numeroDocumento String?  @map("numero_documento")
+  usuario         String?
+
+  @@index([itemId, proveedorId])
+  @@index([fecha])
+  @@map("precios_historico")
+}
+
+model DolarCotizacion {
+  anio       Int
+  mes        Int
+  tcPromedio Float @map("tc_promedio")
+
+  @@id([anio, mes])
+  @@map("dolar_cotizaciones")
+}
+
+// ──────────────────────────────────────────────────────────────────────────────
+// Mantenimiento
+// ──────────────────────────────────────────────────────────────────────────────
+
+model Mantenimiento {
+  id                   Int      @id @default(autoincrement())
+  tipo                 String
+  maquinariaId         Int      @map("maquinaria_id")
+  maquinaria           Maquinaria @relation(fields: [maquinariaId], references: [id])
+  prioridad            String
+  descripcion          String?
+  responsableId        Int      @map("responsable_id")
+  responsable          Usuario  @relation(fields: [responsableId], references: [id])
+  unidadProductivaId   Int?     @map("unidad_productiva_id")
+  unidadProductiva     UnidadProductiva? @relation("MantenimientoUnidadProductiva", fields: [unidadProductivaId], references: [id])
+  estado               String
+  tallerAsignadoId     Int?     @map("taller_asignado_id")
+  tallerAsignado       UnidadProductiva? @relation("MantenimientoTallerAsignado", fields: [tallerAsignadoId], references: [id])
+  fechaCreacion        DateTime @default(now()) @map("fecha_creacion")
+  fechaInicio          DateTime? @map("fecha_inicio")
+  fechaFinalizacion    DateTime? @map("fecha_finalizacion")
+  programarRevision    Boolean  @default(false) @map("programar_revision")
+  fechaProximaRevision DateTime? @map("fecha_proxima_revision")
+  descripcionRevision  String?  @map("descripcion_revision")
+  creadoPor            String?  @map("creado_por")
+  esRecurrente         Boolean  @default(true) @map("es_recurrente")
+  plantillaId          Int?     @map("plantilla_id")
+  plantilla            PlantillaMantenimiento? @relation(fields: [plantillaId], references: [id])
+  frecuenciaValor      Float?   @map("frecuencia_valor")
+  frecuenciaUnidad     String?  @map("frecuencia_unidad")
+  fechaProgramada      DateTime? @map("fecha_programada")
+  usoEstimadoDiario    Float?   @map("uso_estimado_diario")
+  unidadEstimacion     String?  @map("unidad_estimacion")
+  metodoCalculo        String?  @map("metodo_calculo")
+
+  insumos   MantenimientoInsumo[]
+  tareas    MantenimientoTarea[]
+  historial MantenimientoHistorial[]
+
+  @@index([tipo])
+  @@index([estado])
+  @@index([maquinariaId])
+  @@index([fechaCreacion])
+  @@index([responsableId])
+  @@index([fechaProgramada])
+  @@index([estado, tipo])
+  @@map("mantenimientos")
+}
+
+model PlantillaMantenimiento {
+  id                Int      @id @default(autoincrement())
+  nombre            String   @unique
+  tipoMaquinariaId  Int      @map("tipo_maquinaria_id")
+  tipoMaquinaria    MaquinariaTipo @relation(fields: [tipoMaquinariaId], references: [id])
+  frecuenciaValor   Float    @map("frecuencia_valor")
+  frecuenciaUnidad  String   @map("frecuencia_unidad")
+  prioridad         String
+  descripcion       String?
+  creadoPor         String?  @map("creado_por")
+  fechaCreacion     DateTime @default(now()) @map("fecha_creacion")
+
+  insumos        PlantillaInsumo[]
+  tareas         PlantillaTarea[]
+  mantenimientos Mantenimiento[]
+
+  @@index([tipoMaquinariaId])
+  @@map("plantillas_mantenimiento")
+}
+
+model PlantillaInsumo {
+  id                Int      @id @default(autoincrement())
+  plantillaId       Int      @map("plantilla_id")
+  plantilla         PlantillaMantenimiento @relation(fields: [plantillaId], references: [id], onDelete: Cascade)
+  itemInventarioId  Int      @map("item_inventario_id")
+  item              Inventario @relation(fields: [itemInventarioId], references: [id])
+  cantidadSugerida  Float    @map("cantidad_sugerida")
+  unidadMedida      String   @map("unidad_medida")
+
+  @@index([plantillaId])
+  @@index([itemInventarioId])
+  @@map("plantilla_insumos")
+}
+
+model PlantillaTarea {
+  id          Int    @id @default(autoincrement())
+  plantillaId Int    @map("plantilla_id")
+  plantilla   PlantillaMantenimiento @relation(fields: [plantillaId], references: [id], onDelete: Cascade)
+  descripcion String
+  orden       Int    @default(0)
+
+  @@index([plantillaId])
+  @@map("plantilla_tareas")
+}
+
+model MantenimientoInsumo {
+  id                Int      @id @default(autoincrement())
+  mantenimientoId   Int      @map("mantenimiento_id")
+  mantenimiento     Mantenimiento @relation(fields: [mantenimientoId], references: [id], onDelete: Cascade)
+  itemInventarioId  Int      @map("item_inventario_id")
+  item              Inventario @relation(fields: [itemInventarioId], references: [id])
+  cantidadSugerida  Float    @map("cantidad_sugerida")
+  cantidadUtilizada Float    @default(0) @map("cantidad_utilizada")
+  unidadMedida      String   @map("unidad_medida")
+  costoUnitario     Float    @default(0) @map("costo_unitario")
+  costoTotal        Float    @default(0) @map("costo_total")
+  proveedorId       Int?     @map("proveedor_id")
+  proveedor         Proveedor? @relation(fields: [proveedorId], references: [id])
+
+  @@index([mantenimientoId])
+  @@index([itemInventarioId])
+  @@index([proveedorId])
+  @@map("mantenimiento_insumos")
+}
+
+/// Drift table: exists in the live DB but is not in init_db_schema.
+model MantenimientoTarea {
+  id              Int     @id @default(autoincrement())
+  mantenimientoId Int     @map("mantenimiento_id")
+  mantenimiento   Mantenimiento @relation(fields: [mantenimientoId], references: [id], onDelete: Cascade)
+  descripcion     String
+  realizada       Boolean @default(false)
+  orden           Int     @default(0)
+  esDePlantilla   Boolean @default(false) @map("es_de_plantilla")
+
+  @@index([mantenimientoId])
+  @@map("mantenimiento_tareas")
+}
+
+/// Drift table: audit log written to by the Python app without being declared in init_db_schema.
+model MantenimientoHistorial {
+  id              Int      @id @default(autoincrement())
+  mantenimientoId Int      @map("mantenimiento_id")
+  mantenimiento   Mantenimiento @relation(fields: [mantenimientoId], references: [id], onDelete: Cascade)
+  tipoCambio      String   @map("tipo_cambio")
+  valorAnterior   String?  @map("valor_anterior")
+  valorNuevo      String?  @map("valor_nuevo")
+  detalle         String?
+  fechaCambio     DateTime @default(now()) @map("fecha_cambio")
+  usuario         String
+
+  @@index([mantenimientoId])
+  @@index([fechaCambio])
+  @@map("mantenimiento_historial")
+}
+
+// ──────────────────────────────────────────────────────────────────────────────
+// Órdenes de trabajo
+// ──────────────────────────────────────────────────────────────────────────────
+
+model OrdenTrabajo {
+  id                 Int      @id @default(autoincrement())
+  numeroOt           String?  @unique @map("numero_ot")
+  fechaCreacion      DateTime @default(now()) @map("fecha_creacion")
+  fechaFinalizacion  DateTime? @map("fecha_finalizacion")
+  localidadId        Int?     @map("localidad_id")
+  localidad          Localidad? @relation(fields: [localidadId], references: [id])
+  unidadProductivaId Int?     @map("unidad_productiva_id")
+  unidadProductiva   UnidadProductiva? @relation(fields: [unidadProductivaId], references: [id])
+  solicitanteId      Int?     @map("solicitante_id")
+  solicitante        Usuario? @relation("OrdenTrabajoSolicitante", fields: [solicitanteId], references: [id])
+  responsableId      Int?     @map("responsable_id")
+  responsable        Usuario? @relation("OrdenTrabajoResponsable", fields: [responsableId], references: [id])
+  prioridad          String   @default("Media")
+  estado             String   @default("En Curso")
+  titulo             String
+  descripcionTrabajo String?  @map("descripcion_trabajo")
+  observaciones      String?
+  creadoPor          String?  @map("creado_por")
+
+  insumos OtInsumo[]
+
+  @@map("ordenes_trabajo")
+}
+
+model OtInsumo {
+  id                Int      @id @default(autoincrement())
+  otId              Int      @map("ot_id")
+  ot                OrdenTrabajo @relation(fields: [otId], references: [id], onDelete: Cascade)
+  itemInventarioId  Int      @map("item_inventario_id")
+  item              Inventario @relation(fields: [itemInventarioId], references: [id])
+  cantidad          Float
+  unidadMedida      String?  @map("unidad_medida")
+  costoUnitario     Float    @default(0) @map("costo_unitario")
+  costoTotal        Float    @default(0) @map("costo_total")
+  estadoSolicitud   String?  @map("estado_solicitud")
+
+  @@index([otId])
+  @@index([itemInventarioId])
+  @@map("ot_insumos")
 }
