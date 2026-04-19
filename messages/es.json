@@ -654,6 +654,69 @@
     "historial": {
       "titulo": "Historial",
       "sinEventos": "Sin eventos registrados."
+    },
+    "plantillas": {
+      "titulo": "Plantillas de mantenimiento",
+      "descripcion": "Preventivos recurrentes agrupados por tipo de máquina.",
+      "nueva": "Nueva plantilla",
+      "nuevaTitulo": "Nueva plantilla",
+      "editarTitulo": "Editar plantilla",
+      "volver": "Volver a plantillas",
+      "formAyuda": "Definí la recurrencia, los insumos esperados y las tareas a realizar.",
+      "buscarPlaceholder": "Buscar por nombre o tipo…",
+      "resultadosCount": "{count, plural, one {# plantilla} other {# plantillas}}",
+      "crear": "Crear plantilla",
+      "eliminar": "Eliminar plantilla",
+      "aplicar": "Aplicar plantilla",
+      "aplicarDescripcion": "Generá un nuevo mantenimiento preventivo a partir de esta plantilla.",
+      "vacio": "No hay plantillas cargadas.",
+      "columnas": {
+        "nombre": "Nombre",
+        "tipoMaquinaria": "Tipo de máquina",
+        "frecuencia": "Frecuencia",
+        "insumos": "Insumos",
+        "tareas": "Tareas",
+        "aplicaciones": "Aplicaciones"
+      },
+      "filtros": {
+        "tipoMaquinaria": "Tipo de máquina"
+      },
+      "campos": {
+        "nombre": "Nombre",
+        "tipoMaquinaria": "Tipo de máquina",
+        "prioridad": "Prioridad",
+        "frecuenciaValor": "Cada",
+        "frecuenciaUnidad": "Unidad",
+        "descripcion": "Descripción"
+      },
+      "frecuenciaUnidades": {
+        "horas": "Horas",
+        "dias": "Días",
+        "meses": "Meses"
+      },
+      "insumos": {
+        "titulo": "Insumos sugeridos",
+        "ayuda": "Se copian al mantenimiento cuando se aplica la plantilla.",
+        "vacio": "Sin insumos sugeridos.",
+        "item": "Ítem",
+        "cantidadSugerida": "Cantidad",
+        "agregar": "Agregar insumo"
+      },
+      "tareas": {
+        "titulo": "Tareas",
+        "vacio": "Sin tareas cargadas.",
+        "placeholder": "Describí una tarea…",
+        "agregar": "Agregar"
+      },
+      "avisos": {
+        "creadaExitosa": "Plantilla creada.",
+        "eliminadaExitosa": "Plantilla eliminada.",
+        "enUso": "No se puede eliminar: hay mantenimientos que la referencian.",
+        "eliminarTitulo": "¿Eliminar la plantilla?",
+        "eliminarDescripcion": "Esta acción no se puede deshacer. Solo se puede eliminar si no tiene aplicaciones.",
+        "aplicadaExitosa": "Mantenimiento generado.",
+        "sinMaquinasDelTipo": "No hay máquinas activas de este tipo."
+      }
     }
   },
   "listados": {
