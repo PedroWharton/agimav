@@ -86,27 +86,27 @@ export default async function AbcPage({
           ) : (
             <div className="max-h-[600px] overflow-auto">
               <table className="min-w-full text-sm">
-                <thead className="sticky top-0 z-10 bg-muted/50 text-xs uppercase text-muted-foreground">
+                <thead className="sticky top-0 z-10 bg-muted text-xs uppercase text-muted-foreground">
                   <tr>
-                    <th className="px-3 py-2 text-left">
+                    <th scope="col" className="px-3 py-2 text-left">
                       {t("abc.columnas.codigo")}
                     </th>
-                    <th className="px-3 py-2 text-left">
+                    <th scope="col" className="px-3 py-2 text-left">
                       {t("abc.columnas.descripcion")}
                     </th>
-                    <th className="px-3 py-2 text-right">
+                    <th scope="col" className="px-3 py-2 text-right">
                       {t("abc.columnas.cantidad")}
                     </th>
-                    <th className="px-3 py-2 text-right">
+                    <th scope="col" className="px-3 py-2 text-right">
                       {t("abc.columnas.valor")}
                     </th>
-                    <th className="px-3 py-2 text-right">
+                    <th scope="col" className="px-3 py-2 text-right">
                       {t("abc.columnas.porcentaje")}
                     </th>
-                    <th className="px-3 py-2 text-right">
+                    <th scope="col" className="px-3 py-2 text-right">
                       {t("abc.columnas.acumulado")}
                     </th>
-                    <th className="px-3 py-2 text-center">
+                    <th scope="col" className="px-3 py-2 text-center">
                       {t("abc.columnas.clase")}
                     </th>
                   </tr>

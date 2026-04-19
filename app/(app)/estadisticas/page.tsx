@@ -199,7 +199,10 @@ export default async function EstadisticasPage() {
           {t("lentes.titulo")}
         </h2>
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          <Link href="/estadisticas/abc">
+          <Link
+            href="/estadisticas/abc"
+            className="block rounded-xl outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+          >
             <Card className="flex h-full items-center justify-between gap-3 p-4 transition-colors hover:bg-muted/40">
               <div className="flex items-center gap-3">
                 <div className="rounded-md bg-muted p-2">
@@ -215,7 +218,10 @@ export default async function EstadisticasPage() {
               <ChevronRight className="size-4 text-muted-foreground" />
             </Card>
           </Link>
-          <Link href="/estadisticas/precios">
+          <Link
+            href="/estadisticas/precios"
+            className="block rounded-xl outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+          >
             <Card className="flex h-full items-center justify-between gap-3 p-4 transition-colors hover:bg-muted/40">
               <div className="flex items-center gap-3">
                 <div className="rounded-md bg-muted p-2">
@@ -231,7 +237,10 @@ export default async function EstadisticasPage() {
               <ChevronRight className="size-4 text-muted-foreground" />
             </Card>
           </Link>
-          <Link href="/estadisticas/maquinaria">
+          <Link
+            href="/estadisticas/maquinaria"
+            className="block rounded-xl outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+          >
             <Card className="flex h-full items-center justify-between gap-3 p-4 transition-colors hover:bg-muted/40">
               <div className="flex items-center gap-3">
                 <div className="rounded-md bg-muted p-2">
@@ -247,7 +256,10 @@ export default async function EstadisticasPage() {
               <ChevronRight className="size-4 text-muted-foreground" />
             </Card>
           </Link>
-          <Link href="/estadisticas/proveedores">
+          <Link
+            href="/estadisticas/proveedores"
+            className="block rounded-xl outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+          >
             <Card className="flex h-full items-center justify-between gap-3 p-4 transition-colors hover:bg-muted/40">
               <div className="flex items-center gap-3">
                 <div className="rounded-md bg-muted p-2">

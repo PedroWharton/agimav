@@ -107,27 +107,27 @@ export default async function MaquinariaStatsPage({
         ) : (
           <div className="max-h-[600px] overflow-auto">
             <table className="min-w-full text-sm">
-              <thead className="sticky top-0 z-10 bg-muted/50 text-xs uppercase text-muted-foreground">
+              <thead className="sticky top-0 z-10 bg-muted text-xs uppercase text-muted-foreground">
                 <tr>
-                  <th className="px-3 py-2 text-left">
+                  <th scope="col" className="px-3 py-2 text-left">
                     {t("maquinaria.columnas.maquina")}
                   </th>
-                  <th className="px-3 py-2 text-left">
+                  <th scope="col" className="px-3 py-2 text-left">
                     {t("maquinaria.columnas.tipo")}
                   </th>
-                  <th className="px-3 py-2 text-right">
+                  <th scope="col" className="px-3 py-2 text-right">
                     {t("maquinaria.columnas.correctivos")}
                   </th>
-                  <th className="px-3 py-2 text-right">
+                  <th scope="col" className="px-3 py-2 text-right">
                     {t("maquinaria.columnas.preventivos")}
                   </th>
-                  <th className="px-3 py-2 text-right">
+                  <th scope="col" className="px-3 py-2 text-right">
                     {t("maquinaria.columnas.mtbf")}
                   </th>
-                  <th className="px-3 py-2 text-right">
+                  <th scope="col" className="px-3 py-2 text-right">
                     {t("maquinaria.columnas.horas")}
                   </th>
-                  <th className="px-3 py-2 text-right">
+                  <th scope="col" className="px-3 py-2 text-right">
                     {t("maquinaria.columnas.costo")}
                   </th>
                 </tr>

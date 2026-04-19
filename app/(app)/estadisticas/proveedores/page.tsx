@@ -93,21 +93,21 @@ export default async function ProveedoresStatsPage({
           <div className="overflow-hidden rounded-lg border border-border">
             <div className="max-h-[600px] overflow-auto">
               <table className="min-w-full text-sm">
-                <thead className="sticky top-0 z-10 bg-muted/50 text-xs uppercase text-muted-foreground">
+                <thead className="sticky top-0 z-10 bg-muted text-xs uppercase text-muted-foreground">
                   <tr>
-                    <th className="px-3 py-2 text-left">
+                    <th scope="col" className="px-3 py-2 text-left">
                       {t("proveedores.columnas.proveedor")}
                     </th>
-                    <th className="px-3 py-2 text-right">
+                    <th scope="col" className="px-3 py-2 text-right">
                       {t("proveedores.columnas.facturas")}
                     </th>
-                    <th className="px-3 py-2 text-right">
+                    <th scope="col" className="px-3 py-2 text-right">
                       {t("proveedores.columnas.total")}
                     </th>
-                    <th className="px-3 py-2 text-right">
+                    <th scope="col" className="px-3 py-2 text-right">
                       {t("proveedores.columnas.porcentaje")}
                     </th>
-                    <th className="px-3 py-2 text-left">
+                    <th scope="col" className="px-3 py-2 text-left">
                       {t("proveedores.columnas.ultima")}
                     </th>
                   </tr>

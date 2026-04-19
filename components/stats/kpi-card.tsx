@@ -72,7 +72,10 @@ export function KpiCard({
 
   if (href) {
     return (
-      <Link href={href} className="block h-full">
+      <Link
+        href={href}
+        className="block h-full rounded-xl outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+      >
         {body}
       </Link>
     );

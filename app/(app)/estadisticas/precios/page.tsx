@@ -172,16 +172,16 @@ export default async function PreciosPage({
             <table className="min-w-full text-sm">
               <thead className="bg-muted/40 text-xs uppercase text-muted-foreground">
                 <tr>
-                  <th className="px-3 py-2 text-left">
+                  <th scope="col" className="px-3 py-2 text-left">
                     {t("precios.columnas.fecha")}
                   </th>
-                  <th className="px-3 py-2 text-right">
+                  <th scope="col" className="px-3 py-2 text-right">
                     {t("precios.columnas.ars")}
                   </th>
-                  <th className="px-3 py-2 text-right">
+                  <th scope="col" className="px-3 py-2 text-right">
                     {t("precios.columnas.usd")}
                   </th>
-                  <th className="px-3 py-2 text-left">
+                  <th scope="col" className="px-3 py-2 text-left">
                     {t("precios.columnas.proveedor")}
                   </th>
                 </tr>

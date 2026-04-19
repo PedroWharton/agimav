@@ -52,8 +52,8 @@ Findings from the manual QA pass against the Neon dev DB (parity-verified vs `fl
 
 - **Module:** Cross-cutting (UI primitives)
 - **Severity:** low
-- **Status:** open
-- **Notes:** Tailwind v4 / shadcn defaults: native `<button>` doesn't ship `cursor-pointer`. Add to the base `Button` variant in `components/ui/button.tsx` so it propagates everywhere.
+- **Status:** **fixed (uncommitted)**
+- **Notes:** Tailwind v4 / shadcn defaults: native `<button>` doesn't ship `cursor-pointer`. Added `cursor-pointer` to the base `Button` variant in `components/ui/button.tsx`; propagates everywhere via the shared cva base.
 
 ## QA-006 · Adding an insumo on a mantenimiento doesn't write a historial row
 
@@ -182,10 +182,10 @@ Findings from the manual QA pass against the Neon dev DB (parity-verified vs `fl
 
 - **Module:** Estadísticas (Phase 7, Slice B — `/estadisticas/abc`)
 - **Severity:** low
-- **Status:** open
+- **Status:** **fixed (uncommitted)** — bundled with QA-022.
 - **Repro:** open `/estadisticas/abc` → scroll the table → header shows rows behind it through the partial transparency.
 - **Root cause:** `page.tsx:89` — `<thead className="sticky top-0 z-10 bg-muted/50 ...">`. `bg-muted/50` is 50% opacity, so the row underneath bleeds through.
-- **Proposed fix:** swap to a fully opaque token: `bg-muted` (or `bg-background`/`bg-card` if the contrast looks better). Sweep `/estadisticas/precios`, `/maquinaria`, `/proveedores` for the same `bg-*/50` pattern on sticky headers — same fix.
+- **Fix:** swapped `bg-muted/50` → `bg-muted` on the 3 sticky `<thead>` (abc, maquinaria, proveedores). `/estadisticas/precios` thead is non-sticky; opacity left alone.
 
 ## QA-019 · Estadísticas maquinaria: `min=` filter triggers full server recompute
 
@@ -207,29 +207,27 @@ Audit of 5 routes against [vercel-labs/web-interface-guidelines](https://github.
 
 - **Module:** Cross-cutting (UI primitive)
 - **Severity:** low
-- **Status:** open
+- **Status:** **fixed (uncommitted)**
 - **File:** `components/ui/button.tsx:8`
 - **Rule:** "Animation › Never `transition: all`—list properties explicitly. Animate `transform`/`opacity` only."
-- **Why this matters:** `transition-all` re-flows layout properties unnecessarily, including ones we never animate. Spec wants enumerated lists for compositor performance.
-- **Proposed fix:** swap `transition-all` → `transition-[background-color,border-color,box-shadow,color,opacity,transform]` (or whichever subset the variants actually animate). Sweep `components/ui/*` for the same.
+- **Fix:** swapped `transition-all` → `transition-[color,background-color,border-color,box-shadow,opacity,transform]` (the subset the variants actually animate — bg on hover, border/ring on focus, opacity on disabled, transform on active).
+- **Follow-up:** broader sweep of `components/ui/*` for `transition-all` deferred to post-cutover polish PR.
 
 ## QA-021 · `KpiCard` linked tiles have no visible focus ring on the `<a>` wrapper
 
 - **Module:** Cross-cutting (`KpiCard`) — surfaces on `/estadisticas`
 - **Severity:** medium (a11y)
-- **Status:** open
+- **Status:** **fixed (uncommitted)**
 - **File:** `components/stats/kpi-card.tsx:73-78`
 - **Rule:** "Focus States › Interactive elements need visible focus: `focus-visible:ring-*`."
-- **Symptom:** keyboard users tabbing the dashboard tiles get no focus indicator. The `<Link>` wraps a `<Card>` that has hover styles but no `focus-within:` or focus-on-the-link ring.
-- **Proposed fix:** add `focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring rounded-xl` (or similar) to the `<Link>` className, or hoist a `focus-within:ring-2` onto the inner `<Card>`. Same fix applies to the lentes Cards on `/estadisticas:202-268`.
+- **Fix:** added `rounded-xl outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2` to the `<Link>` className in `kpi-card.tsx`, matching the inner Card's `rounded-xl`. Applied the same wrapper to the 4 lentes `<Link>` wrappers on `app/(app)/estadisticas/page.tsx`.
 
 ## QA-022 · Sticky `<thead>` opacity issue extends beyond ABC
 
-- **Module:** Estadísticas (Phase 7 — `/estadisticas/abc`, `/estadisticas/maquinaria`) + factura form
+- **Module:** Estadísticas (Phase 7 — `/estadisticas/abc`, `/estadisticas/maquinaria`, `/estadisticas/proveedores`) + factura form
 - **Severity:** low (extends QA-018)
-- **Status:** open
-- **Files:** `app/(app)/estadisticas/abc/page.tsx:89`, `app/(app)/estadisticas/maquinaria/page.tsx:110`, `app/(app)/compras/facturas/nueva/factura-form-client.tsx:285` (`bg-muted/40`)
-- **Why now:** QA-018 caught it on ABC. Same `bg-muted/50` or `bg-muted/40` semi-transparent header is reused on the maquinaria-stats table and the factura lines table. Bundle the fix.
+- **Status:** **fixed (uncommitted)**
+- **Fix:** swapped `bg-muted/50` → `bg-muted` on the 3 sticky `<thead>` (abc, maquinaria, proveedores). Factura form thead (`bg-muted/40`) and `/estadisticas/precios` thead are non-sticky → no scroll bleed → opacity intentionally retained for hierarchy.
 
 ## QA-023 · Factura nueva: form inputs missing `name`, `autocomplete`, and per-row `aria-label`
 
@@ -271,10 +269,8 @@ Audit of 5 routes against [vercel-labs/web-interface-guidelines](https://github.
 
 - **Module:** Cross-cutting (i18n message catalog)
 - **Severity:** low
-- **Status:** open
-- **Rule:** "Typography › Loading states end with `…`: 'Loading…', 'Saving…'. Use `…` not `...`."
-- **Where:** `messages/es.json` keys like `acciones.guardando`, `columnas.guardando`, plus any inline strings. Quick `grep -n 'guardando\\|cargando\\|loading' messages/es.json` will surface them.
-- **Proposed fix:** sweep the message catalog and append `…` (single Unicode character, not three dots).
+- **Status:** **already compliant**
+- **Verification (2026-04-19):** `grep '\\.\\.\\.'` against `messages/es.json` returns 0 matches; all `Guardando` keys end with the unicode `…` already. No inline `Guardando...` / `Cargando...` strings in `*.{ts,tsx}` either.
 
 ## QA-027 · `Intl.NumberFormat` not used uniformly — `toFixed`/`toLocaleString` mixed in tables
 
@@ -316,10 +312,9 @@ Extended the audit beyond the original 5 routes. Surface scan covered all `app/(
 
 - **Module:** Cross-cutting (every table)
 - **Severity:** low (a11y)
-- **Status:** open
-- **Where:** `grep -rn 'scope="col"' app/` returns zero matches. Includes shadcn `<TableHead>` (`components/ui/table.tsx`) — neither wrapper nor consumer sets `scope`.
+- **Status:** **fixed (uncommitted)**
 - **Rule:** "Tables › `<th scope="col|row">` for headers; `<caption>` for context."
-- **Proposed fix:** add `scope="col"` to the base `<TableHead>` in `components/ui/table.tsx` (single edit, propagates everywhere). Hand-rolled `<thead>`/`<th>` in `estadisticas/*` pages need scope added per occurrence (~6 spots).
+- **Fix:** added `scope = "col"` default to `TableHead` in `components/ui/table.tsx` (propagates to every consumer; overridable per call site). Added `scope="col"` to all hand-rolled `<th>` in `app/(app)/estadisticas/{abc,maquinaria,proveedores,precios}/page.tsx`.
 
 ## QA-031 · `autoFocus` on every form-sheet primary input
 
@@ -375,11 +370,46 @@ Extended the audit beyond the original 5 routes. Surface scan covered all `app/(
   3. When fixing QA-016 (disabled-button reason), surface the reason via `aria-describedby` linked to a `sr-only` span.
 - **Note:** this is an audit observation, not a "we tested with a screen reader" finding. A real a11y pass post-cutover may surface more.
 
+---
+
+## Parity-audit findings (2026-04-19)
+
+Legacy-vs-web feature sweep against `Agimav23b.py`. Items below are gaps the audit flagged that aren't covered by QA-001…QA-035.
+
+## QA-036 · Opciones module is a placeholder — hide from nav before cutover
+
+- **Module:** Cross-cutting (app shell + `/opciones`)
+- **Severity:** medium (user-visible dead entry point)
+- **Status:** open
+- **Context:** parity audit confirmed `/opciones` renders `PlaceholderModule`. Legacy Opciones grouped backup/restore, wipe-by-módulo, and Excel import/export per módulo — none migrated. In the new deployment these are platform-level or admin-via-scripts: backup = Neon PITR, restore = support ticket, wipe/import/export = SQL scripts. The placeholder link in the nav will confuse Cervi post-cutover ("where did the old menu go?").
+- **Proposed fix:**
+  - Remove the nav link to `/opciones` (or gate it `isAdmin`-only with a "próximamente" badge if we expect to revive any of these as UI).
+  - Delete the placeholder route or keep it behind a flag — don't ship a clickable dead-end.
+  - Add one paragraph to `docs/cutover-runbook.md` (under "Known non-blockers") stating the admin procedures for backup/restore/wipe/import/export so Cervi has a pointer when they ask.
+- **Why not defer:** cheapest fix before T-0 — hiding a nav link is a one-line change.
+
+## QA-037 · Allow recepciones to close without a factura
+
+- **Module:** Compras (Phase 5, Slices D + E)
+- **Severity:** medium (missing legacy path)
+- **Status:** open
+- **Context:** parity audit flagged that legacy has a "Completar remitos sin factura" action on recepciones (`Agimav23b.py` ~line 18927). Real business case: supplier returns, free replacements, damaged-goods remitos that never get invoiced. Today the web app only closes recepción lines on factura creation, so these recepciones stay "open" forever and keep showing up in `/compras/facturas/nueva`.
+- **Proposed fix:**
+  - Add a "Cerrar sin factura" action on the recepción detail page (admin-gated).
+  - Introduce a `cerradaSinFactura: boolean` column on `Recepcion` (or a new terminal estado). Closing marks the lines exempt from the unfacturated-lines query that feeds factura-nueva.
+  - **Does NOT** write `PrecioHistorico`, does NOT update `Inventario.valorUnitario`, does NOT trigger additional `InventarioMovimiento` beyond what the recepción already did at Stock-destino time.
+  - Historial entry so the reason is auditable (`tipo_cambio='cerrada_sin_factura'`, free-text motivo).
+- **Spec touch-up:** update `docs/ux-spec/4-compras.md` with the new terminal state so future work doesn't drop it again.
+- **Scope note:** Cervi confirmed (2026-04-19) this is real, not legacy cruft — for now, just wire it up.
+
+---
+
 ## Triage
 
 - **Blockers:** ~~QA-004, QA-008, QA-009, QA-013, QA-014, QA-015~~ — all fixed.
-- **High / medium open:** QA-001, QA-002, QA-006 (needs product decision), QA-007, QA-011, QA-016, QA-017, QA-019, QA-021, QA-023, QA-035.
-- **Low / deferred:** QA-003 (already on backlog), QA-005, QA-010, QA-012, QA-018, QA-020, QA-022, QA-024, QA-025, QA-026, QA-027, QA-028, QA-029, QA-030, QA-031, QA-032, QA-033, QA-034.
+- **High / medium open:** QA-001, QA-002, QA-006 (needs product decision), QA-007, QA-011, QA-016, QA-017, QA-019, QA-023, QA-035, QA-036, QA-037.
+- **Fixed (design polish batch, uncommitted):** QA-005 (cursor-pointer), QA-018/QA-022 (sticky thead opacity), QA-020 (transition-all → explicit), QA-021 (KpiCard + lentes focus rings), QA-026 (already compliant), QA-030 (scope="col").
+- **Low / deferred:** QA-003 (already on backlog), QA-010, QA-012, QA-024, QA-025, QA-027, QA-028, QA-029, QA-031, QA-032, QA-033, QA-034.
 
 ## Next steps
 
@@ -388,3 +418,4 @@ Extended the audit beyond the original 5 routes. Surface scan covered all `app/(
 3. Continue cataloguing UX findings as we walk Phase 6 → 4 → 5 → 7. Fixes batched at the end.
 4. Decide QA-006 with Cervi or product owner before fixing.
 5. Audit findings (QA-020 through QA-035) are guideline-driven, not user-reported. Pre-cutover: fix only QA-021 (a11y focus, medium) and QA-035 pass-1 (icon button aria-labels). The rest go into a single post-cutover "polish" PR or the backlog.
+6. Parity-audit items QA-036 (hide Opciones nav) and QA-037 (close recepción without factura) are both pre-cutover work.
