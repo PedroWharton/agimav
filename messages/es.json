@@ -389,7 +389,9 @@
       "abc": "Análisis ABC",
       "abcDesc": "Clasificación por valor consumido.",
       "precios": "Evolución de precios",
-      "preciosDesc": "Historial en ARS y USD por ítem."
+      "preciosDesc": "Historial en ARS y USD por ítem.",
+      "maquinaria": "Métricas por máquina",
+      "maquinariaDesc": "Correctivos, preventivos, MTBF y costo por equipo."
     },
     "precios": {
       "titulo": "Evolución de precios",
@@ -403,6 +405,28 @@
         "ars": "Precio ARS",
         "usd": "Precio USD",
         "proveedor": "Proveedor"
+      }
+    },
+    "maquinaria": {
+      "titulo": "Métricas por máquina",
+      "descripcion": "Ranking por costo total de mantenimiento. MTBF estimado por fechas.",
+      "volver": "Volver a Estadísticas",
+      "vacio": "No hay máquinas que cumplan el filtro seleccionado.",
+      "sinHistorial": "{count, plural, =0 {Todas las máquinas tienen historial.} one {# máquina sin historial en el período.} other {# máquinas sin historial en el período.}}",
+      "totales": "{total, plural, one {# máquina en total} other {# máquinas en total}}",
+      "filtros": {
+        "min2": "≥ 2 mantenimientos",
+        "min3": "≥ 3 mantenimientos",
+        "todas": "Todas las máquinas"
+      },
+      "columnas": {
+        "maquina": "Máquina",
+        "tipo": "Tipo",
+        "correctivos": "Correctivos",
+        "preventivos": "Preventivos",
+        "mtbf": "MTBF (días)",
+        "horas": "Horas operadas",
+        "costo": "Costo total"
       }
     },
     "abc": {

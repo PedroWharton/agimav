@@ -230,6 +230,22 @@ export default async function EstadisticasPage() {
               <ChevronRight className="size-4 text-muted-foreground" />
             </Card>
           </Link>
+          <Link href="/estadisticas/maquinaria">
+            <Card className="flex h-full items-center justify-between gap-3 p-4 transition-colors hover:bg-muted/40">
+              <div className="flex items-center gap-3">
+                <div className="rounded-md bg-muted p-2">
+                  <Tractor className="size-5 text-muted-foreground" />
+                </div>
+                <div className="flex flex-col">
+                  <span className="font-medium">{t("lentes.maquinaria")}</span>
+                  <span className="text-xs text-muted-foreground">
+                    {t("lentes.maquinariaDesc")}
+                  </span>
+                </div>
+              </div>
+              <ChevronRight className="size-4 text-muted-foreground" />
+            </Card>
+          </Link>
         </div>
       </div>
 
