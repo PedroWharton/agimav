@@ -750,6 +750,89 @@
       }
     }
   },
+  "ordenesTrabajo": {
+    "titulo": "Órdenes de Trabajo",
+    "descripcion": "Trabajos puntuales con insumos y trazabilidad.",
+    "nueva": "Nueva OT",
+    "nuevaTitulo": "Nueva orden de trabajo",
+    "editarTitulo": "Editar orden de trabajo",
+    "detalleDescripcion": "Gestioná los insumos y cerrá la OT cuando esté completa.",
+    "formAyuda": "Completá la información general de la OT.",
+    "buscarPlaceholder": "Buscar por título, Nº o responsable…",
+    "resultadosCount": "{count, plural, one {# orden} other {# órdenes}}",
+    "volver": "Volver a órdenes de trabajo",
+    "editar": "Editar",
+    "guardar": "Guardar",
+    "crear": "Crear OT",
+    "cerrar": "Cerrar OT",
+    "cancelar": "Cancelar",
+    "cancelarOt": "Cancelar OT",
+    "columnas": {
+      "numero": "Nº",
+      "titulo": "Título",
+      "fechaCreacion": "Fecha",
+      "responsable": "Responsable",
+      "prioridad": "Prioridad",
+      "estado": "Estado",
+      "insumos": "Insumos"
+    },
+    "campos": {
+      "titulo": "Título",
+      "descripcionTrabajo": "Descripción del trabajo",
+      "solicitante": "Solicitante",
+      "responsable": "Responsable",
+      "localidad": "Localidad",
+      "unidadProductiva": "Unidad productiva",
+      "prioridad": "Prioridad",
+      "estado": "Estado",
+      "observaciones": "Observaciones",
+      "fechaCreacion": "Fecha de creación",
+      "fechaFinalizacion": "Fecha de finalización",
+      "creadoPor": "Creado por"
+    },
+    "secciones": {
+      "responsables": "Responsables",
+      "trabajo": "Trabajo"
+    },
+    "filtros": {
+      "estado": "Estado",
+      "prioridad": "Prioridad",
+      "responsable": "Responsable",
+      "todos": "Todos",
+      "incluirCerradas": "Incluir cerradas"
+    },
+    "insumos": {
+      "titulo": "Insumos",
+      "vacio": "Sin insumos cargados.",
+      "agregar": "Agregar insumo",
+      "eliminar": "Eliminar",
+      "guardar": "Guardar insumos",
+      "item": "Ítem",
+      "cantidad": "Cantidad",
+      "unidadMedida": "Unidad",
+      "costoUnitario": "Costo unitario",
+      "costoTotal": "Total",
+      "totalEstimado": "Total estimado",
+      "sobreConsumoAviso": "Supera el stock disponible.",
+      "sobreConsumoAvisoFooter": "Algún insumo supera el stock — revisá antes de cerrar."
+    },
+    "avisos": {
+      "vacio": "No hay órdenes de trabajo registradas.",
+      "creadaExitosa": "Orden de trabajo creada.",
+      "actualizadaExitosa": "Cambios guardados.",
+      "insumosGuardados": "Insumos guardados.",
+      "cerradaExitosa": "OT cerrada. Se consumieron los insumos del stock.",
+      "canceladaExitosa": "OT cancelada.",
+      "cerrada": "La OT ya no se puede modificar.",
+      "guardarInsumosAntes": "Guardá los insumos antes de cerrar la OT.",
+      "sinDescripcion": "Sin descripción.",
+      "sinPermisos": "No tenés permisos para esta acción.",
+      "errorGenerico": "No se pudo completar la acción. Reintentá.",
+      "campoRequerido": "Este campo es obligatorio.",
+      "cancelarTitulo": "¿Cancelar la orden de trabajo?",
+      "cancelarDescripcion": "La OT quedará cancelada sin consumir insumos del stock."
+    }
+  },
   "listados": {
     "index": {
       "titulo": "Listados",
