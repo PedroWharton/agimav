@@ -361,6 +361,15 @@
     "titulo": "Estadísticas",
     "descripcion": "Resumen operativo del mes y tendencias.",
     "adminSeccion": "Admin",
+    "exportar": "Exportar",
+    "exportarError": "No se pudo exportar. Probá de nuevo.",
+    "rangos": {
+      "7d": "Últimos 7 días",
+      "30d": "Últimos 30 días",
+      "90d": "Últimos 90 días",
+      "ytd": "Año a la fecha",
+      "todo": "Todo el historial"
+    },
     "kpi": {
       "maquinas": "Máquinas activas",
       "maquinasCaption": "de {total, plural, one {# total} other {# totales}}",
@@ -374,6 +383,34 @@
       "facturacionMesCaption": "{count, plural, =0 {Sin facturas en {mes}} one {# factura · {mes}} other {# facturas · {mes}}}",
       "otEnCurso": "OT en curso",
       "otEnCursoCaption": "órdenes de trabajo abiertas"
+    },
+    "lentes": {
+      "titulo": "Análisis detallados",
+      "abc": "Análisis ABC",
+      "abcDesc": "Clasificación por valor consumido."
+    },
+    "abc": {
+      "titulo": "Análisis ABC",
+      "descripcion": "Clasificación por valor consumido en el período.",
+      "volver": "Volver a Estadísticas",
+      "vacio": "No hay movimientos de salida en el período seleccionado.",
+      "distribucion": "Distribución por clase",
+      "totalValor": "Valor total del período",
+      "sinConsumo": "{count, plural, =0 {Todos los ítems tuvieron movimientos en el período.} one {# ítem sin consumo en el período.} other {# ítems sin consumo en el período.}}",
+      "clases": {
+        "a": "A · 80% del valor",
+        "b": "B · 15% del valor",
+        "c": "C · 5% del valor"
+      },
+      "columnas": {
+        "codigo": "Código",
+        "descripcion": "Descripción",
+        "cantidad": "Cantidad",
+        "valor": "Valor",
+        "porcentaje": "% del total",
+        "acumulado": "% acumulado",
+        "clase": "Clase"
+      }
     }
   },
   "compras": {

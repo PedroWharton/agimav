@@ -1,7 +1,10 @@
+import Link from "next/link";
 import { redirect } from "next/navigation";
 import { getTranslations } from "next-intl/server";
 import {
   AlertTriangle,
+  BarChart3,
+  ChevronRight,
   ClipboardList,
   DollarSign,
   ShoppingCart,
@@ -13,6 +16,7 @@ import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/db";
 import { isAdmin } from "@/lib/rbac";
 import { PageHeader } from "@/components/app/page-header";
+import { Card } from "@/components/ui/card";
 import { KpiCard } from "@/components/stats/kpi-card";
 import { SparkLine } from "@/components/stats/spark-line";
 
@@ -186,6 +190,30 @@ export default async function EstadisticasPage() {
             <span>{serieLabels[serieLabels.length - 1]}</span>
           </div>
         </KpiCard>
+      </div>
+
+      <div className="border-t border-border pt-6">
+        <h2 className="mb-3 text-sm font-medium text-muted-foreground">
+          {t("lentes.titulo")}
+        </h2>
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          <Link href="/estadisticas/abc">
+            <Card className="flex h-full items-center justify-between gap-3 p-4 transition-colors hover:bg-muted/40">
+              <div className="flex items-center gap-3">
+                <div className="rounded-md bg-muted p-2">
+                  <BarChart3 className="size-5 text-muted-foreground" />
+                </div>
+                <div className="flex flex-col">
+                  <span className="font-medium">{t("lentes.abc")}</span>
+                  <span className="text-xs text-muted-foreground">
+                    {t("lentes.abcDesc")}
+                  </span>
+                </div>
+              </div>
+              <ChevronRight className="size-4 text-muted-foreground" />
+            </Card>
+          </Link>
+        </div>
       </div>
 
       {admin ? (
