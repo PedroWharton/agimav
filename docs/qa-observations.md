@@ -380,23 +380,24 @@ Legacy-vs-web feature sweep against `Agimav23b.py`. Items below are gaps the aud
 
 - **Module:** Compras (Phase 5, Slices D + E)
 - **Severity:** medium (missing legacy path)
-- **Status:** open
-- **Context:** parity audit flagged that legacy has a "Completar remitos sin factura" action on recepciones (`Agimav23b.py` ~line 18927). Real business case: supplier returns, free replacements, damaged-goods remitos that never get invoiced. Today the web app only closes recepción lines on factura creation, so these recepciones stay "open" forever and keep showing up in `/compras/facturas/nueva`.
-- **Proposed fix:**
-  - Add a "Cerrar sin factura" action on the recepción detail page (admin-gated).
-  - Introduce a `cerradaSinFactura: boolean` column on `Recepcion` (or a new terminal estado). Closing marks the lines exempt from the unfacturated-lines query that feeds factura-nueva.
-  - **Does NOT** write `PrecioHistorico`, does NOT update `Inventario.valorUnitario`, does NOT trigger additional `InventarioMovimiento` beyond what the recepción already did at Stock-destino time.
-  - Historial entry so the reason is auditable (`tipo_cambio='cerrada_sin_factura'`, free-text motivo).
-- **Spec touch-up:** update `docs/ux-spec/4-compras.md` with the new terminal state so future work doesn't drop it again.
-- **Scope note:** Cervi confirmed (2026-04-19) this is real, not legacy cruft — for now, just wire it up.
+- **Status:** **fixed (committed 22c1e9f)**
+- **Context:** parity audit flagged that legacy has a "Completar remitos sin factura" action on recepciones (`Agimav23b.py` ~line 18927). Real business case: supplier returns, free replacements, damaged-goods remitos that never get invoiced.
+- **Fix:**
+  - Schema: `cerradaSinFactura Boolean @default(false)` + `motivoCierre`, `fechaCierre`, `cerradoPor` on `Recepcion` (migration `20260419200000_recepcion_cerrar_sin_factura`).
+  - Server action `cerrarRecepcionSinFactura` (admin-only, motivo required, transaction). Blocks on `already_closed` / `nothing_to_close`.
+  - `/compras/facturas/nueva` unfacturated-lines query now filters `recepcion: { cerradaSinFactura: false }`.
+  - Detail page renders an admin-only "Cerrar sin factura" button (dialog with motivo textarea) and a closed-state banner once terminal.
+  - No `PrecioHistorico` / `Inventario.valorUnitario` / `InventarioMovimiento` writes on close — the recepción already did those at Stock-destino time.
+  - Audit info lives on `Recepcion` itself (`cerradoPor` / `fechaCierre` / `motivoCierre`). No per-entity historial table for recepciones — deferred; keeping the footprint minimal.
+- **Spec touch-up:** `docs/ux-spec/4-compras.md` §7.3 + §7.7 updated so the terminal state is documented.
 
 ---
 
 ## Triage
 
 - **Blockers:** ~~QA-004, QA-008, QA-009, QA-013, QA-014, QA-015~~ — all fixed.
-- **High / medium open:** QA-006 (needs product decision), QA-037.
-- **Fixed (committed):** QA-001, QA-002, QA-005, QA-007, QA-010, QA-011, QA-015, QA-016, QA-017, QA-018, QA-019, QA-020, QA-021, QA-022, QA-023, QA-026, QA-030, QA-036; QA-035 first aria sweep (fff9ccf).
+- **High / medium open:** QA-006 (needs product decision).
+- **Fixed (committed):** QA-001, QA-002, QA-005, QA-007, QA-010, QA-011, QA-015, QA-016, QA-017, QA-018, QA-019, QA-020, QA-021, QA-022, QA-023, QA-026, QA-030, QA-036, QA-037; QA-035 first aria sweep (fff9ccf).
 - **Low / deferred:** QA-003 (already on backlog), QA-012, QA-025, QA-027, QA-028, QA-029, QA-031, QA-032, QA-033, QA-034.
 - **Partial:** QA-024 (factura scope done, broader sweep pending); QA-035 (first aria sweep committed — trash buttons, structure-tree trigger, DataTable aria-sort; Radix primitives + describedby pending).
 
