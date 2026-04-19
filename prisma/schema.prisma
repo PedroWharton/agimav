@@ -345,7 +345,7 @@ model Maquinaria {
   typeId           Int      @map("type_id")
   tipo             MaquinariaTipo @relation(fields: [typeId], references: [id])
   nroSerie         String?  @map("nro_serie")
-  estado           String   @default("Activo")
+  estado           String   @default("activo")
   horasAcumuladas  Float    @default(0) @map("horas_acumuladas")
 
   nodos            MaquinaNodo[]

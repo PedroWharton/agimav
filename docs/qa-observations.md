@@ -80,6 +80,22 @@ Findings from the manual QA pass against the Neon dev DB (parity-verified vs `fl
 
 ---
 
+## QA-009 · Plantilla "aplicar a máquina" dropdown empty + casing inconsistency in `Maquinaria.estado`
+
+- **Module:** Mantenimiento (Phase 6, Slice B) + cross-cutting
+- **Severity:** **blocker** (silent data hiding)
+- **Status:** **fixed (uncommitted)**
+- **Symptom:** opening `/mantenimiento/plantillas/[id]` shows an empty máquina dropdown for the Abonadora plantilla even though 1 Abonadora exists.
+- **Root cause:** `Maquinaria.estado` schema default was `"Activo"` (capital A) and all 236 legacy rows + 1 dev row stored it that way, while every other entity in the schema (`Usuario`, `Proveedor`, `MaquinariaTipo`) consistently uses lowercase `"activo"`. Three queries filtered Maquinaria by lowercase `"activo"` and silently returned zero rows. Two other reads in `/estadisticas` queried capitalized `"Activo"` and worked but reinforced the inconsistency.
+- **Fix (Option B — full normalization):**
+  - Schema default `Maquinaria.estado @default("activo")`.
+  - New migration `20260419171605_lowercase_maquinaria_estado` runs `UPDATE "maquinaria" SET estado = LOWER(estado)` then resets the column default. Picks up the unrelated `inventario.updated_at DROP DEFAULT` drift Prisma noticed; benign because `@updatedAt` is set at the app layer.
+  - `scripts/migrate-from-sqlite.ts` lowercases `estado` on import (idempotent re-runs stay normalized; Cervi's flota7 still stores `"Activo"`).
+  - `app/(app)/maquinaria/[tipoId]/maquinaria-client.tsx` form picker SelectItem values + create-default lowercased; display labels stay capitalized.
+  - `app/(app)/estadisticas/page.tsx` + `scripts/estadisticas-probe.ts` swapped to lowercase filter.
+  - The 3 originally-broken queries (`mantenimiento/nuevo`, `mantenimiento/horometros`, `mantenimiento/plantillas/[id]`) need no code change — they were already lowercase; data normalization makes them work.
+- **Verified:** parity-check (9 diffs all Postgres-has-more from QA-time additions, no losses), typecheck, build all green. 237 maquinaria rows confirmed lowercase post-migration.
+
 ## Triage
 
 - **Blockers:** ~~QA-004, QA-008~~ — fixed (uncommitted).

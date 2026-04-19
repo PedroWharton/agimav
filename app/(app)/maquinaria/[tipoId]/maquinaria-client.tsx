@@ -168,7 +168,7 @@ function defaultsFromRow(
   }
   return {
     nroSerie: row?.nroSerie ?? "",
-    estado: row?.estado ?? "Activo",
+    estado: row?.estado ?? "activo",
     horasAcumuladas: row ? String(row.horasAcumuladas) : "0",
     attrs,
   };
@@ -641,9 +641,9 @@ export function MaquinariaClient({
                 <SelectItem value="all">
                   {t("maquinaria.maquinas.estadoTodos")}
                 </SelectItem>
-                <SelectItem value="Activo">Activo</SelectItem>
-                <SelectItem value="Inactivo">Inactivo</SelectItem>
-                <SelectItem value="Baja">Baja</SelectItem>
+                <SelectItem value="activo">Activo</SelectItem>
+                <SelectItem value="inactivo">Inactivo</SelectItem>
+                <SelectItem value="baja">Baja</SelectItem>
               </SelectContent>
             </Select>
           }
@@ -686,9 +686,9 @@ export function MaquinariaClient({
                       </SelectTrigger>
                     </FormControl>
                     <SelectContent>
-                      <SelectItem value="Activo">Activo</SelectItem>
-                      <SelectItem value="Inactivo">Inactivo</SelectItem>
-                      <SelectItem value="Baja">Baja</SelectItem>
+                      <SelectItem value="activo">Activo</SelectItem>
+                      <SelectItem value="inactivo">Inactivo</SelectItem>
+                      <SelectItem value="baja">Baja</SelectItem>
                     </SelectContent>
                   </Select>
                   <FormMessage />

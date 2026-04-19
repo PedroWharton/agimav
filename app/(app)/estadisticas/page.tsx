@@ -65,7 +65,7 @@ async function loadKpis() {
     facturasMes,
     facturasSerie,
   ] = await Promise.all([
-    prisma.maquinaria.count({ where: { estado: "Activo" } }),
+    prisma.maquinaria.count({ where: { estado: "activo" } }),
     prisma.maquinaria.count(),
     prisma.$queryRaw<
       { count: bigint }[]
