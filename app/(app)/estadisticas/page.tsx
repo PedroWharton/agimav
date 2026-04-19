@@ -7,6 +7,7 @@ import {
   ChevronRight,
   ClipboardList,
   DollarSign,
+  LineChart,
   ShoppingCart,
   Tractor,
   Wrench,
@@ -207,6 +208,22 @@ export default async function EstadisticasPage() {
                   <span className="font-medium">{t("lentes.abc")}</span>
                   <span className="text-xs text-muted-foreground">
                     {t("lentes.abcDesc")}
+                  </span>
+                </div>
+              </div>
+              <ChevronRight className="size-4 text-muted-foreground" />
+            </Card>
+          </Link>
+          <Link href="/estadisticas/precios">
+            <Card className="flex h-full items-center justify-between gap-3 p-4 transition-colors hover:bg-muted/40">
+              <div className="flex items-center gap-3">
+                <div className="rounded-md bg-muted p-2">
+                  <LineChart className="size-5 text-muted-foreground" />
+                </div>
+                <div className="flex flex-col">
+                  <span className="font-medium">{t("lentes.precios")}</span>
+                  <span className="text-xs text-muted-foreground">
+                    {t("lentes.preciosDesc")}
                   </span>
                 </div>
               </div>

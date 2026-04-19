@@ -387,7 +387,23 @@
     "lentes": {
       "titulo": "Análisis detallados",
       "abc": "Análisis ABC",
-      "abcDesc": "Clasificación por valor consumido."
+      "abcDesc": "Clasificación por valor consumido.",
+      "precios": "Evolución de precios",
+      "preciosDesc": "Historial en ARS y USD por ítem."
+    },
+    "precios": {
+      "titulo": "Evolución de precios",
+      "descripcion": "Historial de precios en ARS y USD por ítem y proveedor.",
+      "volver": "Volver a Estadísticas",
+      "sinHistorial": "Todavía no hay precios históricos cargados.",
+      "elegirItem": "Elegí un ítem para ver su evolución.",
+      "unSoloPunto": "Este ítem solo tiene un punto de precio en el período. No hay evolución para graficar.",
+      "columnas": {
+        "fecha": "Fecha",
+        "ars": "Precio ARS",
+        "usd": "Precio USD",
+        "proveedor": "Proveedor"
+      }
     },
     "abc": {
       "titulo": "Análisis ABC",
