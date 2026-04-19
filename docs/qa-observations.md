@@ -145,10 +145,33 @@ Findings from the manual QA pass against the Neon dev DB (parity-verified vs `fl
 - **Fix:** `maquinaria-client.tsx:402` — track `seenAttrIds: Set<number>` in the column-build loop and skip any duplicate `attr_<id>`.
 - **Followup (UX, not blocker → backlog):** the drawer still lists principal atributos as separate togglable entries even when `es_principal` is on, which is what tempts users into the duplicate state. Either lock them while `es_principal` is visible, or hide them entirely from the drawer (they're already controlled together).
 
+## QA-015 · Nueva factura: lines stay empty after picking proveedor
+
+- **Module:** Compras (Phase 5, `/compras/facturas/nueva`)
+- **Severity:** **blocker** (admin can't invoice received goods)
+- **Status:** **fixed (uncommitted)**
+- **Repro:** open `/compras/facturas/nueva` (no proveedor in URL) → pick a proveedor that has unfacturated recepciones (e.g. ALDO DIAS) → table stays empty even though `?proveedorId=N` is in the URL and the server returns the rows.
+- **Root cause:** the form-client seeded `lineState` via `useState(() => lineas.map(...))`. Initial seeding only runs once, so when picking the proveedor caused a server re-render with new `lineas` props, `lineState` stayed empty (initial empty seed) and the rendered table iterated `lineState`, not `lineas`.
+- **Fix:** added a `useEffect` that resets `lineState` whenever `lineas` changes. Switching proveedor wipes line selections, which is the desired UX anyway.
+- **Why it didn't surface earlier:** would only manifest if you hit the page without `?proveedorId` first (the typical path from the listing button) and then chose a proveedor in the form. Hitting the URL with `?proveedorId=N` directly always worked.
+
+## QA-016 · Nueva factura: disabled "Guardar" button gives no signal what's missing
+
+- **Module:** Compras (Phase 5, `/compras/facturas/nueva`)
+- **Severity:** medium
+- **Status:** open
+- **Repro:** open the form, fill some but not all required fields → "Guardar" stays disabled with no hint why.
+- **Why this is wrong:** the disabled-button pattern is a black box. User reported missing `numeroFactura` after trial-and-error; same trap applies to "no line checked" or "precio empty on selected line".
+- **Proposed fix (pick one or combine):**
+  - Mark required fields with `*` and a small required-field caption.
+  - On hover/focus of the disabled button, show a tooltip listing what's missing (e.g. "Falta: número de factura, al menos una línea seleccionada").
+  - Or: leave the button enabled and on click show inline validation errors next to the offending fields (Zod-style toast or field-level red text).
+- **Scope:** check `nueva` flows in `/compras/recepciones/nueva` and `/compras/requisiciones/[id]/asignar` for the same gap — they probably share the disabled-button pattern.
+
 ## Triage
 
-- **Blockers:** ~~QA-004, QA-008, QA-009, QA-013, QA-014~~ — all fixed (uncommitted).
-- **High / medium open:** QA-001, QA-002, QA-006 (needs product decision), QA-007, QA-011.
+- **Blockers:** ~~QA-004, QA-008, QA-009, QA-013, QA-014, QA-015~~ — all fixed.
+- **High / medium open:** QA-001, QA-002, QA-006 (needs product decision), QA-007, QA-011, QA-016.
 - **Low / deferred:** QA-003 (already on backlog), QA-005, QA-010, QA-012.
 
 ## Next steps

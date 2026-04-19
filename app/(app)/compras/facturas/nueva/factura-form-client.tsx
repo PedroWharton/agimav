@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState, useTransition } from "react";
+import { useEffect, useMemo, useState, useTransition } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
@@ -89,6 +89,16 @@ export function FacturaFormClient({
       descuento: "0",
     })),
   );
+  useEffect(() => {
+    setLineState(
+      lineas.map((l) => ({
+        id: l.id,
+        selected: false,
+        precio: "",
+        descuento: "0",
+      })),
+    );
+  }, [lineas]);
   const [isSaving, startSave] = useTransition();
 
   const proveedorOptions = useMemo(
