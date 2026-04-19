@@ -1,10 +1,5 @@
-import { PlaceholderModule } from "@/components/app/placeholder-module";
+import { redirect } from "next/navigation";
 
 export default function ComprasPage() {
-  return (
-    <PlaceholderModule
-      titleKey="nav.compras"
-      descriptionKey="placeholder.descripcionModulo.compras"
-    />
-  );
+  redirect("/compras/requisiciones");
 }

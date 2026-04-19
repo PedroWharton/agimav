@@ -163,10 +163,11 @@ model Proveedor {
   nombreContacto  String? @map("nombre_contacto")
   direccionFiscal String? @map("direccion_fiscal")
 
-  ordenesCompra         OrdenCompra[]
-  facturas              Factura[]
-  preciosHistoricos     PrecioHistorico[]
-  mantenimientoInsumos  MantenimientoInsumo[]
+  ordenesCompra             OrdenCompra[]
+  facturas                  Factura[]
+  preciosHistoricos         PrecioHistorico[]
+  mantenimientoInsumos      MantenimientoInsumo[]
+  requisicionesDetalle      RequisicionDetalle[] @relation("RequisicionDetalleProveedorAsignado")
 
   createdAt   DateTime @default(now()) @map("created_at")
   updatedAt   DateTime @updatedAt @map("updated_at")
@@ -227,6 +228,7 @@ model InventarioMovimiento {
   moduloOrigen  String?  @map("modulo_origen")
   idOrigen      Int?     @map("id_origen")
   observaciones String?
+  destino       String?
 
   createdAt   DateTime @default(now()) @map("created_at")
   createdById Int?     @map("created_by")
@@ -455,6 +457,7 @@ model Requisicion {
   aprobadoPor         String?   @map("aprobado_por")
   fechaCancelacion    DateTime? @map("fecha_cancelacion")
   canceladoPor        String?   @map("cancelado_por")
+  motivoRechazo       String?   @map("motivo_rechazo")
   numeroOrdenInterna  String?   @map("numero_orden_interna")
 
   detalle RequisicionDetalle[]
@@ -466,20 +469,23 @@ model Requisicion {
 }
 
 model RequisicionDetalle {
-  id             Int     @id @default(autoincrement())
-  requisicionId  Int     @map("requisicion_id")
-  requisicion    Requisicion @relation(fields: [requisicionId], references: [id], onDelete: Cascade)
-  itemId         Int     @map("item_id")
-  item           Inventario @relation(fields: [itemId], references: [id])
-  cantidad       Float
-  prioridadItem  String  @default("Normal") @map("prioridad_item")
-  notasItem      String? @map("notas_item")
-  estado         String  @default("Pendiente")
+  id                   Int     @id @default(autoincrement())
+  requisicionId        Int     @map("requisicion_id")
+  requisicion          Requisicion @relation(fields: [requisicionId], references: [id], onDelete: Cascade)
+  itemId               Int     @map("item_id")
+  item                 Inventario @relation(fields: [itemId], references: [id])
+  cantidad             Float
+  prioridadItem        String  @default("Normal") @map("prioridad_item")
+  notasItem            String? @map("notas_item")
+  estado               String  @default("Pendiente")
+  proveedorAsignadoId  Int?    @map("proveedor_asignado_id")
+  proveedorAsignado    Proveedor? @relation("RequisicionDetalleProveedorAsignado", fields: [proveedorAsignadoId], references: [id], onDelete: SetNull)
 
   ocDetalle OrdenCompraDetalle[]
 
   @@index([requisicionId])
   @@index([itemId])
+  @@index([proveedorAsignadoId])
   @@map("requisiciones_detalle")
 }
 

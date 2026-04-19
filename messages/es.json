@@ -211,6 +211,328 @@
       "opciones": "Copias de seguridad, importación y exportación de datos."
     }
   },
+  "compras": {
+    "common": {
+      "singular": "requisición",
+      "plural": "requisiciones",
+      "estados": {
+        "Borrador": "Borrador",
+        "EnRevision": "En Revisión",
+        "Aprobada": "Aprobada",
+        "AsignadoAProveedor": "Asignado a Proveedor",
+        "OCEmitida": "OC Emitida",
+        "Rechazada": "Rechazada",
+        "Emitida": "Emitida",
+        "ParcialmenteRecibida": "Parcialmente Recibida",
+        "Completada": "Completada",
+        "Cancelada": "Cancelada",
+        "Pendiente": "Pendiente",
+        "VinculadaOC": "Vinculada OC"
+      },
+      "prioridades": {
+        "Normal": "Normal",
+        "Urgente": "Urgente"
+      }
+    },
+    "requisiciones": {
+      "titulo": "Requisiciones",
+      "descripcion": "Pedidos de compra desde creación hasta emisión de OC.",
+      "nueva": "Nueva requisición",
+      "editar": "Editar requisición",
+      "ver": "Ver requisición",
+      "volver": "Volver a requisiciones",
+      "buscarPlaceholder": "Buscar por solicitante, UP o notas…",
+      "resultadosCount": "{count, plural, one {# requisición} other {# requisiciones}}",
+      "campos": {
+        "numero": "Nº",
+        "fecha": "Fecha",
+        "fechaCreacion": "Fecha de creación",
+        "solicitante": "Solicitante",
+        "unidadProductiva": "Unidad productiva",
+        "localidad": "Localidad",
+        "prioridad": "Prioridad",
+        "estado": "Estado",
+        "fechaTentativa": "Fecha tentativa",
+        "fechaLimite": "Fecha límite",
+        "notas": "Notas",
+        "lineas": "Líneas",
+        "lineasCount": "{count, plural, one {# línea} other {# líneas}}"
+      },
+      "lineas": {
+        "titulo": "Líneas",
+        "agregar": "Agregar línea",
+        "item": "Ítem",
+        "cantidad": "Cantidad",
+        "unidad": "Unidad",
+        "prioridad": "Prioridad",
+        "notas": "Notas",
+        "eliminar": "Eliminar línea",
+        "itemPlaceholder": "Buscar por código o descripción…",
+        "sinLineas": "Sin líneas todavía. Agregá al menos una para enviar a revisión.",
+        "duplicada": "Este ítem ya está en otra línea."
+      },
+      "filtros": {
+        "estado": "Estado",
+        "unidadProductiva": "Unidad productiva",
+        "incluirRechazadas": "Incluir rechazadas",
+        "todos": "Todos"
+      },
+      "acciones": {
+        "enviarRevision": "Enviar a revisión",
+        "crear": "Crear requisición",
+        "guardar": "Guardar",
+        "asignarProveedores": "Asignar proveedores",
+        "revisarAsignacion": "Revisar asignación"
+      },
+      "auditoria": {
+        "titulo": "Auditoría",
+        "creadaPor": "Creada por {nombre} · {fecha}",
+        "aprobadaPor": "Aprobada por {nombre} · {fecha}",
+        "rechazadaPor": "Rechazada por {nombre} · {fecha}",
+        "canceladaPor": "Cancelada por {nombre} · {fecha}",
+        "aprobacionPendiente": "Aprobación pendiente.",
+        "sinDatos": "Sin auditoría.",
+        "ocsVinculadas": "OCs vinculadas"
+      },
+      "avisos": {
+        "vacio": "Todavía no hay requisiciones.",
+        "vacioFiltrado": "No hay requisiciones que coincidan con los filtros.",
+        "eliminarPregunta": "¿Eliminar la requisición #{id}?",
+        "eliminarAviso": "Solo se pueden eliminar requisiciones en borrador.",
+        "enviarConfirmacion": "¿Enviar la requisición #{id} a revisión?",
+        "enviarAviso": "Después de enviar no vas a poder editar las líneas.",
+        "sinLineas": "Agregá al menos una línea antes de enviar a revisión.",
+        "soloBorrador": "Esta requisición ya no está en borrador.",
+        "creadaExitoso": "Requisición #{id} creada.",
+        "actualizadaExitoso": "Requisición #{id} actualizada.",
+        "enviadaExitoso": "Requisición #{id} enviada a revisión.",
+        "eliminadaExitoso": "Requisición #{id} eliminada."
+      },
+      "aprobaciones": {
+        "acciones": {
+          "aprobar": "Aprobar",
+          "rechazar": "Rechazar"
+        },
+        "aprobarTitulo": "Aprobar requisición #{id}",
+        "aprobarDescripcion": "Al aprobar, la requisición pasa a estado Aprobada y queda disponible para asignar proveedores.",
+        "rechazarTitulo": "Rechazar requisición #{id}",
+        "rechazarDescripcion": "El rechazo es definitivo. La requisición queda solo lectura.",
+        "comentarioOpcional": "Comentario (opcional)",
+        "motivoRequeridoLabel": "Motivo del rechazo",
+        "motivoRequerido": "Indicá el motivo del rechazo.",
+        "motivoRechazo": "Motivo del rechazo",
+        "avisos": {
+          "aprobadaExitoso": "Requisición #{id} aprobada.",
+          "rechazadaExitoso": "Requisición #{id} rechazada.",
+          "yaNoEsEnRevision": "La requisición ya no está en revisión."
+        }
+      },
+      "asignar": {
+        "titulo": "Asignar proveedores · Requisición #{id}",
+        "descripcion": "Asigná un proveedor a cada línea para poder generar las órdenes de compra.",
+        "asignados": "{asignadas} de {total} líneas asignadas",
+        "seleccionar": "Seleccionar proveedor",
+        "bulk": {
+          "label": "Asignar todas a",
+          "placeholder": "Elegí un proveedor"
+        },
+        "columnas": {
+          "codigo": "Código",
+          "descripcion": "Descripción",
+          "cantidad": "Cantidad",
+          "unidad": "Unidad",
+          "proveedor": "Proveedor"
+        },
+        "acciones": {
+          "guardarBorrador": "Guardar asignación",
+          "generar": "Generar OCs"
+        },
+        "avisos": {
+          "guardadoExitoso": "Asignación guardada.",
+          "estadoIncorrecto": "La requisición ya no admite cambios de asignación.",
+          "generadoExitoso": "{count, plural, one {# OC generada} other {# OCs generadas}}.",
+          "asignarTodas": "Asigná un proveedor a todas las líneas antes de generar las OCs.",
+          "generarTitulo": "¿Generar {count, plural, one {# OC} other {# OCs}}?",
+          "generarLinea": "{nombre}: {count, plural, one {# línea} other {# líneas}}",
+          "sinGrupos": "Todavía no hay líneas asignadas."
+        }
+      }
+    },
+    "subnav": {
+      "requisiciones": "Requisiciones",
+      "oc": "Órdenes de compra",
+      "recepciones": "Recepciones",
+      "facturas": "Facturas"
+    },
+    "oc": {
+      "titulo": "Órdenes de compra",
+      "descripcion": "Órdenes emitidas a proveedores.",
+      "volver": "Volver a órdenes",
+      "buscarPlaceholder": "Buscar por Nº, proveedor o comprador…",
+      "resultadosCount": "{count, plural, one {# orden} other {# órdenes}}",
+      "subtotalEstimado": "Subtotal estimado",
+      "requisicionOrigen": "Requisición origen",
+      "canceladaPor": "Cancelada por {nombre} · {fecha}",
+      "campos": {
+        "numero": "Nº",
+        "fechaEmision": "Fecha",
+        "proveedor": "Proveedor",
+        "comprador": "Comprador",
+        "lineas": "Líneas",
+        "estado": "Estado",
+        "observaciones": "Observaciones"
+      },
+      "columnas": {
+        "codigo": "Código",
+        "descripcion": "Descripción",
+        "cantidad": "Cantidad",
+        "precio": "P. unit.",
+        "total": "Subtotal",
+        "recibido": "Recibido"
+      },
+      "filtros": {
+        "estado": "Estado",
+        "proveedor": "Proveedor",
+        "todos": "Todos"
+      },
+      "acciones": {
+        "descargarPdf": "Descargar PDF",
+        "cancelar": "Cancelar OC",
+        "recibir": "Recibir"
+      },
+      "avisos": {
+        "vacio": "Todavía no hay órdenes de compra.",
+        "vacioFiltrado": "No hay órdenes que coincidan con los filtros.",
+        "canceladaExitoso": "Orden cancelada.",
+        "tieneRecepciones": "La OC tiene recepciones; no se puede cancelar.",
+        "yaNoEsEmitida": "La OC ya no está en estado Emitida.",
+        "cancelarTitulo": "¿Cancelar esta OC?",
+        "cancelarDescripcion": "Las líneas vuelven a estado Pendiente en su requisición."
+      }
+    },
+    "recepciones": {
+      "titulo": "Recepciones",
+      "descripcion": "Remitos recibidos contra órdenes de compra.",
+      "volver": "Volver a recepciones",
+      "nuevaDesdeOc": "Nueva recepción desde OC",
+      "nuevaTitulo": "Nueva recepción · {numero} · {proveedor}",
+      "nuevaDescripcion": "Cargá las cantidades efectivamente recibidas.",
+      "detalleTitulo": "Remito {remito}",
+      "buscarPlaceholder": "Buscar por remito, proveedor u OC…",
+      "resultadosCount": "{count, plural, one {# recepción} other {# recepciones}}",
+      "facturadoSi": "Facturado",
+      "facturadoNo": "Sin facturar",
+      "campos": {
+        "remito": "Remito",
+        "fecha": "Fecha",
+        "oc": "OC",
+        "proveedor": "Proveedor",
+        "recibidoPor": "Recibido por",
+        "lineas": "Líneas",
+        "observaciones": "Observaciones"
+      },
+      "columnas": {
+        "codigo": "Código",
+        "descripcion": "Descripción",
+        "pendiente": "Pend.",
+        "recibirAhora": "Recibir",
+        "destino": "Destino",
+        "observaciones": "Obs.",
+        "cantidad": "Cantidad",
+        "facturado": "Facturado"
+      },
+      "filtros": {
+        "proveedor": "Proveedor",
+        "todos": "Todos"
+      },
+      "destinos": {
+        "Stock": "Stock",
+        "Directa": "Directa"
+      },
+      "acciones": {
+        "recibirTodo": "Recibir todo",
+        "guardar": "Guardar recepción"
+      },
+      "resumen": {
+        "sinLineas": "Sin cantidades cargadas.",
+        "completa": "OC completa",
+        "parcial": "OC parcialmente recibida",
+        "detalle": "Saldo tras recepción: {saldo}. {stock} a stock · {directa} directas."
+      },
+      "avisos": {
+        "vacio": "Todavía no hay recepciones.",
+        "vacioFiltrado": "No hay recepciones que coincidan con los filtros.",
+        "creadaExitoso": "Recepción #{id} registrada.",
+        "sobreRecepcion": "Alguna cantidad supera el pendiente. Revisá las líneas.",
+        "ocNoRecibible": "La OC ya no admite recepciones.",
+        "nadaParaRecibir": "Cargá al menos una cantidad antes de guardar."
+      }
+    },
+    "facturas": {
+      "titulo": "Facturas",
+      "descripcion": "Facturas de proveedores asociadas a recepciones.",
+      "volver": "Volver a facturas",
+      "nueva": "Nueva factura",
+      "nuevaTitulo": "Nueva factura",
+      "nuevaDescripcion": "Seleccioná el proveedor y asociá las líneas ya recibidas.",
+      "buscarPlaceholder": "Buscar por Nº o proveedor…",
+      "resultadosCount": "{count, plural, one {# factura} other {# facturas}}",
+      "seleccionarProveedor": "Seleccionar proveedor",
+      "seleccionarTodas": "Seleccionar todas",
+      "campos": {
+        "proveedor": "Proveedor",
+        "numero": "Nº factura",
+        "fecha": "Fecha",
+        "usuario": "Usuario",
+        "lineas": "Líneas",
+        "total": "Total"
+      },
+      "columnas": {
+        "remito": "Remito",
+        "oc": "OC",
+        "descripcion": "Descripción",
+        "cantidad": "Cant.",
+        "precioUnit": "P. unit.",
+        "descuento": "Desc. %",
+        "discrepancia": "Dif.",
+        "total": "Total"
+      },
+      "filtros": {
+        "proveedor": "Proveedor",
+        "todos": "Todos"
+      },
+      "acciones": {
+        "guardar": "Guardar factura"
+      },
+      "totales": {
+        "subtotal": "Subtotal",
+        "descuentoComercial": "Desc. comercial",
+        "descuentoFinanciero": "Desc. financiero",
+        "recargo": "Recargo",
+        "netoGravado": "Neto gravado",
+        "ivaPorcentaje": "IVA %",
+        "ivaMonto": "IVA",
+        "total": "Total"
+      },
+      "discrepancia": {
+        "match": "Coincide",
+        "soft": "Diferencia leve",
+        "hard": "Diferencia alta",
+        "noReference": "Sin ref. OC",
+        "none": ""
+      },
+      "avisos": {
+        "vacio": "Todavía no hay facturas.",
+        "vacioFiltrado": "No hay facturas que coincidan con los filtros.",
+        "seleccionarProveedor": "Seleccioná un proveedor para ver sus líneas sin facturar.",
+        "sinPendientes": "Este proveedor no tiene recepciones pendientes de facturar.",
+        "creadaExitoso": "Factura {numero} registrada.",
+        "duplicadoNumero": "Ya existe una factura con ese número.",
+        "yaFacturada": "Alguna línea fue facturada por otro usuario. Refrescá la página.",
+        "proveedorInvalido": "Las líneas seleccionadas no pertenecen al proveedor elegido."
+      }
+    }
+  },
   "listados": {
     "index": {
       "titulo": "Listados",

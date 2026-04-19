@@ -25,6 +25,20 @@ export function requirePañolero(session: Session | null | undefined): asserts s
   if (!isPañolero(session)) throw new Error("forbidden");
 }
 
+export function requireAuthenticated(
+  session: Session | null | undefined,
+): asserts session is Session {
+  if (!session?.user) throw new Error("forbidden");
+}
+
+export function userNameFromSession(
+  session: Session | null | undefined,
+): string | null {
+  const u = session?.user;
+  if (!u) return null;
+  return (u as { name?: string | null }).name ?? u.email ?? null;
+}
+
 export function userIdFromSession(
   session: Session | null | undefined,
 ): number | null {
