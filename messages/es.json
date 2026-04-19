@@ -717,6 +717,37 @@
         "aplicadaExitosa": "Mantenimiento generado.",
         "sinMaquinasDelTipo": "No hay máquinas activas de este tipo."
       }
+    },
+    "horometros": {
+      "titulo": "Horómetros",
+      "descripcion": "Registro de horas acumuladas por máquina.",
+      "nuevo": "Registrar horas",
+      "nuevoTitulo": "Registrar horas",
+      "nuevoDescripcion": "Actualizá las horas acumuladas de una máquina.",
+      "registrar": "Registrar",
+      "buscarPlaceholder": "Buscar por máquina, usuario u observaciones…",
+      "resultadosCount": "{count, plural, one {# registro} other {# registros}}",
+      "vacio": "No hay registros de horómetro.",
+      "horasActuales": "Horas actuales: {valor}",
+      "columnas": {
+        "fecha": "Fecha",
+        "maquina": "Máquina",
+        "horasAnterior": "Anterior",
+        "horasNuevo": "Nuevo",
+        "diferencia": "Diferencia",
+        "usuario": "Usuario",
+        "observaciones": "Observaciones"
+      },
+      "campos": {
+        "horasNuevo": "Horas nuevas",
+        "fechaRegistro": "Fecha de registro",
+        "observaciones": "Observaciones",
+        "observacionesPlaceholder": "Comentarios opcionales…"
+      },
+      "avisos": {
+        "creadoExitoso": "Registro guardado.",
+        "campoRequerido": "Este campo es obligatorio."
+      }
     }
   },
   "listados": {
