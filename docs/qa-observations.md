@@ -396,10 +396,9 @@ Legacy-vs-web feature sweep against `Agimav23b.py`. Items below are gaps the aud
 
 - **Blockers:** ~~QA-004, QA-008, QA-009, QA-013, QA-014, QA-015~~ — all fixed.
 - **High / medium open:** QA-002, QA-006 (needs product decision), QA-037.
-- **Fixed (committed):** QA-001, QA-005, QA-007, QA-010, QA-011, QA-015, QA-016, QA-017, QA-018, QA-019, QA-020, QA-021, QA-022, QA-023, QA-026, QA-030, QA-036.
+- **Fixed (committed):** QA-001, QA-005, QA-007, QA-010, QA-011, QA-015, QA-016, QA-017, QA-018, QA-019, QA-020, QA-021, QA-022, QA-023, QA-026, QA-030, QA-036; QA-035 first aria sweep (fff9ccf).
 - **Low / deferred:** QA-003 (already on backlog), QA-012, QA-025, QA-027, QA-028, QA-029, QA-031, QA-032, QA-033, QA-034.
-- **Partial:** QA-024 (factura scope done, broader sweep pending); QA-035 (first aria sweep done — trash buttons, structure-tree trigger, DataTable aria-sort; Radix primitives + describedby pending).
-- **Fixed (uncommitted):** QA-035 first sweep (aria-labels on icon-only trash buttons + structure-tree MoreHorizontal trigger, aria-sort on DataTable sortable headers).
+- **Partial:** QA-024 (factura scope done, broader sweep pending); QA-035 (first aria sweep committed — trash buttons, structure-tree trigger, DataTable aria-sort; Radix primitives + describedby pending).
 
 ## Next steps
 
