@@ -762,6 +762,13 @@
       "acciones": {
         "guardar": "Guardar factura"
       },
+      "faltan": {
+        "proveedor": "proveedor",
+        "numero": "Nº de factura",
+        "lineas": "al menos una línea seleccionada",
+        "precio": "precio en cada línea seleccionada",
+        "titulo": "Falta"
+      },
       "totales": {
         "subtotal": "Subtotal",
         "descuentoComercial": "Desc. comercial",

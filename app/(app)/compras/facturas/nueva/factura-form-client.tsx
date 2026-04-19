@@ -158,14 +158,19 @@ export function FacturaFormClient({
   const ivaMonto = netoGravado * (ivaPctN / 100);
   const total = netoGravado + ivaMonto;
 
-  const canSave =
-    !isSaving &&
-    proveedorId !== "" &&
-    numeroFactura.trim().length > 0 &&
+  const missing: string[] = [];
+  if (proveedorId === "") missing.push(tFac("faltan.proveedor"));
+  if (numeroFactura.trim().length === 0) missing.push(tFac("faltan.numero"));
+  if (selectedLines.length === 0) missing.push(tFac("faltan.lineas"));
+  if (
     selectedLines.length > 0 &&
-    lineComputed.every(
+    !lineComputed.every(
       (l) => !l.selected || (l.priceValid && l.descValid && l.netPrice >= 0),
-    );
+    )
+  ) {
+    missing.push(tFac("faltan.precio"));
+  }
+  const canSave = !isSaving && missing.length === 0;
 
   function handleSave() {
     startSave(async () => {
@@ -226,17 +231,24 @@ export function FacturaFormClient({
           title={tFac("nuevaTitulo")}
           description={tFac("nuevaDescripcion")}
           actions={
-            <Button type="button" onClick={handleSave} disabled={!canSave}>
-              <Save className="size-4" />
-              {tFac("acciones.guardar")}
-            </Button>
+            <div className="flex flex-col items-end gap-1">
+              <Button type="button" onClick={handleSave} disabled={!canSave}>
+                <Save className="size-4" />
+                {tFac("acciones.guardar")}
+              </Button>
+              {!isSaving && missing.length > 0 ? (
+                <p className="text-xs text-muted-foreground">
+                  {tFac("faltan.titulo")}: {missing.join(", ")}
+                </p>
+              ) : null}
+            </div>
           }
         />
       </div>
 
       <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
         <div className="md:col-span-1">
-          <Label>{tFac("campos.proveedor")}</Label>
+          <Label>{tFac("campos.proveedor")} *</Label>
           <Combobox
             value={proveedorId}
             onChange={(v) => {
@@ -254,7 +266,7 @@ export function FacturaFormClient({
           />
         </div>
         <div className="md:col-span-1">
-          <Label htmlFor="numeroFactura">{tFac("campos.numero")}</Label>
+          <Label htmlFor="numeroFactura">{tFac("campos.numero")} *</Label>
           <Input
             id="numeroFactura"
             value={numeroFactura}
