@@ -10,21 +10,8 @@ import {
   userNameFromSession,
 } from "@/lib/rbac";
 
-export const TIPO_ACTUALIZACION = ["manual", "importacion"] as const;
-export type TipoActualizacion = (typeof TIPO_ACTUALIZACION)[number];
-
-export type HorometroActionResult =
-  | { ok: true; id: number }
-  | {
-      ok: false;
-      error:
-        | "forbidden"
-        | "invalid"
-        | "not_found"
-        | "horas_retroactivas"
-        | "unknown";
-      fieldErrors?: Record<string, string>;
-    };
+import { TIPO_ACTUALIZACION } from "./types";
+import type { HorometroActionResult } from "./types";
 
 function fieldErrorsFromZod(err: z.ZodError): Record<string, string> {
   const out: Record<string, string> = {};

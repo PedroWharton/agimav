@@ -7,7 +7,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 
-import { loginAction, type LoginState } from "./actions";
+import { loginAction } from "./actions";
+import type { LoginState } from "./types";
 
 const initialState: LoginState = { error: null };
 

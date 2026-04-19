@@ -8,7 +8,8 @@ import { useTranslations } from "next-intl";
 import { Button } from "@/components/ui/button";
 import { downloadBase64 } from "@/lib/download";
 
-import { exportarAbc, type AbcRange } from "./actions";
+import { exportarAbc } from "./actions";
+import type { AbcRange } from "./types";
 
 export function AbcExportButton({ range }: { range: AbcRange }) {
   const t = useTranslations("estadisticas");

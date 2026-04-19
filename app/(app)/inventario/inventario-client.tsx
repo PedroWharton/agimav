@@ -66,8 +66,8 @@ import {
   deleteItem,
   getRecentMovimientos,
   exportarInventario,
-  type RecentMovimiento,
 } from "./actions";
+import type { RecentMovimiento } from "./types";
 
 export type InventarioRow = {
   id: number;

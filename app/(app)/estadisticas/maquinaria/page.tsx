@@ -9,13 +9,13 @@ import { Badge } from "@/components/ui/badge";
 import { PageHeader } from "@/components/app/page-header";
 import { RangeSelect } from "@/components/stats/range-select";
 
+import { computeMaqMetrics } from "./actions";
 import {
   MAQ_RANGES,
   MIN_FILTROS,
-  computeMaqMetrics,
   type MaqRange,
   type MinFiltro,
-} from "./actions";
+} from "./types";
 
 export const dynamic = "force-dynamic";
 

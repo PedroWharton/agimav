@@ -4,7 +4,7 @@ import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/db";
 
 import { OtDetailClient } from "./ot-detail-client";
-import { OT_PRIORIDADES, type OtPrioridad } from "../actions";
+import { OT_PRIORIDADES, type OtPrioridad } from "../types";
 
 export default async function OtDetailPage({
   params,

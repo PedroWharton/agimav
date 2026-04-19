@@ -12,6 +12,8 @@ import {
 } from "@/lib/rbac";
 import { formatOCNumber } from "@/lib/compras/oc-number";
 
+import type { AsignarActionResult } from "./types";
+
 const asignacionSchema = z.object({
   lineas: z
     .array(
@@ -22,20 +24,6 @@ const asignacionSchema = z.object({
     )
     .min(1),
 });
-
-export type AsignarActionResult =
-  | { ok: true; id: number; ocIds?: number[] }
-  | {
-      ok: false;
-      error:
-        | "forbidden"
-        | "invalid"
-        | "not_found"
-        | "wrong_estado"
-        | "incomplete"
-        | "unknown";
-      message?: string;
-    };
 
 function canAsignar(estado: string): boolean {
   return estado === "Aprobada" || estado === "Asignado a Proveedor";

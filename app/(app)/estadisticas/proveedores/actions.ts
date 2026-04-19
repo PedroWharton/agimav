@@ -5,8 +5,12 @@ import * as XLSX from "xlsx";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/db";
 
-export const PROV_RANGES = ["30d", "90d", "ytd", "todo"] as const;
-export type ProvRange = (typeof PROV_RANGES)[number];
+import type {
+  ExportResult,
+  ProvRange,
+  ProvResult,
+  ProvRow,
+} from "./types";
 
 function rangeToGte(range: ProvRange): Date | null {
   const now = new Date();
@@ -21,22 +25,6 @@ function rangeToGte(range: ProvRange): Date | null {
       return null;
   }
 }
-
-export type ProvRow = {
-  id: number;
-  nombre: string;
-  facturas: number;
-  total: number;
-  porcentaje: number;
-  ultima: Date | null;
-};
-
-export type ProvResult = {
-  rows: ProvRow[];
-  totalGeneral: number;
-  proveedoresConFacturas: number;
-  proveedoresTotales: number;
-};
 
 export async function computeProveedoresGasto(
   range: ProvRange,
@@ -88,8 +76,6 @@ export async function computeProveedoresGasto(
     proveedoresTotales,
   };
 }
-
-export type ExportResult = { base64: string; filename: string };
 
 export async function exportarProveedores(
   range: ProvRange,

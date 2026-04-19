@@ -19,18 +19,7 @@ import {
   isTerminal,
 } from "@/lib/mantenimiento/estado";
 
-export type MantActionResult =
-  | { ok: true; id: number }
-  | {
-      ok: false;
-      error:
-        | "forbidden"
-        | "invalid"
-        | "not_found"
-        | "wrong_estado"
-        | "unknown";
-      fieldErrors?: Record<string, string>;
-    };
+import type { MantActionResult } from "./types";
 
 function fieldErrorsFromZod(err: z.ZodError): Record<string, string> {
   const out: Record<string, string> = {};

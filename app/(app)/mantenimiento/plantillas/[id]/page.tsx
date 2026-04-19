@@ -5,10 +5,7 @@ import { isAdmin } from "@/lib/rbac";
 import { prisma } from "@/lib/db";
 
 import { PlantillaDetailClient } from "./plantilla-detail-client";
-import {
-  FRECUENCIA_UNIDADES,
-  type FrecuenciaUnidad,
-} from "../actions";
+import { FRECUENCIA_UNIDADES, type FrecuenciaUnidad } from "../types";
 
 export default async function PlantillaDetailPage({
   params,

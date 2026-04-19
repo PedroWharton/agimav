@@ -7,6 +7,8 @@ import { prisma } from "@/lib/db";
 import { auth } from "@/lib/auth";
 import { requireAdmin } from "@/lib/rbac";
 
+import type { SaveColumnsResult } from "./types";
+
 const BUILTIN_KEYS = [
   "es_principal",
   "nro_serie",
@@ -14,7 +16,6 @@ const BUILTIN_KEYS = [
   "horas_acumuladas",
   "created_at",
 ] as const;
-export type BuiltinKey = (typeof BUILTIN_KEYS)[number];
 
 const columnSchema = z.discriminatedUnion("kind", [
   z.object({
@@ -33,12 +34,6 @@ const payloadSchema = z.object({
   tipoId: z.coerce.number().int().positive(),
   columns: z.array(columnSchema).max(200),
 });
-
-export type ColumnPayload = z.infer<typeof columnSchema>;
-
-export type SaveColumnsResult =
-  | { ok: true }
-  | { ok: false; error: "forbidden" | "invalid" | "unknown" };
 
 export async function saveColumnConfig(
   raw: unknown,

@@ -11,6 +11,8 @@ import {
   userNameFromSession,
 } from "@/lib/rbac";
 
+import type { RecepcionActionResult } from "./types";
+
 const recepcionLineaSchema = z.object({
   ocDetalleId: z.coerce.number().int().positive(),
   cantidadRecibidaAhora: z.coerce.number().nonnegative(),
@@ -26,21 +28,6 @@ const recepcionSchema = z.object({
   observaciones: z.string().trim().max(500).optional().nullable(),
   lineas: z.array(recepcionLineaSchema).min(1),
 });
-
-export type RecepcionActionResult =
-  | { ok: true; id: number }
-  | {
-      ok: false;
-      error:
-        | "forbidden"
-        | "invalid"
-        | "not_found"
-        | "wrong_estado"
-        | "over_reception"
-        | "nothing_to_receive"
-        | "unknown";
-      message?: string;
-    };
 
 export async function createRecepcion(
   raw: unknown,

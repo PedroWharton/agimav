@@ -10,17 +10,7 @@ import {
   userNameFromSession,
 } from "@/lib/rbac";
 
-export type OcActionResult =
-  | { ok: true; id: number }
-  | {
-      ok: false;
-      error:
-        | "forbidden"
-        | "not_found"
-        | "wrong_estado"
-        | "has_recepciones"
-        | "unknown";
-    };
+import type { OcActionResult } from "./types";
 
 export async function cancelarOC(id: number): Promise<OcActionResult> {
   const session = await auth();

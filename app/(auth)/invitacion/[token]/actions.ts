@@ -5,6 +5,8 @@ import { z } from "zod";
 
 import { prisma } from "@/lib/db";
 
+import type { SetPasswordResult } from "./types";
+
 const schema = z
   .object({
     token: z.string().min(1),
@@ -15,14 +17,6 @@ const schema = z
     path: ["passwordConfirmacion"],
     message: "errorPasswordNoCoincide",
   });
-
-export type SetPasswordResult =
-  | { ok: true }
-  | {
-      ok: false;
-      error: "invalid" | "expired" | "validation" | "unknown";
-      fieldErrors?: Record<string, string>;
-    };
 
 export async function setPasswordFromInvite(
   raw: unknown,

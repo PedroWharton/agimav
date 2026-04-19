@@ -43,8 +43,8 @@ import {
   updateProveedor,
   deactivateProveedor,
   reactivateProveedor,
-  CONDICIONES_IVA,
 } from "./actions";
+import { CONDICIONES_IVA } from "./types";
 
 export type ProveedorRow = {
   id: number;

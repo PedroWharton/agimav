@@ -2,11 +2,12 @@
 
 import { prisma } from "@/lib/db";
 
-export const MAQ_RANGES = ["90d", "ytd", "todo"] as const;
-export type MaqRange = (typeof MAQ_RANGES)[number];
-
-export const MIN_FILTROS = ["min2", "min3", "todas"] as const;
-export type MinFiltro = (typeof MIN_FILTROS)[number];
+import type {
+  MaqRange,
+  MaqResult,
+  MaqRow,
+  MinFiltro,
+} from "./types";
 
 function rangeToGte(range: MaqRange): Date | null {
   const now = new Date();
@@ -19,24 +20,6 @@ function rangeToGte(range: MaqRange): Date | null {
       return null;
   }
 }
-
-export type MaqRow = {
-  id: number;
-  nombre: string;
-  tipoId: number | null;
-  tipoNombre: string | null;
-  correctivos: number;
-  preventivos: number;
-  mtbfDias: number | null;
-  horasOperadas: number | null;
-  costoTotal: number;
-};
-
-export type MaqResult = {
-  rows: MaqRow[];
-  sinHistorial: number;
-  totalMaquinas: number;
-};
 
 export async function computeMaqMetrics(
   range: MaqRange,

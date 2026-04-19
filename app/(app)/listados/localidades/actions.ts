@@ -7,13 +7,11 @@ import { prisma } from "@/lib/db";
 import { auth } from "@/lib/auth";
 import { requireAdmin, userIdFromSession } from "@/lib/rbac";
 
+import type { ActionResult } from "./types";
+
 const schema = z.object({
   nombre: z.string().trim().min(1).max(100),
 });
-
-export type ActionResult =
-  | { ok: true }
-  | { ok: false; error: string; fieldErrors?: Record<string, string>; usageCount?: number };
 
 export async function createLocalidad(raw: unknown): Promise<ActionResult> {
   const session = await auth();

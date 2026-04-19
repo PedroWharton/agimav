@@ -7,21 +7,14 @@ import { prisma } from "@/lib/db";
 import { auth } from "@/lib/auth";
 import { requireAdmin, userIdFromSession } from "@/lib/rbac";
 
+import type { ActionResult } from "./types";
+
 const schema = z.object({
   nombre: z.string().trim().min(1, "Obligatorio").max(120),
   estado: z.enum(["activo", "inactivo"]),
   unidadMedicion: z.string().trim().max(40).nullable().optional(),
   abrevUnidad: z.string().trim().max(10).nullable().optional(),
 });
-
-export type ActionResult =
-  | { ok: true }
-  | {
-      ok: false;
-      error: string;
-      fieldErrors?: Record<string, string>;
-      usageCount?: number;
-    };
 
 export async function createMaquinariaTipo(raw: unknown): Promise<ActionResult> {
   const session = await auth();

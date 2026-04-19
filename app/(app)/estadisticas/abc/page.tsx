@@ -10,7 +10,8 @@ import { AbcBadge } from "@/components/stats/abc-badge";
 import { AbcPie } from "@/components/stats/abc-pie";
 import { RangeSelect } from "@/components/stats/range-select";
 
-import { ABC_RANGES, computeAbc, type AbcRange } from "./actions";
+import { computeAbc } from "./actions";
+import { ABC_RANGES, type AbcRange } from "./types";
 import { AbcExportButton } from "./abc-export-button";
 
 export const dynamic = "force-dynamic";

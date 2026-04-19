@@ -11,6 +11,16 @@ import { requireAdmin, requirePañolero, userIdFromSession } from "@/lib/rbac";
 import { round4 } from "@/lib/format";
 import { ITEM_HEADERS } from "@/lib/xlsx-headers";
 
+import type {
+  ExportResult,
+  ImportPreview,
+  ImportPreviewRow,
+  ImportRow,
+  InventarioActionResult,
+  MovimientoExportFilter,
+  RecentMovimiento,
+} from "./types";
+
 const optionalTrimmed = (max: number) =>
   z
     .string()
@@ -29,15 +39,6 @@ const itemSchema = z.object({
   stockMinimo: z.coerce.number().nonnegative().default(0),
   valorUnitario: z.coerce.number().nonnegative().default(0),
 });
-
-export type InventarioActionResult =
-  | { ok: true; id?: number }
-  | {
-      ok: false;
-      error: string;
-      fieldErrors?: Record<string, string>;
-      count?: number;
-    };
 
 function fieldErrorsFromZod(err: z.ZodError): Record<string, string> {
   const out: Record<string, string> = {};
@@ -138,19 +139,6 @@ export async function updateItem(
     return { ok: false, error: "unknown" };
   }
 }
-
-export type RecentMovimiento = {
-  id: number;
-  fecha: Date;
-  tipo: string;
-  cantidad: number;
-  valorUnitario: number;
-  unidadMedida: string | null;
-  moduloOrigen: string | null;
-  idOrigen: number | null;
-  motivo: string | null;
-  usuario: string;
-};
 
 export async function getRecentMovimientos(
   itemId: number,
@@ -352,8 +340,6 @@ export async function deleteItem(id: number): Promise<InventarioActionResult> {
   return { ok: true };
 }
 
-export type ExportResult = { base64: string; filename: string };
-
 function sheetToBase64(rows: (string | number | null)[][]): string {
   const ws = XLSX.utils.aoa_to_sheet(rows);
   const wb = XLSX.utils.book_new();
@@ -411,14 +397,6 @@ export async function exportarInventario(): Promise<ExportResult> {
   const stamp = new Date().toISOString().slice(0, 10);
   return { base64, filename: `inventario_${stamp}.xlsx` };
 }
-
-export type MovimientoExportFilter = {
-  itemId?: number;
-  tipo?: string;
-  modulo?: string;
-  desde?: string;
-  hasta?: string;
-};
 
 export async function exportarMovimientos(
   filter: MovimientoExportFilter,
@@ -501,32 +479,6 @@ export async function exportarMovimientos(
   const scope = filter.itemId ? `_item${filter.itemId}` : "";
   return { base64, filename: `movimientos${scope}_${stamp}.xlsx` };
 }
-
-export type ImportRow = {
-  codigo?: string | null;
-  descripcion?: string | null;
-  categoria?: string | null;
-  localidad?: string | null;
-  unidadProductiva?: string | null;
-  unidadMedida?: string | null;
-  stockMinimo?: number | string | null;
-  valorUnitario?: number | string | null;
-};
-
-export type ImportPreviewRow = {
-  rowIndex: number;
-  codigo: string | null;
-  descripcion: string | null;
-  status: "new" | "updated" | "unchanged" | "invalid";
-  invalidReason?: string;
-  changedFields?: string[];
-};
-
-export type ImportPreview = {
-  counts: { new: number; updated: number; unchanged: number; invalid: number };
-  rows: ImportPreviewRow[];
-  total: number;
-};
 
 const MAX_IMPORT_ROWS = 5000;
 

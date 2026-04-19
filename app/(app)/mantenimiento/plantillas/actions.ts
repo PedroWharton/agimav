@@ -12,22 +12,8 @@ import {
 } from "@/lib/rbac";
 import { MANT_PRIORIDADES } from "@/lib/mantenimiento/estado";
 
-export const FRECUENCIA_UNIDADES = ["horas", "dias", "meses"] as const;
-export type FrecuenciaUnidad = (typeof FRECUENCIA_UNIDADES)[number];
-
-export type PlantillaActionResult =
-  | { ok: true; id: number }
-  | {
-      ok: false;
-      error:
-        | "forbidden"
-        | "invalid"
-        | "not_found"
-        | "in_use"
-        | "duplicate"
-        | "unknown";
-      fieldErrors?: Record<string, string>;
-    };
+import { FRECUENCIA_UNIDADES } from "./types";
+import type { PlantillaActionResult } from "./types";
 
 function fieldErrorsFromZod(err: z.ZodError): Record<string, string> {
   const out: Record<string, string> = {};

@@ -10,11 +10,8 @@ import { PageHeader } from "@/components/app/page-header";
 import { PriceChart } from "@/components/stats/price-chart";
 import { RangeSelect } from "@/components/stats/range-select";
 
-import {
-  PRECIOS_RANGES,
-  getPriceSeries,
-  type PreciosRange,
-} from "./actions";
+import { getPriceSeries } from "./actions";
+import { PRECIOS_RANGES, type PreciosRange } from "./types";
 import { ItemPicker, type ItemOption } from "./item-picker";
 
 export const dynamic = "force-dynamic";

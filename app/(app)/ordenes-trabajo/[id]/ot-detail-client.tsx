@@ -36,16 +36,13 @@ import { ConfirmDialog } from "@/components/app/confirm-dialog";
 import { PageHeader } from "@/components/app/page-header";
 import { formatOTNumber } from "@/lib/ot/ot-number";
 
+import { cancelarOT, cerrarOT, saveOtInsumos, updateOT } from "../actions";
 import {
-  cancelarOT,
-  cerrarOT,
   OT_PRIORIDADES,
   otIsActiva,
   otIsTerminal,
-  saveOtInsumos,
-  updateOT,
   type OtPrioridad,
-} from "../actions";
+} from "../types";
 
 type UsuarioOpt = { id: number; nombre: string };
 type LocalidadOpt = { id: number; nombre: string };

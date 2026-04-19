@@ -2,8 +2,7 @@
 
 import { prisma } from "@/lib/db";
 
-export const PRECIOS_RANGES = ["90d", "ytd", "todo"] as const;
-export type PreciosRange = (typeof PRECIOS_RANGES)[number];
+import type { PreciosRange, PricePoint, PriceSeries } from "./types";
 
 function rangeToGte(range: PreciosRange): Date | null {
   const now = new Date();
@@ -16,22 +15,6 @@ function rangeToGte(range: PreciosRange): Date | null {
       return null;
   }
 }
-
-export type PricePoint = {
-  fecha: string; // ISO YYYY-MM-DD
-  precioArs: number;
-  precioUsd: number | null;
-  proveedor: string | null;
-};
-
-export type PriceSeries = {
-  itemId: number;
-  codigo: string | null;
-  descripcion: string | null;
-  unidadMedida: string | null;
-  points: PricePoint[];
-  dolarFrom: string | null; // earliest month with a cotización, "YYYY-MM"
-};
 
 export async function getPriceSeries(
   itemId: number,

@@ -7,6 +7,8 @@ import { prisma } from "@/lib/db";
 import { auth } from "@/lib/auth";
 import { requireAdmin } from "@/lib/rbac";
 
+import type { AtributoActionResult } from "./types";
+
 const dataTypeSchema = z.enum(["text", "number", "date", "list", "ref"]);
 const sourceRefSchema = z.enum(["unidades_productivas", "inventario"]);
 
@@ -55,21 +57,6 @@ const updateSchema = z
       .optional()
       .transform((v) => (v == null ? null : v)),
   });
-
-export type AtributoActionResult =
-  | { ok: true; id: number }
-  | {
-      ok: false;
-      error:
-        | "forbidden"
-        | "invalid"
-        | "unknown"
-        | "duplicate"
-        | "in_use"
-        | "not_found";
-      fieldErrors?: Record<string, string>;
-      usageCount?: number;
-    };
 
 function fieldErrorsFromZod(err: z.ZodError): Record<string, string> {
   const out: Record<string, string> = {};

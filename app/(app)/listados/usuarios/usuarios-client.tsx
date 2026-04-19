@@ -54,8 +54,8 @@ import {
   deactivateUsuario,
   reactivateUsuario,
   regenerateInvite,
-  type InviteInfo,
 } from "./actions";
+import type { InviteInfo } from "./types";
 
 export type UsuarioRow = {
   id: number;

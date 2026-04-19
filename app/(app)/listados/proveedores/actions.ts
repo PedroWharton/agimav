@@ -7,15 +7,10 @@ import { prisma } from "@/lib/db";
 import { auth } from "@/lib/auth";
 import { requireAdmin, userIdFromSession } from "@/lib/rbac";
 
-const CUIT_REGEX = /^\d{2}-\d{8}-\d$/;
+import { CONDICIONES_IVA } from "./types";
+import type { ActionResult } from "./types";
 
-const CONDICIONES_IVA = [
-  "Responsable Inscripto",
-  "Monotributo",
-  "Exento",
-  "Consumidor Final",
-  "No Responsable",
-] as const;
+const CUIT_REGEX = /^\d{2}-\d{8}-\d$/;
 
 const optionalString = (max: number) =>
   z
@@ -60,10 +55,6 @@ const schema = z.object({
   nombreContacto: optionalString(200),
   contacto: optionalString(200),
 });
-
-export type ActionResult =
-  | { ok: true }
-  | { ok: false; error: string; fieldErrors?: Record<string, string> };
 
 export async function createProveedor(raw: unknown): Promise<ActionResult> {
   const session = await auth();
@@ -171,5 +162,3 @@ function fieldErrorsFromZod(err: z.ZodError): Record<string, string> {
   }
   return out;
 }
-
-export { CONDICIONES_IVA };

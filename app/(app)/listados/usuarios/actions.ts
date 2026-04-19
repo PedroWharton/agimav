@@ -8,6 +8,8 @@ import { prisma } from "@/lib/db";
 import { auth } from "@/lib/auth";
 import { requireAdmin, userIdFromSession, ADMIN_ROL } from "@/lib/rbac";
 
+import type { MutationResult } from "./types";
+
 // Invite tokens expire 14 days after mint. Admins can regenerate at will.
 const INVITE_TTL_DAYS = 14;
 
@@ -16,28 +18,6 @@ const baseSchema = z.object({
   email: z.string().trim().toLowerCase().email("Email inválido").max(200),
   rolId: z.union([z.coerce.number().int().positive(), z.null()]).optional(),
 });
-
-type ActionError =
-  | "forbidden"
-  | "invalid"
-  | "duplicate_email"
-  | "not_found"
-  | "no_self_deactivate"
-  | "last_admin"
-  | "unknown";
-
-export type InviteInfo = {
-  token: string;
-  expiresAt: string;
-};
-
-export type MutationResult =
-  | { ok: true; invite?: InviteInfo }
-  | {
-      ok: false;
-      error: ActionError;
-      fieldErrors?: Record<string, string>;
-    };
 
 function mintToken(): { token: string; expiresAt: Date } {
   const token = randomBytes(32).toString("base64url");

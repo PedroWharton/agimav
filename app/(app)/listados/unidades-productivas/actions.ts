@@ -7,20 +7,13 @@ import { prisma } from "@/lib/db";
 import { auth } from "@/lib/auth";
 import { requireAdmin, userIdFromSession } from "@/lib/rbac";
 
+import type { ActionResult } from "./types";
+
 const schema = z.object({
   nombre: z.string().trim().min(1, "Obligatorio").max(200),
   localidadId: z.union([z.coerce.number().int().positive(), z.null()]).optional(),
   tipoUnidadId: z.union([z.coerce.number().int().positive(), z.null()]).optional(),
 });
-
-export type ActionResult =
-  | { ok: true }
-  | {
-      ok: false;
-      error: string;
-      fieldErrors?: Record<string, string>;
-      usageCount?: number;
-    };
 
 export async function createUnidadProductiva(raw: unknown): Promise<ActionResult> {
   const session = await auth();

@@ -25,7 +25,7 @@ import { DataTable } from "@/components/app/data-table";
 import { PageHeader } from "@/components/app/page-header";
 import { Combobox } from "@/components/app/combobox";
 import { formatOTNumber } from "@/lib/ot/ot-number";
-import { OT_ESTADOS, OT_PRIORIDADES } from "./actions";
+import { OT_ESTADOS, OT_PRIORIDADES } from "./types";
 
 export type OtRow = {
   id: number;

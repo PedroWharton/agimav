@@ -8,7 +8,8 @@ import { useTranslations } from "next-intl";
 import { Button } from "@/components/ui/button";
 import { downloadBase64 } from "@/lib/download";
 
-import { exportarProveedores, type ProvRange } from "./actions";
+import { exportarProveedores } from "./actions";
+import type { ProvRange } from "./types";
 
 export function ProveedoresExportButton({ range }: { range: ProvRange }) {
   const t = useTranslations("estadisticas");

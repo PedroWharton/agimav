@@ -21,12 +21,8 @@ import {
 import { Combobox } from "@/components/app/combobox";
 import { PageHeader } from "@/components/app/page-header";
 
-import {
-  createOT,
-  updateOT,
-  OT_PRIORIDADES,
-  type OtPrioridad,
-} from "./actions";
+import { createOT, updateOT } from "./actions";
+import { OT_PRIORIDADES, type OtPrioridad } from "./types";
 
 export type OtFormInitial = {
   id?: number;

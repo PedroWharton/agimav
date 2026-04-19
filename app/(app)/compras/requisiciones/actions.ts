@@ -12,14 +12,7 @@ import {
   userNameFromSession,
 } from "@/lib/rbac";
 
-const ESTADOS_REQ = [
-  "Borrador",
-  "En Revisión",
-  "Aprobada",
-  "Asignado a Proveedor",
-  "OC Emitida",
-  "Rechazada",
-] as const;
+import type { RequisicionActionResult } from "./types";
 
 const PRIORIDADES = ["Normal", "Urgente"] as const;
 
@@ -69,21 +62,6 @@ const createSchema = headerSchema.extend({
 });
 
 const updateSchema = createSchema;
-
-export type RequisicionActionResult =
-  | { ok: true; id: number }
-  | {
-      ok: false;
-      error:
-        | "forbidden"
-        | "invalid"
-        | "unknown"
-        | "not_found"
-        | "wrong_estado"
-        | "empty_detalle"
-        | "motivo_required";
-      fieldErrors?: Record<string, string>;
-    };
 
 function fieldErrorsFromZod(err: z.ZodError): Record<string, string> {
   const out: Record<string, string> = {};
@@ -446,5 +424,3 @@ export async function rejectRequisicion(
     return { ok: false, error: "unknown" };
   }
 }
-
-export { ESTADOS_REQ, PRIORIDADES };

@@ -11,6 +11,8 @@ import {
   userNameFromSession,
 } from "@/lib/rbac";
 
+import type { FacturaActionResult } from "./types";
+
 const facturaLineaSchema = z.object({
   recepcionDetalleId: z.coerce.number().int().positive(),
   precioUnitario: z.coerce.number().nonnegative(),
@@ -31,21 +33,6 @@ const facturaSchema = z.object({
   total: z.coerce.number().nonnegative(),
   lineas: z.array(facturaLineaSchema).min(1),
 });
-
-export type FacturaActionResult =
-  | { ok: true; id: number }
-  | {
-      ok: false;
-      error:
-        | "forbidden"
-        | "invalid"
-        | "not_found"
-        | "duplicate_numero"
-        | "already_invoiced"
-        | "wrong_proveedor"
-        | "unknown";
-      message?: string;
-    };
 
 export async function createFactura(
   raw: unknown,

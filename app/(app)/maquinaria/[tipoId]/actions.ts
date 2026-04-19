@@ -8,6 +8,8 @@ import { auth } from "@/lib/auth";
 import { requireAdmin, userIdFromSession } from "@/lib/rbac";
 import type { Prisma } from "@/lib/generated/prisma/client";
 
+import type { ActionResult } from "./types";
+
 const atributoSchema = z.object({
   atributoId: z.coerce.number().int().positive(),
   valueText: z.string().max(1000),
@@ -28,17 +30,6 @@ const payloadSchema = z.object({
   horasAcumuladas: z.coerce.number().finite().min(0).default(0),
   niveles: z.array(nivelSchema),
 });
-
-export type MaquinariaPayload = z.infer<typeof payloadSchema>;
-
-export type ActionResult =
-  | { ok: true; id: number }
-  | {
-      ok: false;
-      error: "forbidden" | "invalid" | "unknown" | "in_use" | "not_found";
-      fieldErrors?: Record<string, string>;
-      usageCount?: number;
-    };
 
 export async function createMaquinaria(raw: unknown): Promise<ActionResult> {
   const session = await auth();

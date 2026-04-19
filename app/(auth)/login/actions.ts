@@ -3,7 +3,7 @@
 import { AuthError } from "next-auth";
 import { signIn } from "@/lib/auth";
 
-export type LoginState = { error: string | null };
+import type { LoginState } from "./types";
 
 export async function loginAction(
   _prev: LoginState,

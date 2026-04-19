@@ -22,10 +22,12 @@ import { matchHeader } from "@/lib/xlsx-headers";
 import {
   previewImportInventario,
   commitImportInventario,
-  type ImportRow,
-  type ImportPreview,
-  type ImportPreviewRow,
 } from "@/app/(app)/inventario/actions";
+import type {
+  ImportRow,
+  ImportPreview,
+  ImportPreviewRow,
+} from "@/app/(app)/inventario/types";
 
 type Step = "archivo" | "vista_previa" | "resultado";
 

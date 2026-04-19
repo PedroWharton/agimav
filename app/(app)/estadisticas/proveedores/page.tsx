@@ -9,11 +9,8 @@ import { PageHeader } from "@/components/app/page-header";
 import { HorizontalBarChart } from "@/components/stats/bar-chart";
 import { RangeSelect } from "@/components/stats/range-select";
 
-import {
-  PROV_RANGES,
-  computeProveedoresGasto,
-  type ProvRange,
-} from "./actions";
+import { computeProveedoresGasto } from "./actions";
+import { PROV_RANGES, type ProvRange } from "./types";
 import { ProveedoresExportButton } from "./proveedores-export-button";
 
 export const dynamic = "force-dynamic";

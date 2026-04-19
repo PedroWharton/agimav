@@ -23,12 +23,8 @@ import {
 } from "@/components/ui/select";
 import { MANT_PRIORIDADES } from "@/lib/mantenimiento/estado";
 
-import {
-  createPlantilla,
-  deletePlantilla,
-  FRECUENCIA_UNIDADES,
-  updatePlantilla,
-} from "./actions";
+import { createPlantilla, deletePlantilla, updatePlantilla } from "./actions";
+import { FRECUENCIA_UNIDADES } from "./types";
 
 export type TipoMaquinariaOpt = {
   id: number;
