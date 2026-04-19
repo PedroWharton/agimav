@@ -4,12 +4,16 @@ import { ArrowLeft } from "lucide-react";
 import { format } from "date-fns";
 import { es } from "date-fns/locale";
 
+import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/db";
+import { isAdmin } from "@/lib/rbac";
 import { formatOCNumber } from "@/lib/compras/oc-number";
 import { getTranslations } from "next-intl/server";
 
 import { Button } from "@/components/ui/button";
 import { PageHeader } from "@/components/app/page-header";
+
+import { CerrarSinFacturaButton } from "./cerrar-sin-factura-button";
 
 export default async function RecepcionDetailPage({
   params,
@@ -54,8 +58,13 @@ export default async function RecepcionDetailPage({
   });
   if (!rec) notFound();
 
+  const session = await auth();
+  const admin = isAdmin(session);
   const tRec = await getTranslations("compras.recepciones");
   const numeroOc = rec.oc.numeroOc ?? formatOCNumber(rec.oc.id);
+  const pendientes = rec.detalle.filter((d) => !d.facturado).length;
+  const canCerrarSinFactura =
+    admin && !rec.cerradaSinFactura && pendientes > 0;
 
   return (
     <div className="flex flex-col gap-6 p-6">
@@ -71,8 +80,35 @@ export default async function RecepcionDetailPage({
           description={`${format(rec.fechaRecepcion, "dd/MM/yyyy", {
             locale: es,
           })} · ${rec.oc.proveedor.nombre}`}
+          actions={
+            canCerrarSinFactura ? (
+              <CerrarSinFacturaButton recepcionId={rec.id} />
+            ) : undefined
+          }
         />
       </div>
+
+      {rec.cerradaSinFactura ? (
+        <div className="rounded-md border border-amber-300 bg-amber-50 p-3 text-sm text-amber-900 dark:border-amber-700/40 dark:bg-amber-950/30 dark:text-amber-200">
+          <div className="font-medium">{tRec("cerrarSinFactura.banner")}</div>
+          <div className="mt-1 text-xs">
+            {tRec("cerrarSinFactura.cerradaPor", {
+              nombre: rec.cerradoPor ?? "—",
+              fecha: rec.fechaCierre
+                ? format(rec.fechaCierre, "dd/MM/yyyy HH:mm", { locale: es })
+                : "—",
+            })}
+          </div>
+          {rec.motivoCierre ? (
+            <div className="mt-1 text-xs">
+              <span className="font-medium">
+                {tRec("cerrarSinFactura.motivoLabel")}:
+              </span>{" "}
+              <span className="whitespace-pre-wrap">{rec.motivoCierre}</span>
+            </div>
+          ) : null}
+        </div>
+      ) : null}
 
       <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_320px]">
         <div className="flex flex-col gap-4">

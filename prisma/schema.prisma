@@ -537,14 +537,18 @@ model OrdenCompraDetalle {
 }
 
 model Recepcion {
-  id              Int      @id @default(autoincrement())
-  ocId            Int      @map("oc_id")
-  oc              OrdenCompra @relation(fields: [ocId], references: [id])
-  numeroRemito    String   @map("numero_remito")
-  fechaRecepcion  DateTime @default(now()) @map("fecha_recepcion")
-  recibidoPor     String   @map("recibido_por")
-  observaciones   String?
-  creadoPor       String?  @map("creado_por")
+  id                Int       @id @default(autoincrement())
+  ocId              Int       @map("oc_id")
+  oc                OrdenCompra @relation(fields: [ocId], references: [id])
+  numeroRemito      String    @map("numero_remito")
+  fechaRecepcion    DateTime  @default(now()) @map("fecha_recepcion")
+  recibidoPor       String    @map("recibido_por")
+  observaciones     String?
+  creadoPor         String?   @map("creado_por")
+  cerradaSinFactura Boolean   @default(false) @map("cerrada_sin_factura")
+  motivoCierre      String?   @map("motivo_cierre")
+  fechaCierre       DateTime? @map("fecha_cierre")
+  cerradoPor        String?   @map("cerrado_por")
 
   detalle RecepcionDetalle[]
 

@@ -397,6 +397,7 @@ prisma.requisicion.findUnique({
 prisma.recepcionDetalle.findMany({
   where: {
     facturado: false,
+    recepcion: { cerradaSinFactura: false },
     ocDetalle: { oc: { proveedorId } },
   },
   include: {
@@ -406,6 +407,8 @@ prisma.recepcionDetalle.findMany({
   orderBy: [{ recepcion: { fechaRecepcion: 'asc' } }, { id: 'asc' }],
 })
 ```
+
+Exclude `cerradaSinFactura` recepciones — see §7.7 "Recepción terminal cierre" below.
 
 ### 7.4 OC number generation
 
@@ -477,6 +480,14 @@ Emitida ──receive-all──▶ Completada (terminal, under normal flow)
 ```
 
 Factura: no state machine (issued once, locked). Cancellation out of scope v1.
+
+Recepción terminal cierre (QA-037, post-Slice D):
+
+```
+Recepción (open) ──admin closes──▶ cerradaSinFactura = true (terminal)
+```
+
+Legacy `Completar remitos sin factura` path for supplier returns, free replacements, damaged-goods remitos. Admin-only on `/compras/recepciones/[id]`; requires `motivo`; stamps `cerradoPor` + `fechaCierre`. Closing does **not** write `PrecioHistorico`, does **not** update `Inventario.valorUnitario`, does **not** emit new `InventarioMovimiento` (the original recepción already did that at Stock-destino time). Only effect: closed recepciones drop out of §7.3's unfacturadas query.
 
 ## 8. States & edge cases
 

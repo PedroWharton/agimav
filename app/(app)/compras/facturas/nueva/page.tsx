@@ -33,6 +33,7 @@ export default async function NuevaFacturaPage({
     const recepciones = await prisma.recepcionDetalle.findMany({
       where: {
         facturado: false,
+        recepcion: { cerradaSinFactura: false },
         ocDetalle: { oc: { proveedorId } },
       },
       orderBy: [{ recepcion: { fechaRecepcion: "asc" } }, { id: "asc" }],

@@ -725,6 +725,21 @@
         "sobreRecepcion": "Alguna cantidad supera el pendiente. Revisá las líneas.",
         "ocNoRecibible": "La OC ya no admite recepciones.",
         "nadaParaRecibir": "Cargá al menos una cantidad antes de guardar."
+      },
+      "cerrarSinFactura": {
+        "accion": "Cerrar sin factura",
+        "dialogTitulo": "Cerrar recepción sin factura",
+        "dialogDescripcion": "Las líneas pendientes quedarán fuera del listado de facturas nuevas. Usalo para devoluciones, reemplazos o remitos que no se facturan.",
+        "motivoLabel": "Motivo",
+        "motivoPlaceholder": "Ej.: devolución al proveedor, reemplazo por garantía.",
+        "confirmar": "Cerrar sin factura",
+        "banner": "Recepción cerrada sin factura.",
+        "cerradaPor": "Cerrada por {nombre} el {fecha}.",
+        "toastOk": "Recepción cerrada sin factura.",
+        "toastYaCerrada": "La recepción ya estaba cerrada.",
+        "toastNadaPorCerrar": "No hay líneas pendientes para cerrar.",
+        "toastForbidden": "No tenés permisos para esta acción.",
+        "toastUnknown": "No se pudo cerrar. Reintentá en unos segundos."
       }
     },
     "facturas": {

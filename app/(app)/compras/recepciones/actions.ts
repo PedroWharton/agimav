@@ -6,12 +6,13 @@ import { z } from "zod";
 import { prisma } from "@/lib/db";
 import { auth } from "@/lib/auth";
 import {
+  isAdmin,
   isPañolero,
   requireAuthenticated,
   userNameFromSession,
 } from "@/lib/rbac";
 
-import type { RecepcionActionResult } from "./types";
+import type { CerrarSinFacturaResult, RecepcionActionResult } from "./types";
 
 const recepcionLineaSchema = z.object({
   ocDetalleId: z.coerce.number().int().positive(),
@@ -182,6 +183,70 @@ export async function createRecepcion(
       msg === "not_found" ||
       msg === "wrong_estado" ||
       msg === "over_reception" ||
+      msg === "invalid"
+    )
+      return { ok: false, error: msg };
+    return { ok: false, error: "unknown" };
+  }
+}
+
+const cerrarSinFacturaSchema = z.object({
+  recepcionId: z.coerce.number().int().positive(),
+  motivo: z.string().trim().min(1).max(500),
+});
+
+export async function cerrarRecepcionSinFactura(
+  raw: unknown,
+): Promise<CerrarSinFacturaResult> {
+  const session = await auth();
+  try {
+    requireAuthenticated(session);
+  } catch {
+    return { ok: false, error: "forbidden" };
+  }
+  if (!isAdmin(session)) return { ok: false, error: "forbidden" };
+  const cerradoPor = userNameFromSession(session);
+
+  const parsed = cerrarSinFacturaSchema.safeParse(raw);
+  if (!parsed.success) return { ok: false, error: "invalid" };
+  const { recepcionId, motivo } = parsed.data;
+
+  try {
+    await prisma.$transaction(async (tx) => {
+      const rec = await tx.recepcion.findUnique({
+        where: { id: recepcionId },
+        select: {
+          id: true,
+          cerradaSinFactura: true,
+          detalle: { select: { facturado: true } },
+        },
+      });
+      if (!rec) throw new Error("not_found");
+      if (rec.cerradaSinFactura) throw new Error("already_closed");
+      const pendientes = rec.detalle.filter((d) => !d.facturado).length;
+      if (pendientes === 0) throw new Error("nothing_to_close");
+
+      await tx.recepcion.update({
+        where: { id: recepcionId },
+        data: {
+          cerradaSinFactura: true,
+          motivoCierre: motivo,
+          fechaCierre: new Date(),
+          cerradoPor,
+        },
+      });
+    });
+
+    revalidatePath("/compras/recepciones");
+    revalidatePath(`/compras/recepciones/${recepcionId}`);
+    revalidatePath("/compras/facturas/nueva");
+    return { ok: true };
+  } catch (e) {
+    const msg = e instanceof Error ? e.message : "unknown";
+    if (
+      msg === "not_found" ||
+      msg === "already_closed" ||
+      msg === "nothing_to_close" ||
       msg === "invalid"
     )
       return { ok: false, error: msg };

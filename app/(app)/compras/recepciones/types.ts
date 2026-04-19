@@ -12,3 +12,17 @@ export type RecepcionActionResult =
         | "unknown";
       message?: string;
     };
+
+export type CerrarSinFacturaResult =
+  | { ok: true }
+  | {
+      ok: false;
+      error:
+        | "forbidden"
+        | "invalid"
+        | "not_found"
+        | "already_closed"
+        | "nothing_to_close"
+        | "unknown";
+      message?: string;
+    };
