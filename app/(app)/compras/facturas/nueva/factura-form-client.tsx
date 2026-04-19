@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState, useTransition } from "react";
+import { useMemo, useState, useTransition } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
@@ -81,24 +81,25 @@ export function FacturaFormClient({
   const [descuentoFinanciero, setDescuentoFinanciero] = useState("0");
   const [recargo, setRecargo] = useState("0");
   const [ivaPorcentaje, setIvaPorcentaje] = useState("21");
-  const [lineState, setLineState] = useState<LineState[]>(() =>
-    lineas.map((l) => ({
+  const initialLineState = (ls: FacturaRecepcionLinea[]): LineState[] =>
+    ls.map((l) => ({
       id: l.id,
       selected: false,
       precio: "",
       descuento: "0",
-    })),
+    }));
+  const lineasKey = useMemo(
+    () => lineas.map((l) => l.id).join(","),
+    [lineas],
   );
-  useEffect(() => {
-    setLineState(
-      lineas.map((l) => ({
-        id: l.id,
-        selected: false,
-        precio: "",
-        descuento: "0",
-      })),
-    );
-  }, [lineas]);
+  const [lineState, setLineState] = useState<LineState[]>(() =>
+    initialLineState(lineas),
+  );
+  const [prevLineasKey, setPrevLineasKey] = useState(lineasKey);
+  if (lineasKey !== prevLineasKey) {
+    setPrevLineasKey(lineasKey);
+    setLineState(initialLineState(lineas));
+  }
   const [isSaving, startSave] = useTransition();
 
   const proveedorOptions = useMemo(
