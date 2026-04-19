@@ -168,11 +168,40 @@ Findings from the manual QA pass against the Neon dev DB (parity-verified vs `fl
   - Or: leave the button enabled and on click show inline validation errors next to the offending fields (Zod-style toast or field-level red text).
 - **Scope:** check `nueva` flows in `/compras/recepciones/nueva` and `/compras/requisiciones/[id]/asignar` for the same gap — they probably share the disabled-button pattern.
 
+## QA-017 · Estadísticas: facturación-mes sparkline only fills ~30% of its KPI card
+
+- **Module:** Estadísticas (Phase 7, Slice A — `/estadisticas`)
+- **Severity:** medium
+- **Status:** open
+- **Repro:** open `/estadisticas` at desktop width → "Facturación del mes" KPI card spans 2 columns but the sparkline visually occupies only the left third.
+- **Root cause:** `SparkLine` renders an SVG with a fixed pixel `width` (`page.tsx:188` passes `width={280}`). The SVG sits unanchored inside the wider card, leaving empty space to its right.
+- **Proposed fix:** make `SparkLine` fluid. In `components/stats/spark-line.tsx`, drop the literal `width` attribute on the `<svg>` (keep `viewBox`), set `width="100%"` and `preserveAspectRatio="none"`. Pass `className="w-full"` from the page. The internal coordinate math stays in the 280-unit space and stretches via the viewBox.
+- **Knock-on check:** other charts (`AbcPie`, `PriceChart`, `HorizontalBarChart`) likely share the same fixed-pixel pattern. Sweep all four during the fix.
+
+## QA-018 · Estadísticas ABC: sticky table header is semi-transparent on scroll
+
+- **Module:** Estadísticas (Phase 7, Slice B — `/estadisticas/abc`)
+- **Severity:** low
+- **Status:** open
+- **Repro:** open `/estadisticas/abc` → scroll the table → header shows rows behind it through the partial transparency.
+- **Root cause:** `page.tsx:89` — `<thead className="sticky top-0 z-10 bg-muted/50 ...">`. `bg-muted/50` is 50% opacity, so the row underneath bleeds through.
+- **Proposed fix:** swap to a fully opaque token: `bg-muted` (or `bg-background`/`bg-card` if the contrast looks better). Sweep `/estadisticas/precios`, `/maquinaria`, `/proveedores` for the same `bg-*/50` pattern on sticky headers — same fix.
+
+## QA-019 · Estadísticas maquinaria: `min=` filter triggers full server recompute
+
+- **Module:** Estadísticas (Phase 7, Slice D — `/estadisticas/maquinaria`)
+- **Severity:** medium (perf)
+- **Status:** open
+- **Repro:** open `/estadisticas/maquinaria` → toggle the "min mantenimientos" filter (`min2` ↔ `min3` ↔ `todos`) → noticeable lag while the server re-runs.
+- **Root cause:** `actions.ts:computeMaqMetrics` runs every Prisma query (maquinaria findMany, raw principalRows, mantenimientos findMany, insumos groupBy, registros findMany) regardless of `minFiltro`. The filter is applied only at line 162-166 against already-computed totals — the heavy lifting is identical across min values.
+- **Proposed fix:** keep `min` as a client-only filter. Server returns the full row set (≤ a few hundred máquinas — fits comfortably in client state); `RangeSelect` for `min` becomes a `useState` filter that hides rows below the threshold. `range` (90d/ytd/todo) stays server-side because it actually changes the SQL `WHERE`.
+- **Bonus:** the maquinaria findMany on line 30 has no `where`, no `orderBy` — fine, but worth confirming it returns deterministic ordering across reloads.
+
 ## Triage
 
 - **Blockers:** ~~QA-004, QA-008, QA-009, QA-013, QA-014, QA-015~~ — all fixed.
-- **High / medium open:** QA-001, QA-002, QA-006 (needs product decision), QA-007, QA-011, QA-016.
-- **Low / deferred:** QA-003 (already on backlog), QA-005, QA-010, QA-012.
+- **High / medium open:** QA-001, QA-002, QA-006 (needs product decision), QA-007, QA-011, QA-016, QA-017, QA-019.
+- **Low / deferred:** QA-003 (already on backlog), QA-005, QA-010, QA-012, QA-018.
 
 ## Next steps
 
