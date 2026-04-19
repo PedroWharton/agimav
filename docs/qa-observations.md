@@ -197,11 +197,189 @@ Findings from the manual QA pass against the Neon dev DB (parity-verified vs `fl
 - **Proposed fix:** keep `min` as a client-only filter. Server returns the full row set (≤ a few hundred máquinas — fits comfortably in client state); `RangeSelect` for `min` becomes a `useState` filter that hides rows below the threshold. `range` (90d/ytd/todo) stays server-side because it actually changes the SQL `WHERE`.
 - **Bonus:** the maquinaria findMany on line 30 has no `where`, no `orderBy` — fine, but worth confirming it returns deterministic ordering across reloads.
 
+---
+
+## Vercel Web Interface Guidelines audit (2026-04-19)
+
+Audit of 5 routes against [vercel-labs/web-interface-guidelines](https://github.com/vercel-labs/web-interface-guidelines): `/estadisticas`, `/estadisticas/abc`, `/estadisticas/maquinaria`, `/compras/facturas/nueva`, `/maquinaria/[tipoId]`. Findings are guideline-driven and complement the manual QA above.
+
+## QA-020 · `Button` base class uses `transition-all` (Vercel anti-pattern)
+
+- **Module:** Cross-cutting (UI primitive)
+- **Severity:** low
+- **Status:** open
+- **File:** `components/ui/button.tsx:8`
+- **Rule:** "Animation › Never `transition: all`—list properties explicitly. Animate `transform`/`opacity` only."
+- **Why this matters:** `transition-all` re-flows layout properties unnecessarily, including ones we never animate. Spec wants enumerated lists for compositor performance.
+- **Proposed fix:** swap `transition-all` → `transition-[background-color,border-color,box-shadow,color,opacity,transform]` (or whichever subset the variants actually animate). Sweep `components/ui/*` for the same.
+
+## QA-021 · `KpiCard` linked tiles have no visible focus ring on the `<a>` wrapper
+
+- **Module:** Cross-cutting (`KpiCard`) — surfaces on `/estadisticas`
+- **Severity:** medium (a11y)
+- **Status:** open
+- **File:** `components/stats/kpi-card.tsx:73-78`
+- **Rule:** "Focus States › Interactive elements need visible focus: `focus-visible:ring-*`."
+- **Symptom:** keyboard users tabbing the dashboard tiles get no focus indicator. The `<Link>` wraps a `<Card>` that has hover styles but no `focus-within:` or focus-on-the-link ring.
+- **Proposed fix:** add `focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring rounded-xl` (or similar) to the `<Link>` className, or hoist a `focus-within:ring-2` onto the inner `<Card>`. Same fix applies to the lentes Cards on `/estadisticas:202-268`.
+
+## QA-022 · Sticky `<thead>` opacity issue extends beyond ABC
+
+- **Module:** Estadísticas (Phase 7 — `/estadisticas/abc`, `/estadisticas/maquinaria`) + factura form
+- **Severity:** low (extends QA-018)
+- **Status:** open
+- **Files:** `app/(app)/estadisticas/abc/page.tsx:89`, `app/(app)/estadisticas/maquinaria/page.tsx:110`, `app/(app)/compras/facturas/nueva/factura-form-client.tsx:285` (`bg-muted/40`)
+- **Why now:** QA-018 caught it on ABC. Same `bg-muted/50` or `bg-muted/40` semi-transparent header is reused on the maquinaria-stats table and the factura lines table. Bundle the fix.
+
+## QA-023 · Factura nueva: form inputs missing `name`, `autocomplete`, and per-row `aria-label`
+
+- **Module:** Compras (`/compras/facturas/nueva`)
+- **Severity:** medium (a11y + browser autofill)
+- **Status:** open
+- **Files:** `app/(app)/compras/facturas/nueva/factura-form-client.tsx`
+- **Rule:** "Forms › Inputs need `autocomplete` and meaningful `name`. Form controls need `<label>` or `aria-label`."
+- **Specifics:**
+  - L257-263 `numeroFactura` — no `name`, no `autocomplete="off"` (keeps password managers from firing on a non-credential field).
+  - L267-273 `fechaFactura` — same.
+  - L361-370 per-line `precio` `<Input>` — no `name`, no `aria-label`. The `<th>` "Precio unit." is the only label, which screen readers won't associate per row.
+  - L372-383 per-line `descuento` — same.
+  - L410-418, L423-431, L437-444, L454-462 totals inputs (`descuentoComercial`, `descuentoFinanciero`, `recargo`, `ivaPorcentaje`) wrap `<Label>` with no `htmlFor` — clickable label dead.
+- **Proposed fix:** add `name`, `autoComplete="off"`, and per-input `aria-label={t("...")}` on tbody inputs; convert totals labels to `htmlFor`/`id` pairs.
+
+## QA-024 · Numeric inputs missing `inputMode` for mobile keyboards
+
+- **Module:** Cross-cutting (Compras factura form, totals, price inputs)
+- **Severity:** low
+- **Status:** open
+- **Rule:** "Forms › Use correct `type` (`email`, `tel`, `url`, `number`) and `inputmode`."
+- **Where:** factura nueva price/descuento/totals inputs (`type="number"` only). Same applies to inventario stock fields, maquinaria horometros, and any other money/quantity inputs we haven't checked.
+- **Proposed fix:** add `inputMode="decimal"` to monetary inputs and `inputMode="numeric"` to integer-only ones. Audit all `type="number"` instances during the batch.
+
+## QA-025 · Long text columns can break layout (no `truncate` / `min-w-0`)
+
+- **Module:** Estadísticas ABC + maquinaria-stats; factura nueva description column
+- **Severity:** low
+- **Status:** open
+- **Rule:** "Content Handling › Text containers handle long content: `truncate`, `line-clamp-*`, or `break-words`. Flex children need `min-w-0`."
+- **Where:**
+  - `app/(app)/estadisticas/abc/page.tsx:124` — `r.descripcion ?? "—"` rendered raw inside `<td>`. Long descriptions force horizontal scroll.
+  - `app/(app)/estadisticas/maquinaria/page.tsx:147` — `r.nombre` likewise.
+  - `app/(app)/compras/facturas/nueva/factura-form-client.tsx:344-351` — itemDescripcion + itemCodigo stacked without truncation.
+- **Proposed fix:** wrap with `<span className="line-clamp-2 break-words">` or set a `max-w-[420px] truncate` on the `<td>`; ensure parent flex/grid items have `min-w-0` where applicable.
+
+## QA-026 · Loading and saving labels missing ellipsis (`…`)
+
+- **Module:** Cross-cutting (i18n message catalog)
+- **Severity:** low
+- **Status:** open
+- **Rule:** "Typography › Loading states end with `…`: 'Loading…', 'Saving…'. Use `…` not `...`."
+- **Where:** `messages/es.json` keys like `acciones.guardando`, `columnas.guardando`, plus any inline strings. Quick `grep -n 'guardando\\|cargando\\|loading' messages/es.json` will surface them.
+- **Proposed fix:** sweep the message catalog and append `…` (single Unicode character, not three dots).
+
+## QA-027 · `Intl.NumberFormat` not used uniformly — `toFixed`/`toLocaleString` mixed in tables
+
+- **Module:** Estadísticas ABC, KPI dashboard
+- **Severity:** low
+- **Status:** open
+- **Rule:** "Locale & i18n › Numbers/currency: use `Intl.NumberFormat` not hardcoded formats."
+- **Where:**
+  - `app/(app)/estadisticas/abc/page.tsx:138,141` — `r.porcentaje.toFixed(1)` and `r.acumulado.toFixed(1)`. Always `.` decimal, ignores `es-AR` (`,`).
+  - `app/(app)/estadisticas/page.tsx:144,154,163,170,176,180` — `kpi.X.toLocaleString("es-AR")` instead of a memoised `Intl.NumberFormat` instance.
+- **Proposed fix:** introduce module-scope `numberFormatter`, `percentFormatter`, `currencyFormatter` (Intl) and use them everywhere a number renders. Memo at module level avoids recreating per render.
+
+## QA-028 · Tables with growth potential lack virtualization signal
+
+- **Module:** Mantenimiento (QA-002 already), Estadísticas tables (ABC ~items count, Maquinaria ~máquina count)
+- **Severity:** low (perf — current data fits)
+- **Status:** open / monitor
+- **Rule:** "Performance › Large lists (>50 items): virtualize."
+- **Where:** No `<table>` in this audit uses `virtua`, `content-visibility: auto`, or pagination beyond the 600px scroll cap. Mantenimiento (129 rows today) is the only one over the threshold; the rest will grow over time.
+- **Proposed fix:** add server-side pagination per QA-002 to mantenimiento, then revisit ABC + maquinaria-stats once data grows. `content-visibility: auto` on tbody rows is a cheap intermediate step.
+
+---
+
+## Vercel guidelines audit Round 2 (2026-04-19)
+
+Extended the audit beyond the original 5 routes. Surface scan covered all `app/(app)/*-client.tsx` plus `compras/{recepciones,oc,facturas}/*`, `mantenimiento/{[id],horometros,plantillas,nuevo}`, `inventario/{[id]/movimientos,movimientos}`, `estadisticas/{precios,proveedores}`, `ordenes-trabajo/*`. Findings are systemic rather than per-route; one entry covers all occurrences.
+
+## QA-029 · DataTable action cells use `<div onClick={stopPropagation}>` wrapper
+
+- **Module:** Cross-cutting (every list using DataTable with row click + actions menu)
+- **Severity:** low (a11y + anti-pattern)
+- **Status:** open
+- **Files:** `app/(app)/inventario/inventario-client.tsx:382`, `maquinaria/[tipoId]/maquinaria-client.tsx:521`, `maquinaria/tipos/tipos-client.tsx:247`, plus 8 listados clients (`unidades-medida`, `tipos-unidad`, `unidades-productivas`, `usuarios`, `proveedores`, `localidades`, `roles`) and `compras/recepciones/recepciones-list-client.tsx:77`.
+- **Rule:** "Anti-patterns › Avoid `<div onClick>`; use semantic elements." A `<div>` capturing pointer events isn't keyboard-reachable and screen readers see nothing.
+- **Why we did it:** DataTable rows are clickable; the action menu trigger needs to swallow the row's click. The `<div>` is just an event sink.
+- **Proposed fix:** lift `stopPropagation` into the action menu's own button (it's a `<button>` already — adding `onClick={(e) => e.stopPropagation()}` directly to it removes the wrapper div). Alternatively, refactor DataTable to expose `onRowClick` that ignores clicks originating inside `[data-row-actions]`.
+
+## QA-030 · `<th>` elements missing `scope="col"`
+
+- **Module:** Cross-cutting (every table)
+- **Severity:** low (a11y)
+- **Status:** open
+- **Where:** `grep -rn 'scope="col"' app/` returns zero matches. Includes shadcn `<TableHead>` (`components/ui/table.tsx`) — neither wrapper nor consumer sets `scope`.
+- **Rule:** "Tables › `<th scope="col|row">` for headers; `<caption>` for context."
+- **Proposed fix:** add `scope="col"` to the base `<TableHead>` in `components/ui/table.tsx` (single edit, propagates everywhere). Hand-rolled `<thead>`/`<th>` in `estadisticas/*` pages need scope added per occurrence (~6 spots).
+
+## QA-031 · `autoFocus` on every form-sheet primary input
+
+- **Module:** Cross-cutting (form sheets across listados + maquinaria + inventario)
+- **Severity:** low (UX on tablet; backlog mobile/tablet QA item is QA-003)
+- **Status:** open
+- **Where:** 13 occurrences in `components/inventario/movement-dialog.tsx`, `components/app/structure-tree.tsx`, `inventario-client.tsx:553`, `maquinaria/tipos/tipos-client.tsx:328`, plus all 7 listados clients.
+- **Rule:** "Forms › Use `autofocus` sparingly—desktop only, single primary input; avoid on mobile."
+- **Why this matters here:** Cervi uses tablets in chacra (per backlog QA-003). On tablet, `autoFocus` on a sheet open immediately summons the on-screen keyboard, which obscures the rest of the form. Should be either removed or gated on `matchMedia("(pointer: fine)").matches`.
+- **Proposed fix:** centralise behind a `useDesktopAutoFocus()` hook (returns `{ ref }` that calls `.focus()` only on `matches`); replace the 13 `autoFocus` props with the hook.
+
+## QA-032 · Inventario "Facturas (próximamente)" disabled tab is a UX anti-pattern
+
+- **Module:** Inventario detail (Phase 2)
+- **Severity:** low
+- **Status:** open / deferred
+- **File:** `app/(app)/inventario/inventario-client.tsx:771-773` — `<TabsTrigger value="facturas" disabled>Facturas (próximamente)</TabsTrigger>`. Spec calls for this stub (`docs/ux-spec/2-inventario.md:79`).
+- **Rule:** "Content & Copy › Don't show disabled UI for unbuilt features. Either ship it or hide it."
+- **Why now:** Phase 5 Compras shipped — facturas exist. The stub was a Phase 2 placeholder for "Facturas arrives in Phase 5" and is now stale. The tab should either (a) wire up to the actual factura history filtered to this item, or (b) be removed.
+- **Proposed fix:** replace the disabled tab with a real query: `factura.lineas.findMany({ where: { itemInventarioId: id }, include: { factura: { include: { proveedor: true } } } })`. Render in the tab body. Cheap; data already exists.
+- **Hardcoded string:** while there, also note `inventario-client.tsx:412` hardcodes the Spanish delete-warning string ("Si el item tiene movimientos…") — should move to `messages/es.json`. Bundle into the same fix.
+
+## QA-033 · `type="number"` instances missing `inputMode` extend beyond factura form
+
+- **Module:** Cross-cutting (extends QA-024)
+- **Severity:** low
+- **Status:** open
+- **Where (full list — 16 occurrences):** `ordenes-trabajo/[id]/ot-detail-client.tsx:696,722` · `compras/recepciones/nueva/recepcion-form-client.tsx:308` · `mantenimiento/plantillas/plantilla-form.tsx:309,403` · `mantenimiento/horometros/horometros-client.tsx:264` · `inventario/inventario-client.tsx:658` · `compras/facturas/nueva/factura-form-client.tsx:362,374,411,425,437,455` · `maquinaria/[tipoId]/maquinaria-client.tsx:717,880`.
+- **Rule:** Same as QA-024.
+- **Proposed fix:** sweep all 16 in one batch. `inputMode="decimal"` for money/quantities/horometros, `inputMode="numeric"` for integer-only (frequencies, días).
+
+## QA-034 · Dates formatted with `date-fns` instead of `Intl.DateTimeFormat`
+
+- **Module:** Cross-cutting i18n (extends QA-027 to the date side)
+- **Severity:** low
+- **Status:** open
+- **Where:** 24 files import `format`/`parseISO` from `date-fns` (e.g. `mantenimiento/mantenimientos-client.tsx`, `ordenes-trabajo/ot-list-client.tsx`, every compras list, every listados client). Pattern: `format(new Date(s), "dd/MM/yyyy", { locale: es })`.
+- **Rule:** "Locale & i18n › Numbers/currency/dates: use `Intl.*` not hardcoded formats."
+- **Why this matters:** date-fns ships as a runtime dependency we already pay for, but the locale handling is parallel to `Intl.DateTimeFormat`. Two systems means inconsistent output (date-fns writes `19/04/2026`, Intl with `es-AR` writes `19/4/26` by default, `19/04/2026` with explicit options) and we ship duplicate locale data.
+- **Proposed fix:** introduce `lib/intl.ts` exposing module-scope `dateFormatter`, `dateTimeFormatter`, `numberFormatter`, `currencyFormatter`, `percentFormatter` (all `Intl.*`). Migrate the 24 date-fns import sites; once at zero, drop date-fns from `package.json`.
+- **Risk to flag:** `parseISO` is also used; replace with `new Date(s)` (legacy data is ISO-8601 already per probe).
+
+## QA-035 · `aria-*` attributes are sparse across the app
+
+- **Module:** Cross-cutting (a11y)
+- **Severity:** medium (a11y baseline)
+- **Status:** open
+- **Signal:** `grep -c 'aria-label\|aria-describedby\|aria-live\|role=' app/` returns 8 occurrences across 6 files for the entire `app/` tree. This is far below what a 30-page CRUD app should have — the icon-only buttons (action menus, close buttons, sort toggles) are unlabelled to assistive tech, toast regions aren't announced (`aria-live`), and disabled-button reasons (QA-016) have no `aria-describedby` hook.
+- **Rule:** "Accessibility › Icon-only `<button>` needs `aria-label`. Live regions need `aria-live`. Validation messages need `aria-describedby`."
+- **Proposed fix:** triage in three passes:
+  1. Add `aria-label` to every icon-only button (action menu trigger, drawer close, sort caret) — sweep `components/ui/data-table.tsx` and consumers.
+  2. Wrap toast container in `aria-live="polite"` (Sonner does this if configured).
+  3. When fixing QA-016 (disabled-button reason), surface the reason via `aria-describedby` linked to a `sr-only` span.
+- **Note:** this is an audit observation, not a "we tested with a screen reader" finding. A real a11y pass post-cutover may surface more.
+
 ## Triage
 
 - **Blockers:** ~~QA-004, QA-008, QA-009, QA-013, QA-014, QA-015~~ — all fixed.
-- **High / medium open:** QA-001, QA-002, QA-006 (needs product decision), QA-007, QA-011, QA-016, QA-017, QA-019.
-- **Low / deferred:** QA-003 (already on backlog), QA-005, QA-010, QA-012, QA-018.
+- **High / medium open:** QA-001, QA-002, QA-006 (needs product decision), QA-007, QA-011, QA-016, QA-017, QA-019, QA-021, QA-023, QA-035.
+- **Low / deferred:** QA-003 (already on backlog), QA-005, QA-010, QA-012, QA-018, QA-020, QA-022, QA-024, QA-025, QA-026, QA-027, QA-028, QA-029, QA-030, QA-031, QA-032, QA-033, QA-034.
 
 ## Next steps
 
@@ -209,3 +387,4 @@ Findings from the manual QA pass against the Neon dev DB (parity-verified vs `fl
 2. Resume Slice A/B QA from where it broke (plantilla detail page + insumos table).
 3. Continue cataloguing UX findings as we walk Phase 6 → 4 → 5 → 7. Fixes batched at the end.
 4. Decide QA-006 with Cervi or product owner before fixing.
+5. Audit findings (QA-020 through QA-035) are guideline-driven, not user-reported. Pre-cutover: fix only QA-021 (a11y focus, medium) and QA-035 pass-1 (icon button aria-labels). The rest go into a single post-cutover "polish" PR or the backlog.
