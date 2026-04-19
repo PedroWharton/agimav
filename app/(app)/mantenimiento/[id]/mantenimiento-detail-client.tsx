@@ -519,6 +519,7 @@ export function MantenimientoDetailClient({
                         type="button"
                         variant="ghost"
                         size="icon"
+                        aria-label={tM("tareas.eliminarLinea")}
                         onClick={() =>
                           setTareas((prev) =>
                             prev.filter((_, i) => i !== idx),

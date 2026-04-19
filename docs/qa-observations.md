@@ -347,14 +347,16 @@ Extended the audit beyond the original 5 routes. Surface scan covered all `app/(
 
 - **Module:** Cross-cutting (a11y)
 - **Severity:** medium (a11y baseline)
-- **Status:** open
-- **Signal:** `grep -c 'aria-label\|aria-describedby\|aria-live\|role=' app/` returns 8 occurrences across 6 files for the entire `app/` tree. This is far below what a 30-page CRUD app should have — the icon-only buttons (action menus, close buttons, sort toggles) are unlabelled to assistive tech, toast regions aren't announced (`aria-live`), and disabled-button reasons (QA-016) have no `aria-describedby` hook.
-- **Rule:** "Accessibility › Icon-only `<button>` needs `aria-label`. Live regions need `aria-live`. Validation messages need `aria-describedby`."
-- **Proposed fix:** triage in three passes:
-  1. Add `aria-label` to every icon-only button (action menu trigger, drawer close, sort caret) — sweep `components/ui/data-table.tsx` and consumers.
-  2. Wrap toast container in `aria-live="polite"` (Sonner does this if configured).
-  3. When fixing QA-016 (disabled-button reason), surface the reason via `aria-describedby` linked to a `sr-only` span.
-- **Note:** this is an audit observation, not a "we tested with a screen reader" finding. A real a11y pass post-cutover may surface more.
+- **Status:** partial — **first sweep fixed (uncommitted)**; broader follow-ups deferred.
+- **Signal:** `grep -c 'aria-label\|aria-describedby\|aria-live\|role=' app/` returned 8 occurrences across 6 files pre-sweep. Toast live region is handled by Sonner out of the box (no change needed).
+- **Fixes in this sweep:**
+  1. Trash/delete icon buttons in `InsumosEditor`, `plantilla-form` (insumo + tarea), and `mantenimiento-detail-client` tarea list now carry `aria-label`. Remaining icon-only trash (OT detail, usuarios, compras `DetalleLinesEditor`, `ActionsMenu`) already had aria-labels or text siblings.
+  2. `structure-tree` MoreHorizontal trigger got `aria-label` (`maquinaria.estructura.accionesAtributo`).
+  3. `DataTable` sortable columns now set `aria-sort` ("ascending"/"descending"/"none") on the `<TableHead>` — proper ARIA pattern for sortable tables.
+- **Remaining (deferred):**
+  - Cross-check `components/ui/*` primitives (Dialog close, Sheet close) — Radix provides sr-only text but worth auditing once.
+  - Surface QA-016 missing-reasons caption via `aria-describedby` on the disabled Guardar button (minor; Sonner toasts already announce actual submit errors).
+  - A real screen-reader pass post-cutover.
 
 ---
 
@@ -393,11 +395,11 @@ Legacy-vs-web feature sweep against `Agimav23b.py`. Items below are gaps the aud
 ## Triage
 
 - **Blockers:** ~~QA-004, QA-008, QA-009, QA-013, QA-014, QA-015~~ — all fixed.
-- **High / medium open:** QA-002, QA-006 (needs product decision), QA-035, QA-037.
-- **Fixed (committed):** QA-001, QA-005, QA-007, QA-010, QA-011, QA-015, QA-016, QA-017, QA-018, QA-019, QA-020, QA-021, QA-022, QA-026, QA-030, QA-036.
+- **High / medium open:** QA-002, QA-006 (needs product decision), QA-037.
+- **Fixed (committed):** QA-001, QA-005, QA-007, QA-010, QA-011, QA-015, QA-016, QA-017, QA-018, QA-019, QA-020, QA-021, QA-022, QA-023, QA-026, QA-030, QA-036.
 - **Low / deferred:** QA-003 (already on backlog), QA-012, QA-025, QA-027, QA-028, QA-029, QA-031, QA-032, QA-033, QA-034.
-- **Partial:** QA-024 (factura scope done, broader sweep pending).
-- **Fixed (uncommitted):** QA-023 (factura form a11y).
+- **Partial:** QA-024 (factura scope done, broader sweep pending); QA-035 (first aria sweep done — trash buttons, structure-tree trigger, DataTable aria-sort; Radix primitives + describedby pending).
+- **Fixed (uncommitted):** QA-035 first sweep (aria-labels on icon-only trash buttons + structure-tree MoreHorizontal trigger, aria-sort on DataTable sortable headers).
 
 ## Next steps
 

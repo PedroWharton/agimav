@@ -275,6 +275,7 @@
       "archivarAtributo": "Archivar",
       "reactivarAtributo": "Reactivar",
       "eliminarAtributo": "Eliminar",
+      "accionesAtributo": "Acciones del atributo",
       "eliminarPregunta": "¿Eliminar el atributo \"{nombre}\"?",
       "eliminarAviso": "Solo se puede eliminar si no hay máquinas con valores cargados. Esta acción no se puede deshacer.",
       "eliminarEnUso": "No se puede eliminar: {count, plural, one {hay # valor cargado} other {hay # valores cargados}}. Archivalo en su lugar.",
@@ -889,7 +890,8 @@
       "sinTareas": "Sin tareas todavía.",
       "guardar": "Guardar tareas",
       "agregar": "Agregar",
-      "placeholder": "Describí una tarea…"
+      "placeholder": "Describí una tarea…",
+      "eliminarLinea": "Eliminar tarea"
     },
     "insumos": {
       "titulo": "Insumos",
@@ -904,7 +906,8 @@
       "sobreConsumoAviso": "Supera el stock disponible.",
       "itemRequerido": "Seleccioná un ítem o eliminá la línea.",
       "itemRequeridoToast": "Seleccioná el ítem en todas las líneas o eliminá las vacías.",
-      "agregar": "Agregar insumo"
+      "agregar": "Agregar insumo",
+      "eliminarLinea": "Eliminar insumo"
     },
     "observaciones": {
       "titulo": "Observaciones",
@@ -967,13 +970,15 @@
         "vacio": "Sin insumos sugeridos.",
         "item": "Ítem",
         "cantidadSugerida": "Cantidad",
-        "agregar": "Agregar insumo"
+        "agregar": "Agregar insumo",
+        "eliminarLinea": "Eliminar insumo"
       },
       "tareas": {
         "titulo": "Tareas",
         "vacio": "Sin tareas cargadas.",
         "placeholder": "Describí una tarea…",
-        "agregar": "Agregar"
+        "agregar": "Agregar",
+        "eliminarLinea": "Eliminar tarea"
       },
       "avisos": {
         "creadaExitosa": "Plantilla creada.",

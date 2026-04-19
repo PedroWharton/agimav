@@ -360,6 +360,7 @@ function AtributoActions({
           variant="ghost"
           size="sm"
           className="size-7 p-0"
+          aria-label={t("accionesAtributo")}
           disabled={pending}
         >
           <MoreHorizontal className="size-4" />

@@ -105,7 +105,19 @@ export function DataTable<T>({
                   const canSort = header.column.getCanSort();
                   const sort = header.column.getIsSorted();
                   return (
-                    <TableHead key={header.id} className="whitespace-nowrap">
+                    <TableHead
+                      key={header.id}
+                      className="whitespace-nowrap"
+                      aria-sort={
+                        !canSort
+                          ? undefined
+                          : sort === "asc"
+                            ? "ascending"
+                            : sort === "desc"
+                              ? "descending"
+                              : "none"
+                      }
+                    >
                       {header.isPlaceholder ? null : canSort ? (
                         <button
                           type="button"

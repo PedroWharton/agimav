@@ -185,6 +185,7 @@ export function InsumosEditor({
                         type="button"
                         variant="ghost"
                         size="icon"
+                        aria-label={t("eliminarLinea")}
                         onClick={() => removeLine(idx)}
                         disabled={disabled}
                         className="size-7 text-muted-foreground hover:text-destructive"

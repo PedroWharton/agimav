@@ -422,6 +422,7 @@ export function PlantillaForm({
                         type="button"
                         variant="ghost"
                         size="icon"
+                        aria-label={tP("insumos.eliminarLinea")}
                         onClick={() => removeInsumo(idx)}
                         className="size-7 text-muted-foreground hover:text-destructive"
                       >
@@ -464,6 +465,7 @@ export function PlantillaForm({
                   type="button"
                   variant="ghost"
                   size="icon"
+                  aria-label={tP("tareas.eliminarLinea")}
                   onClick={() => removeTarea(idx)}
                   className="size-6 text-muted-foreground hover:text-destructive"
                 >
