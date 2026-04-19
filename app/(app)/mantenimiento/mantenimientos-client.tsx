@@ -66,6 +66,7 @@ export function MantenimientosClient({
     return rows.filter((r) => {
       if (
         !includeCerrados &&
+        estadoFilter === ALL &&
         (MANT_ESTADOS_TERMINALES as readonly string[]).includes(r.estado)
       ) {
         return false;
