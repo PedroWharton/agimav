@@ -380,7 +380,7 @@ Legacy-vs-web feature sweep against `Agimav23b.py`. Items below are gaps the aud
 
 - **Module:** Cross-cutting (app shell + `/opciones`)
 - **Severity:** medium (user-visible dead entry point)
-- **Status:** open
+- **Status:** **fixed** — `lib/nav.ts` entry removed (+ unused `Settings` icon import dropped), `/opciones` route deleted, `nav.opciones` + `placeholder.descripcionModulo.opciones` i18n keys removed from `messages/es.json`, `docs/cutover-runbook.md` "Known non-blockers" section now documents admin procedures for backup/restore/wipe/import-export.
 - **Context:** parity audit confirmed `/opciones` renders `PlaceholderModule`. Legacy Opciones grouped backup/restore, wipe-by-módulo, and Excel import/export per módulo — none migrated. In the new deployment these are platform-level or admin-via-scripts: backup = Neon PITR, restore = support ticket, wipe/import/export = SQL scripts. The placeholder link in the nav will confuse Cervi post-cutover ("where did the old menu go?").
 - **Proposed fix:**
   - Remove the nav link to `/opciones` (or gate it `isAdmin`-only with a "próximamente" badge if we expect to revive any of these as UI).
@@ -407,7 +407,8 @@ Legacy-vs-web feature sweep against `Agimav23b.py`. Items below are gaps the aud
 ## Triage
 
 - **Blockers:** ~~QA-004, QA-008, QA-009, QA-013, QA-014, QA-015~~ — all fixed.
-- **High / medium open:** QA-001, QA-002, QA-006 (needs product decision), QA-007, QA-011, QA-016, QA-017, QA-019, QA-023, QA-035, QA-036, QA-037.
+- **High / medium open:** QA-001, QA-002, QA-006 (needs product decision), QA-007, QA-011, QA-016, QA-017, QA-019, QA-023, QA-035, QA-037.
+- **Fixed (parity-audit sweep, uncommitted):** QA-036 (hide Opciones nav + retire placeholder route).
 - **Fixed (design polish batch, uncommitted):** QA-005 (cursor-pointer), QA-018/QA-022 (sticky thead opacity), QA-020 (transition-all → explicit), QA-021 (KpiCard + lentes focus rings), QA-026 (already compliant), QA-030 (scope="col").
 - **Low / deferred:** QA-003 (already on backlog), QA-010, QA-012, QA-024, QA-025, QA-027, QA-028, QA-029, QA-031, QA-032, QA-033, QA-034.
 

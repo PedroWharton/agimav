@@ -6,7 +6,6 @@ import {
   ClipboardList,
   BarChart3,
   List,
-  Settings,
   type LucideIcon,
 } from "lucide-react";
 
@@ -24,5 +23,4 @@ export const navItems: NavItem[] = [
   { href: "/ordenes-trabajo", labelKey: "nav.ordenesTrabajo", icon: ClipboardList },
   { href: "/estadisticas", labelKey: "nav.estadisticas", icon: BarChart3 },
   { href: "/listados", labelKey: "nav.listados", icon: List },
-  { href: "/opciones", labelKey: "nav.opciones", icon: Settings },
 ];

@@ -119,6 +119,10 @@ The prod Neon branch is **preserved** after rollback — the next cutover attemp
 - **`usuario_invite_tokens`** is not migrated — it's app-only. Any migrated usuario can request a new invite from the login screen.
 - **`tabla_config`** entries are user-scoped UI preferences. If a particular user's columns look wrong after cutover, they can reconfigure from the UI.
 - **Slice D (Phase 5) `destino`** defaults to NULL for legacy recepciones. Existing data continues to work; new recepciones capture it.
+- **Opciones módulo retired from the UI.** Legacy Opciones grouped backup/restore, wipe-por-módulo, and Excel import/export per módulo — none migrated. In the new deployment these are platform-level or admin-via-scripts:
+  - **Backup / restore** — Neon PITR (retention verified in backlog item "Neon backup cadence"). No in-app button; restores go through support.
+  - **Wipe por módulo** — manual SQL only. Not exposed anywhere; there is no runtime UI.
+  - **Excel import / export per módulo** — inventario + estadísticas ABC already have in-page export/import buttons. Per-módulo bulk import/export is intentionally deferred; if Cervi needs one, file a ticket.
 
 ## Security: do not run `npm run db:seed` against prod
 

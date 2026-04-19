@@ -11,7 +11,6 @@
     "ordenesTrabajo": "Órdenes de Trabajo",
     "estadisticas": "Estadísticas",
     "listados": "Listados",
-    "opciones": "Opciones",
     "cerrarSesion": "Cerrar sesión"
   },
   "auth": {
@@ -353,8 +352,7 @@
       "mantenimiento": "Mantenimientos correctivos y preventivos, plantillas e historial.",
       "ordenesTrabajo": "Órdenes de trabajo con insumos y trazabilidad.",
       "estadisticas": "Dashboards, análisis ABC, evolución de precios USD y métricas de maquinaria.",
-      "listados": "Maestros de usuarios, proveedores, localidades y unidades productivas.",
-      "opciones": "Copias de seguridad, importación y exportación de datos."
+      "listados": "Maestros de usuarios, proveedores, localidades y unidades productivas."
     }
   },
   "estadisticas": {
