@@ -67,7 +67,7 @@ Findings from the manual QA pass against the Neon dev DB (parity-verified vs `fl
 
 - **Module:** Mantenimiento (Phase 6, Slice A — shared `InsumosEditor`)
 - **Severity:** medium
-- **Status:** **fixed (uncommitted)**
+- **Status:** **fixed (committed, 5eec28b)**
 - **Repro:** open a mantenimiento detail, scroll the insumos table — quantity column is offscreen on standard desktop widths (detail has a 340px sidebar + 24px gap + body padding, so the main column is ~860px on a 1280 laptop).
 - **Fix:** folded `costoUnitario` into the `cantidadUtilizada` cell as a small `@ $X.XX` caption next to the unit — removes a whole column. Downsized `cantidadSugerida` from a disabled Input to plain text and shrank its column from `w-24` to `w-20`. Net: ~52px saved, no horizontal scroll at laptop widths; total still in its own column as the primary number.
 - **Not touched:** OT inline editor (`ordenes-trabajo/[id]/ot-detail-client.tsx`) uses its own editor with different shape — track separately if it regresses.
@@ -227,25 +227,17 @@ Audit of 5 routes against [vercel-labs/web-interface-guidelines](https://github.
 
 - **Module:** Compras (`/compras/facturas/nueva`)
 - **Severity:** medium (a11y + browser autofill)
-- **Status:** open
+- **Status:** **fixed (uncommitted)**
 - **Files:** `app/(app)/compras/facturas/nueva/factura-form-client.tsx`
-- **Rule:** "Forms › Inputs need `autocomplete` and meaningful `name`. Form controls need `<label>` or `aria-label`."
-- **Specifics:**
-  - L257-263 `numeroFactura` — no `name`, no `autocomplete="off"` (keeps password managers from firing on a non-credential field).
-  - L267-273 `fechaFactura` — same.
-  - L361-370 per-line `precio` `<Input>` — no `name`, no `aria-label`. The `<th>` "Precio unit." is the only label, which screen readers won't associate per row.
-  - L372-383 per-line `descuento` — same.
-  - L410-418, L423-431, L437-444, L454-462 totals inputs (`descuentoComercial`, `descuentoFinanciero`, `recargo`, `ivaPorcentaje`) wrap `<Label>` with no `htmlFor` — clickable label dead.
-- **Proposed fix:** add `name`, `autoComplete="off"`, and per-input `aria-label={t("...")}` on tbody inputs; convert totals labels to `htmlFor`/`id` pairs.
+- **Fix:** `numeroFactura` + `fechaFactura` got `name` + `autoComplete="off"`. Per-line `precio` / `descuento` inputs got `name={\`precio-${l.id}\`}` style keys and `aria-label` combining the column header with the item description, so screen readers differentiate rows. Totals inputs (`descuentoComercial`, `descuentoFinanciero`, `recargo`, `ivaPorcentaje`) got `id` + matching `htmlFor`, restoring the click-to-focus label behavior. Also gave each numeric input `inputMode="decimal"` (closes the factura-scoped slice of QA-024).
 
 ## QA-024 · Numeric inputs missing `inputMode` for mobile keyboards
 
 - **Module:** Cross-cutting (Compras factura form, totals, price inputs)
 - **Severity:** low
-- **Status:** open
+- **Status:** partial — factura nueva inputs covered as part of QA-023 fix (uncommitted). Inventario stock fields, maquinaria horometros, and other `type="number"` instances still unaudited.
 - **Rule:** "Forms › Use correct `type` (`email`, `tel`, `url`, `number`) and `inputmode`."
-- **Where:** factura nueva price/descuento/totals inputs (`type="number"` only). Same applies to inventario stock fields, maquinaria horometros, and any other money/quantity inputs we haven't checked.
-- **Proposed fix:** add `inputMode="decimal"` to monetary inputs and `inputMode="numeric"` to integer-only ones. Audit all `type="number"` instances during the batch.
+- **Remaining:** grep for `type="number"` outside the factura form and add `inputMode="decimal"` / `inputMode="numeric"` as appropriate. Left open for a cross-cutting sweep post-cutover.
 
 ## QA-025 · Long text columns can break layout (no `truncate` / `min-w-0`)
 
@@ -401,10 +393,11 @@ Legacy-vs-web feature sweep against `Agimav23b.py`. Items below are gaps the aud
 ## Triage
 
 - **Blockers:** ~~QA-004, QA-008, QA-009, QA-013, QA-014, QA-015~~ — all fixed.
-- **High / medium open:** QA-002, QA-006 (needs product decision), QA-023, QA-035, QA-037.
-- **Fixed (committed):** QA-001, QA-005, QA-010, QA-011, QA-015, QA-016, QA-017, QA-018, QA-019, QA-020, QA-021, QA-022, QA-026, QA-030, QA-036.
-- **Low / deferred:** QA-003 (already on backlog), QA-012, QA-024, QA-025, QA-027, QA-028, QA-029, QA-031, QA-032, QA-033, QA-034.
-- **Fixed (uncommitted):** QA-007 (insumos editor column trim).
+- **High / medium open:** QA-002, QA-006 (needs product decision), QA-035, QA-037.
+- **Fixed (committed):** QA-001, QA-005, QA-007, QA-010, QA-011, QA-015, QA-016, QA-017, QA-018, QA-019, QA-020, QA-021, QA-022, QA-026, QA-030, QA-036.
+- **Low / deferred:** QA-003 (already on backlog), QA-012, QA-025, QA-027, QA-028, QA-029, QA-031, QA-032, QA-033, QA-034.
+- **Partial:** QA-024 (factura scope done, broader sweep pending).
+- **Fixed (uncommitted):** QA-023 (factura form a11y).
 
 ## Next steps
 

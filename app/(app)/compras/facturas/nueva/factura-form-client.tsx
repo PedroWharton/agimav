@@ -269,6 +269,8 @@ export function FacturaFormClient({
           <Label htmlFor="numeroFactura">{tFac("campos.numero")} *</Label>
           <Input
             id="numeroFactura"
+            name="numeroFactura"
+            autoComplete="off"
             value={numeroFactura}
             onChange={(e) => setNumeroFactura(e.target.value)}
             placeholder="B-0001-00000042"
@@ -279,6 +281,8 @@ export function FacturaFormClient({
           <Label htmlFor="fechaFactura">{tFac("campos.fecha")}</Label>
           <Input
             id="fechaFactura"
+            name="fechaFactura"
+            autoComplete="off"
             type="date"
             value={fechaFactura}
             onChange={(e) => setFechaFactura(e.target.value)}
@@ -373,8 +377,13 @@ export function FacturaFormClient({
                       <td className="px-2 py-2 align-top">
                         <Input
                           type="number"
+                          inputMode="decimal"
                           step="0.01"
                           min={0}
+                          name={`precio-${l.id}`}
+                          aria-label={`${tFac("columnas.precioUnit")} — ${
+                            l.base.itemDescripcion || `#${l.id}`
+                          }`}
                           value={l.precio}
                           onChange={(e) =>
                             updateLine(l.id, { precio: e.target.value })
@@ -385,9 +394,14 @@ export function FacturaFormClient({
                       <td className="px-2 py-2 align-top">
                         <Input
                           type="number"
+                          inputMode="decimal"
                           step="0.01"
                           min={0}
                           max={100}
+                          name={`descuento-${l.id}`}
+                          aria-label={`${tFac("columnas.descuento")} — ${
+                            l.base.itemDescripcion || `#${l.id}`
+                          }`}
                           value={l.descuento}
                           onChange={(e) =>
                             updateLine(l.id, { descuento: e.target.value })
@@ -417,11 +431,14 @@ export function FacturaFormClient({
           <span className="tabular-nums">{formatARS(subtotalAuto)}</span>
         </div>
         <div className="flex items-center justify-between py-1">
-          <Label className="text-muted-foreground">
+          <Label htmlFor="descuentoComercial" className="text-muted-foreground">
             {tFac("totales.descuentoComercial")}
           </Label>
           <Input
+            id="descuentoComercial"
+            name="descuentoComercial"
             type="number"
+            inputMode="decimal"
             step="0.01"
             min={0}
             value={descuentoComercial}
@@ -431,11 +448,14 @@ export function FacturaFormClient({
           />
         </div>
         <div className="flex items-center justify-between py-1">
-          <Label className="text-muted-foreground">
+          <Label htmlFor="descuentoFinanciero" className="text-muted-foreground">
             {tFac("totales.descuentoFinanciero")}
           </Label>
           <Input
+            id="descuentoFinanciero"
+            name="descuentoFinanciero"
             type="number"
+            inputMode="decimal"
             step="0.01"
             min={0}
             value={descuentoFinanciero}
@@ -445,9 +465,14 @@ export function FacturaFormClient({
           />
         </div>
         <div className="flex items-center justify-between py-1">
-          <Label className="text-muted-foreground">{tFac("totales.recargo")}</Label>
+          <Label htmlFor="recargo" className="text-muted-foreground">
+            {tFac("totales.recargo")}
+          </Label>
           <Input
+            id="recargo"
+            name="recargo"
             type="number"
+            inputMode="decimal"
             step="0.01"
             min={0}
             value={recargo}
@@ -461,11 +486,14 @@ export function FacturaFormClient({
           <span className="tabular-nums">{formatARS(netoGravado)}</span>
         </div>
         <div className="flex items-center justify-between py-1">
-          <Label className="text-muted-foreground">
+          <Label htmlFor="ivaPorcentaje" className="text-muted-foreground">
             {tFac("totales.ivaPorcentaje")}
           </Label>
           <Input
+            id="ivaPorcentaje"
+            name="ivaPorcentaje"
             type="number"
+            inputMode="decimal"
             step="0.01"
             min={0}
             value={ivaPorcentaje}
