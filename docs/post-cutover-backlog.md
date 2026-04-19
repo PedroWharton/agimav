@@ -70,12 +70,27 @@ Each item has a **When** field: `immediately` (first 30 days), `next quarter`, o
 **Shape:** two users clicking "Generar OCs" on the same requisición. Mitigate with optimistic lock on `Requisicion.updatedAt` or a state-check-inside-transaction guard.
 **Why deferred:** Cervi has one procurement clerk; collision probability is low.
 
+### "Cargar TC" admin UI (USD exchange-rate upload)
+**When:** next quarter — low priority.
+**Shape:** admin-only form to append rows to `DolarCotizacion` (`fecha` + `valor` ARS/USD). Legacy has a dedicated dialog to bulk-load rates (`Agimav23b.py` has the equivalent). Today the migrated 4 rows (Dec 2025 → Apr 2026) are the only data; new rates require a SQL insert. Once the last migrated rate ages out, `/estadisticas/precios` starts rendering the "aproximado" band for every recent point and the value of the view degrades.
+**Why deferred:** recent rates still cover current queries; pain threshold is weeks/months away, not days. Flagged by parity audit 2026-04-19.
+
 ## Phase 6 (Mantenimiento) — decisions still unresolved
 
 ### Plantilla-de-mantenimiento trigger
 **When:** next quarter.
 **Shape:** currently the batch generator that turns active plantillas into pending mantenimientos is not wired. Decide: Vercel Cron (hobby plan has limits) vs manual admin button.
 **Why deferred:** Cervi uses plantillas so rarely in legacy (~6 rows ever) that this isn't urgent.
+
+## Phase 6 (Órdenes de Trabajo) — scope to revisit
+
+### OT "Movimiento Diario" + dedicated historial view
+**When:** when triggered — confirm scope with Cervi first.
+**Shape:** parity audit 2026-04-19 flagged two legacy OT entry points with no web equivalent:
+- **"Movimiento Diario"** (`Agimav23b.py` ~line 20225) — opens a dialog to record daily-activity justifications per OT. Purpose unclear from code alone: could be time-tracking, could be a free-text journal, could be a duplicate of OT `descripcion` updates.
+- **Historial de OT** — a dedicated per-OT state-transition log. Today the listing shows current estado only; state changes are implicit.
+**Why deferred:** not in acceptance criteria, no day-one blocker, scope requires Cervi input before we commit to UI. If "Movimiento Diario" turns out to be just a notes blob, it may collapse into the existing OT detail form instead of a new surface.
+**How to apply:** before building, schedule 10 min with Cervi to demo the legacy button and capture what they actually use it for. Log the finding here before implementing.
 
 ## Ops / platform
 
