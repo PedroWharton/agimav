@@ -65,6 +65,9 @@ model Usuario {
   inviteTokens         UsuarioInviteToken[] @relation("UsuarioInviteTokenUsuario")
   inviteTokensEmitidos UsuarioInviteToken[] @relation("UsuarioInviteTokenCreatedBy")
 
+  maquinariaTiposCreados MaquinariaTipo[] @relation("MaquinariaTipoCreatedBy")
+  maquinariasCreadas     Maquinaria[]     @relation("MaquinariaCreatedBy")
+
   @@map("usuarios")
 }
 
@@ -277,8 +280,10 @@ model MaquinariaTipo {
   tablaConfigs          TablaConfig[]
   plantillas            PlantillaMantenimiento[]
 
-  createdAt DateTime @default(now()) @map("created_at")
-  updatedAt DateTime @updatedAt @map("updated_at")
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+  createdById Int?     @map("created_by")
+  createdBy   Usuario? @relation("MaquinariaTipoCreatedBy", fields: [createdById], references: [id], onDelete: SetNull)
 
   @@map("maquinaria_tipos")
 }
@@ -347,8 +352,10 @@ model Maquinaria {
   registrosHoras   RegistroHorasMaquinaria[]
   mantenimientos   Mantenimiento[]
 
-  createdAt DateTime @default(now()) @map("created_at")
-  updatedAt DateTime @updatedAt @map("updated_at")
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+  createdById Int?     @map("created_by")
+  createdBy   Usuario? @relation("MaquinariaCreatedBy", fields: [createdById], references: [id], onDelete: SetNull)
 
   @@index([typeId])
   @@map("maquinaria")
