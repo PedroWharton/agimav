@@ -533,6 +533,129 @@
       }
     }
   },
+  "mantenimiento": {
+    "subnav": {
+      "mantenimientos": "Mantenimientos",
+      "plantillas": "Plantillas",
+      "horometros": "Horómetros"
+    },
+    "index": {
+      "titulo": "Mantenimientos",
+      "descripcion": "Correctivos y preventivos sobre la flota.",
+      "nuevo": "Nuevo mantenimiento",
+      "volver": "Volver a mantenimientos",
+      "buscarPlaceholder": "Buscar por máquina o responsable…",
+      "resultadosCount": "{count, plural, one {# mantenimiento} other {# mantenimientos}}"
+    },
+    "nuevo": {
+      "titulo": "Nuevo mantenimiento",
+      "descripcion": "Registrá un correctivo o preventivo sobre una máquina.",
+      "crear": "Crear mantenimiento",
+      "opcionesAvanzadas": "Opciones avanzadas"
+    },
+    "columnas": {
+      "numero": "Nº",
+      "diasAbiertos": "Días abiertos"
+    },
+    "campos": {
+      "maquina": "Máquina",
+      "tipo": "Tipo",
+      "estado": "Estado",
+      "descripcion": "Descripción",
+      "responsable": "Responsable",
+      "unidadProductiva": "Unidad productiva",
+      "tallerAsignado": "Taller asignado",
+      "prioridad": "Prioridad",
+      "fechaCreacion": "Fecha de creación",
+      "fechaProgramada": "Fecha programada",
+      "fechaInicio": "Fecha de inicio",
+      "fechaFinalizacion": "Fecha de finalización",
+      "creado": "Creado"
+    },
+    "estados": {
+      "Pendiente": "Pendiente",
+      "EnReparacionChacra": "En Reparación · Chacra",
+      "EnReparacionTaller": "En Reparación · Taller",
+      "Finalizado": "Finalizado",
+      "Cancelado": "Cancelado"
+    },
+    "tipos": {
+      "correctivo": "Correctivo",
+      "preventivo": "Preventivo"
+    },
+    "filtros": {
+      "tipo": "Tipo",
+      "estado": "Estado",
+      "responsable": "Responsable",
+      "todos": "Todos",
+      "incluirCerrados": "Incluir cerrados"
+    },
+    "acciones": {
+      "editar": "Editar",
+      "guardar": "Guardar",
+      "cancelarDialogo": "Cancelar",
+      "confirmar": "Confirmar",
+      "iniciarChacra": "Iniciar en chacra",
+      "iniciarTaller": "Mandar a taller",
+      "cambiarTaller": "Cambiar taller",
+      "finalizar": "Finalizar",
+      "cancelar": "Cancelar mantenimiento"
+    },
+    "avisos": {
+      "vacio": "No hay mantenimientos registrados.",
+      "creadoExitoso": "Mantenimiento creado.",
+      "guardadoExitoso": "Cambios guardados.",
+      "insumosGuardados": "Insumos guardados.",
+      "tareasGuardadas": "Tareas guardadas.",
+      "errorGenerico": "No se pudo completar la acción. Reintentá.",
+      "estadoTerminal": "El mantenimiento ya está cerrado.",
+      "cambioEstadoConflicto": "Otro usuario cambió el estado. Refrescá y reintentá.",
+      "sinPermisos": "No tenés permisos para esta acción.",
+      "transicionExitosa": "Estado actualizado.",
+      "sinDescripcion": "Sin descripción.",
+      "cancelarTitulo": "¿Cancelar el mantenimiento?",
+      "cancelarDescripcion": "Esta acción cierra el mantenimiento sin finalizarlo. No se consumen insumos.",
+      "editarDescripcion": "Actualizá los datos del mantenimiento.",
+      "elegiTaller": "Elegí el taller responsable.",
+      "finalizarDescripcion": "Al finalizar se consumen los insumos con cantidad utilizada > 0 del stock."
+    },
+    "tareas": {
+      "titulo": "Tareas",
+      "sinTareas": "Sin tareas todavía.",
+      "guardar": "Guardar tareas",
+      "agregar": "Agregar",
+      "placeholder": "Describí una tarea…"
+    },
+    "insumos": {
+      "titulo": "Insumos",
+      "guardar": "Guardar insumos",
+      "descripcionAyuda": "Se descuentan del stock al finalizar el mantenimiento, según la cantidad utilizada.",
+      "item": "Ítem",
+      "cantidadSugerida": "Sugerida",
+      "cantidadUtilizada": "Utilizada",
+      "costoUnitario": "Precio unitario",
+      "costoTotal": "Total",
+      "sinInsumos": "Sin insumos agregados.",
+      "sobreConsumoAviso": "Supera el stock disponible.",
+      "agregar": "Agregar insumo"
+    },
+    "observaciones": {
+      "titulo": "Observaciones",
+      "placeholder": "Agregá una observación…",
+      "agregar": "Registrar"
+    },
+    "revision": {
+      "titulo": "Revisión programada",
+      "programar": "Programar próxima revisión",
+      "ayuda": "Al finalizar, se crea un mantenimiento pendiente para la fecha elegida.",
+      "fecha": "Fecha",
+      "descripcion": "Descripción"
+    },
+    "historial": {
+      "titulo": "Historial",
+      "sinEventos": "Sin eventos registrados."
+    }
+  },
   "listados": {
     "index": {
       "titulo": "Listados",
