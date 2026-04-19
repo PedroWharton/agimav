@@ -65,11 +65,12 @@ Findings from the manual QA pass against the Neon dev DB (parity-verified vs `fl
 
 ## QA-007 · Insumos editor requires horizontal scroll to reach quantity column
 
-- **Module:** Mantenimiento (Phase 6, Slice A) + OT (Slice D — same component)
+- **Module:** Mantenimiento (Phase 6, Slice A — shared `InsumosEditor`)
 - **Severity:** medium
-- **Status:** open
-- **Repro:** open a mantenimiento detail, scroll the insumos table — quantity column is offscreen on standard desktop widths.
-- **Proposed fix:** trim the columns shown (e.g. collapse code + descripción into one cell, or truncate descripción with ellipsis), or restructure to a row-per-line card layout. Spec §6.2 listed Item / Cantidad sugerida / Cantidad utilizada / Costo unitario / Costo total — five columns is too many at desktop widths.
+- **Status:** **fixed (uncommitted)**
+- **Repro:** open a mantenimiento detail, scroll the insumos table — quantity column is offscreen on standard desktop widths (detail has a 340px sidebar + 24px gap + body padding, so the main column is ~860px on a 1280 laptop).
+- **Fix:** folded `costoUnitario` into the `cantidadUtilizada` cell as a small `@ $X.XX` caption next to the unit — removes a whole column. Downsized `cantidadSugerida` from a disabled Input to plain text and shrank its column from `w-24` to `w-20`. Net: ~52px saved, no horizontal scroll at laptop widths; total still in its own column as the primary number.
+- **Not touched:** OT inline editor (`ordenes-trabajo/[id]/ot-detail-client.tsx`) uses its own editor with different shape — track separately if it regresses.
 
 ## QA-008 · Build error on `/estadisticas/abc` — invalid `"use server"` exports
 
@@ -157,7 +158,7 @@ Findings from the manual QA pass against the Neon dev DB (parity-verified vs `fl
 
 - **Module:** Compras (Phase 5, `/compras/facturas/nueva`)
 - **Severity:** medium
-- **Status:** **fixed (uncommitted)**
+- **Status:** **fixed (committed, 1c419e7)**
 - **Repro:** open the form, fill some but not all required fields → "Guardar" stays disabled with no hint why.
 - **Fix:** required field labels now carry a `*` (proveedor, Nº factura); the disabled save button sits above a small `text-muted-foreground` caption listing exactly what's missing ("Falta: proveedor, precio en cada línea seleccionada"). Reasons computed from the same predicate that drives `canSave`, so the list stays in sync.
 - **Not in scope:** `/compras/recepciones/nueva` and `/compras/requisiciones/[id]/asignar` weren't touched. They share the disabled-button pattern but have different shapes — track separately if the same complaint recurs.
@@ -400,10 +401,10 @@ Legacy-vs-web feature sweep against `Agimav23b.py`. Items below are gaps the aud
 ## Triage
 
 - **Blockers:** ~~QA-004, QA-008, QA-009, QA-013, QA-014, QA-015~~ — all fixed.
-- **High / medium open:** QA-002, QA-006 (needs product decision), QA-007, QA-023, QA-035, QA-037.
-- **Fixed (committed):** QA-001, QA-005, QA-010, QA-011, QA-015, QA-017, QA-018, QA-019, QA-020, QA-021, QA-022, QA-026, QA-030, QA-036.
+- **High / medium open:** QA-002, QA-006 (needs product decision), QA-023, QA-035, QA-037.
+- **Fixed (committed):** QA-001, QA-005, QA-010, QA-011, QA-015, QA-016, QA-017, QA-018, QA-019, QA-020, QA-021, QA-022, QA-026, QA-030, QA-036.
 - **Low / deferred:** QA-003 (already on backlog), QA-012, QA-024, QA-025, QA-027, QA-028, QA-029, QA-031, QA-032, QA-033, QA-034.
-- **Fixed (uncommitted):** QA-016 (missing-reasons caption).
+- **Fixed (uncommitted):** QA-007 (insumos editor column trim).
 
 ## Next steps
 

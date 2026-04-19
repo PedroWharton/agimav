@@ -105,17 +105,14 @@ export function InsumosEditor({
                   {t("item")}
                 </th>
                 {showSugerida ? (
-                  <th className="px-2 py-2 text-right font-medium w-24">
+                  <th className="px-2 py-2 text-right font-medium w-20">
                     {t("cantidadSugerida")}
                   </th>
                 ) : null}
                 <th className="px-2 py-2 text-right font-medium w-24">
                   {t("cantidadUtilizada")}
                 </th>
-                <th className="px-2 py-2 text-right font-medium w-28">
-                  {t("costoUnitario")}
-                </th>
-                <th className="px-2 py-2 text-right font-medium w-28">
+                <th className="px-2 py-2 text-right font-medium w-24">
                   {t("costoTotal")}
                 </th>
                 <th className="w-10" />
@@ -157,15 +154,8 @@ export function InsumosEditor({
                       ) : null}
                     </td>
                     {showSugerida ? (
-                      <td className="px-2 py-2">
-                        <Input
-                          type="number"
-                          step="0.01"
-                          min="0"
-                          value={line.cantidadSugerida || ""}
-                          disabled
-                          className="h-8 text-right tabular-nums"
-                        />
+                      <td className="px-2 py-2 text-right text-xs text-muted-foreground tabular-nums">
+                        {line.cantidadSugerida || "—"}
                       </td>
                     ) : null}
                     <td className="px-2 py-2">
@@ -182,16 +172,12 @@ export function InsumosEditor({
                         disabled={disabled}
                         className="h-8 text-right tabular-nums"
                       />
-                      {line.unidadMedida ? (
-                        <div className="mt-0.5 text-right text-xs text-muted-foreground">
-                          {line.unidadMedida}
-                        </div>
-                      ) : null}
+                      <div className="mt-0.5 flex justify-end gap-1 text-right text-xs text-muted-foreground tabular-nums">
+                        {line.unidadMedida ? <span>{line.unidadMedida}</span> : null}
+                        <span>@ {formatARS(line.costoUnitario)}</span>
+                      </div>
                     </td>
-                    <td className="px-2 py-2 text-right text-xs text-muted-foreground tabular-nums">
-                      {formatARS(line.costoUnitario)}
-                    </td>
-                    <td className="px-2 py-2 text-right tabular-nums">
+                    <td className="px-2 py-2 text-right font-medium tabular-nums">
                       {formatARS(costoTotal)}
                     </td>
                     <td className="px-2 py-2 text-right">
