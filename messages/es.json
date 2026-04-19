@@ -391,7 +391,9 @@
       "precios": "Evolución de precios",
       "preciosDesc": "Historial en ARS y USD por ítem.",
       "maquinaria": "Métricas por máquina",
-      "maquinariaDesc": "Correctivos, preventivos, MTBF y costo por equipo."
+      "maquinariaDesc": "Correctivos, preventivos, MTBF y costo por equipo.",
+      "proveedores": "Gasto por proveedor",
+      "proveedoresDesc": "Ranking de proveedores por facturación."
     },
     "precios": {
       "titulo": "Evolución de precios",
@@ -405,6 +407,22 @@
         "ars": "Precio ARS",
         "usd": "Precio USD",
         "proveedor": "Proveedor"
+      }
+    },
+    "proveedores": {
+      "titulo": "Gasto por proveedor",
+      "descripcion": "Ranking de proveedores por total facturado en el período.",
+      "volver": "Volver a Estadísticas",
+      "vacio": "No hay facturas en el período seleccionado.",
+      "top": "Top 10",
+      "totalGeneral": "Total del período",
+      "resumen": "{con} de {total} proveedores con facturas en el período.",
+      "columnas": {
+        "proveedor": "Proveedor",
+        "facturas": "Facturas",
+        "total": "Total",
+        "porcentaje": "% del total",
+        "ultima": "Última factura"
       }
     },
     "maquinaria": {
