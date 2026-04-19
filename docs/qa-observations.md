@@ -23,12 +23,12 @@ Findings from the manual QA pass against the Neon dev DB (parity-verified vs `fl
 
 ## QA-002 · Mantenimiento list has no pagination
 
-- **Module:** Mantenimiento (Phase 6, Slice A)
+- **Module:** Mantenimiento (Phase 6, Slice A) + cross-cutting (shared `DataTable`)
 - **Severity:** medium
-- **Status:** open
-- **Context:** legacy has 129 mantenimientos. Spec §2.1 said "TanStack server-side at 50/page covers everything with room" — that doesn't appear to be wired.
-- **Risk:** post-cutover the table grows without a ceiling; perf and UX both degrade.
-- **Proposed fix:** add server-side pagination (50/page) per spec. Apply same treatment to `/ordenes-trabajo` and `/mantenimiento/horometros` if they have the same gap.
+- **Status:** **fixed (uncommitted)**
+- **Context:** legacy has 129 mantenimientos. Spec §2.1 said "TanStack server-side at 50/page covers everything with room" — that wasn't wired.
+- **Fix:** added client-side pagination to the shared `components/app/data-table.tsx` with `pageSize` prop (default 50) + `getPaginationRowModel`. Pagination bar auto-hides when `pageCount <= 1`, so small listings (roles, tipos) look unchanged. TanStack's default `autoResetPageIndex: true` handles filter/search changes. All 20 DataTable consumers (mantenimiento, OT, horometros, inventario, listados, compras, maquinaria) pick this up automatically.
+- **Deferred to post-cutover:** true server-side pagination (URL-param state + Prisma `skip`/`take`) is still the right call once any listing approaches ~10k rows. For current volumes (<1k everywhere) the client-side solution is sufficient and ships without a filter-state refactor.
 
 ## QA-003 · Pages not responsive on mobile/tablet
 

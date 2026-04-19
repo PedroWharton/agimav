@@ -1126,6 +1126,11 @@
       "campoRequerido": "Este campo es obligatorio",
       "resultados": "{count, plural, one {# resultado} other {# resultados}}",
       "sinResultados": "No hay resultados para \"{query}\"",
+      "paginacion": {
+        "pagina": "Página {current} de {total}",
+        "anterior": "Anterior",
+        "siguiente": "Siguiente"
+      },
       "vacio": "No hay {entidad} aún",
       "vacioAdmin": "No hay {entidad} aún. Creá el primero.",
       "estadoActivo": "Activo",

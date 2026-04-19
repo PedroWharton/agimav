@@ -6,9 +6,11 @@ import {
   flexRender,
   getCoreRowModel,
   getFilteredRowModel,
+  getPaginationRowModel,
   getSortedRowModel,
   useReactTable,
   type ColumnDef,
+  type PaginationState,
   type SortingState,
 } from "@tanstack/react-table";
 
@@ -20,8 +22,16 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { ArrowDown, ArrowUp, ArrowUpDown, Search } from "lucide-react";
+import {
+  ArrowDown,
+  ArrowUp,
+  ArrowUpDown,
+  ChevronLeft,
+  ChevronRight,
+  Search,
+} from "lucide-react";
 
 function norm(s: unknown): string {
   return String(s ?? "")
@@ -39,6 +49,7 @@ export type DataTableProps<T> = {
   filterSlot?: ReactNode;
   onRowClick?: (row: T) => void;
   initialSort?: SortingState;
+  pageSize?: number;
 };
 
 export function DataTable<T>({
@@ -50,10 +61,15 @@ export function DataTable<T>({
   filterSlot,
   onRowClick,
   initialSort,
+  pageSize = 50,
 }: DataTableProps<T>) {
   const t = useTranslations("listados.common");
   const [query, setQuery] = useState("");
   const [sorting, setSorting] = useState<SortingState>(initialSort ?? []);
+  const [pagination, setPagination] = useState<PaginationState>({
+    pageIndex: 0,
+    pageSize,
+  });
 
   const filtered = useMemo(() => {
     if (!query.trim() || !searchableKeys?.length) return data;
@@ -66,15 +82,19 @@ export function DataTable<T>({
   const table = useReactTable({
     data: filtered,
     columns,
-    state: { sorting },
+    state: { sorting, pagination },
     onSortingChange: setSorting,
+    onPaginationChange: setPagination,
     getCoreRowModel: getCoreRowModel(),
     getSortedRowModel: getSortedRowModel(),
     getFilteredRowModel: getFilteredRowModel(),
+    getPaginationRowModel: getPaginationRowModel(),
   });
 
   const resultCount = filtered.length;
   const hasQuery = !!query.trim();
+  const pageCount = table.getPageCount();
+  const showPagination = pageCount > 1;
 
   return (
     <div className="flex flex-col gap-3">
@@ -169,6 +189,39 @@ export function DataTable<T>({
           </TableBody>
         </Table>
       </div>
+
+      {showPagination ? (
+        <div className="flex items-center justify-end gap-3 text-sm text-muted-foreground">
+          <span className="tabular-nums">
+            {t("paginacion.pagina", {
+              current: pagination.pageIndex + 1,
+              total: pageCount,
+            })}
+          </span>
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            onClick={() => table.previousPage()}
+            disabled={!table.getCanPreviousPage()}
+            aria-label={t("paginacion.anterior")}
+          >
+            <ChevronLeft className="size-4" />
+            {t("paginacion.anterior")}
+          </Button>
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            onClick={() => table.nextPage()}
+            disabled={!table.getCanNextPage()}
+            aria-label={t("paginacion.siguiente")}
+          >
+            {t("paginacion.siguiente")}
+            <ChevronRight className="size-4" />
+          </Button>
+        </div>
+      ) : null}
     </div>
   );
 }
