@@ -109,7 +109,7 @@ export function DataTable<T>({
                       {header.isPlaceholder ? null : canSort ? (
                         <button
                           type="button"
-                          className="inline-flex items-center gap-1 font-medium hover:text-foreground"
+                          className="inline-flex cursor-pointer items-center gap-1 font-medium hover:text-foreground"
                           onClick={header.column.getToggleSortingHandler()}
                         >
                           {flexRender(header.column.columnDef.header, header.getContext())}
