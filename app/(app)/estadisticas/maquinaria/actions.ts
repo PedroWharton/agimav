@@ -2,12 +2,7 @@
 
 import { prisma } from "@/lib/db";
 
-import type {
-  MaqRange,
-  MaqResult,
-  MaqRow,
-  MinFiltro,
-} from "./types";
+import type { MaqRange, MaqResult, MaqRow } from "./types";
 
 function rangeToGte(range: MaqRange): Date | null {
   const now = new Date();
@@ -23,7 +18,6 @@ function rangeToGte(range: MaqRange): Date | null {
 
 export async function computeMaqMetrics(
   range: MaqRange,
-  minFiltro: MinFiltro,
 ): Promise<MaqResult> {
   const gte = rangeToGte(range);
 
@@ -159,14 +153,9 @@ export async function computeMaqMetrics(
   });
 
   const totalMants = (r: MaqRow) => r.correctivos + r.preventivos;
-  const filtered = rows.filter((r) => {
-    if (minFiltro === "min2") return totalMants(r) >= 2;
-    if (minFiltro === "min3") return totalMants(r) >= 3;
-    return true;
-  });
-  filtered.sort((a, b) => b.costoTotal - a.costoTotal);
+  rows.sort((a, b) => b.costoTotal - a.costoTotal);
 
   const sinHistorial = rows.filter((r) => totalMants(r) === 0).length;
 
-  return { rows: filtered, sinHistorial, totalMaquinas };
+  return { rows, sinHistorial, totalMaquinas };
 }
