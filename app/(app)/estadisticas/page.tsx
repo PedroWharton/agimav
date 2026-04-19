@@ -186,6 +186,7 @@ export default async function EstadisticasPage() {
             labels={serieLabels}
             width={280}
             height={40}
+            className="w-full"
           />
           <div className="mt-1 flex justify-between text-[10px] text-muted-foreground">
             <span>{serieLabels[0]}</span>

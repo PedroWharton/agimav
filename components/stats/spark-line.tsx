@@ -17,7 +17,7 @@ export function SparkLine({
     return (
       <div
         className={cn("text-xs text-muted-foreground", className)}
-        style={{ width, height }}
+        style={{ height }}
       >
         —
       </div>
@@ -45,10 +45,11 @@ export function SparkLine({
     <svg
       role="img"
       aria-label="Tendencia"
-      width={width}
+      width="100%"
       height={height}
       viewBox={`0 0 ${width} ${height}`}
-      className={cn("text-sky-600 dark:text-sky-400", className)}
+      preserveAspectRatio="none"
+      className={cn("block text-sky-600 dark:text-sky-400", className)}
     >
       <polyline
         fill="none"

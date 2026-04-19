@@ -172,7 +172,7 @@ Findings from the manual QA pass against the Neon dev DB (parity-verified vs `fl
 
 - **Module:** Estadísticas (Phase 7, Slice A — `/estadisticas`)
 - **Severity:** medium
-- **Status:** open
+- **Status:** **fixed** — `SparkLine` now renders `width="100%"` + `preserveAspectRatio="none"` on the SVG; consumer at `/estadisticas` passes `className="w-full"`. Internal coordinate math stays in the 280-unit viewBox space. Knock-on sweep: `HorizontalBarChart` was already fluid; `PriceChart` stays fixed-width (wrapped in `overflow-x-auto` by design); `AbcPie` is intentionally square (size-constrained).
 - **Repro:** open `/estadisticas` at desktop width → "Facturación del mes" KPI card spans 2 columns but the sparkline visually occupies only the left third.
 - **Root cause:** `SparkLine` renders an SVG with a fixed pixel `width` (`page.tsx:188` passes `width={280}`). The SVG sits unanchored inside the wider card, leaving empty space to its right.
 - **Proposed fix:** make `SparkLine` fluid. In `components/stats/spark-line.tsx`, drop the literal `width` attribute on the `<svg>` (keep `viewBox`), set `width="100%"` and `preserveAspectRatio="none"`. Pass `className="w-full"` from the page. The internal coordinate math stays in the 280-unit space and stretches via the viewBox.
@@ -407,8 +407,8 @@ Legacy-vs-web feature sweep against `Agimav23b.py`. Items below are gaps the aud
 ## Triage
 
 - **Blockers:** ~~QA-004, QA-008, QA-009, QA-013, QA-014, QA-015~~ — all fixed.
-- **High / medium open:** QA-001, QA-002, QA-006 (needs product decision), QA-007, QA-011, QA-016, QA-017, QA-019, QA-023, QA-035, QA-037.
-- **Fixed (parity-audit sweep, uncommitted):** QA-036 (hide Opciones nav + retire placeholder route).
+- **High / medium open:** QA-001, QA-002, QA-006 (needs product decision), QA-007, QA-011, QA-016, QA-019, QA-023, QA-035, QA-037.
+- **Fixed (parity-audit sweep, uncommitted):** QA-017 (fluid SparkLine).
 - **Fixed (design polish batch, uncommitted):** QA-005 (cursor-pointer), QA-018/QA-022 (sticky thead opacity), QA-020 (transition-all → explicit), QA-021 (KpiCard + lentes focus rings), QA-026 (already compliant), QA-030 (scope="col").
 - **Low / deferred:** QA-003 (already on backlog), QA-010, QA-012, QA-024, QA-025, QA-027, QA-028, QA-029, QA-031, QA-032, QA-033, QA-034.
 
