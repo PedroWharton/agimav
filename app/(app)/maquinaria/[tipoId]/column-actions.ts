@@ -50,26 +50,23 @@ export async function saveColumnConfig(
   const { tipoId, columns } = parsed.data;
 
   try {
+    const rows = columns.map((c, i) => ({
+      tipoId,
+      targetDepth: 0,
+      orderIndex: i,
+      columnKind: c.kind,
+      builtinKey: c.kind === "builtin" ? c.builtinKey : null,
+      attributeId: c.kind === "attribute" ? c.attributeId : null,
+      visible: c.visible,
+    }));
     await prisma.$transaction(async (tx) => {
       await tx.tablaConfig.deleteMany({ where: { tipoId } });
-      for (let i = 0; i < columns.length; i++) {
-        const c = columns[i];
-        await tx.tablaConfig.create({
-          data: {
-            tipoId,
-            targetDepth: 0,
-            orderIndex: i,
-            columnKind: c.kind,
-            builtinKey: c.kind === "builtin" ? c.builtinKey : null,
-            attributeId: c.kind === "attribute" ? c.attributeId : null,
-            visible: c.visible,
-          },
-        });
-      }
+      if (rows.length > 0) await tx.tablaConfig.createMany({ data: rows });
     });
     revalidatePath(`/maquinaria/${tipoId}`);
     return { ok: true };
-  } catch {
+  } catch (err) {
+    console.error("[saveColumnConfig] failed", err);
     return { ok: false, error: "unknown" };
   }
 }

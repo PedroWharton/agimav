@@ -80,6 +80,25 @@ Findings from the manual QA pass against the Neon dev DB (parity-verified vs `fl
 
 ---
 
+## QA-011 · Insumos editor accepts blank-item lines on save
+
+- **Module:** Mantenimiento (Slice A) + OT (Slice D) — shared `InsumosEditor` component
+- **Severity:** medium
+- **Status:** open
+- **Repro:** open an OT or mantenimiento detail → "Agregar línea" in the insumos editor → leave the Item combobox empty → save / cerrar / finalizar. Save proceeds; an empty-item row is persisted (or silently dropped — needs verification).
+- **Why this is wrong:** an insumo line without an item is meaningless. Either it's persisted as junk (worst) or silently dropped (confusing — user doesn't know their click did nothing).
+- **Proposed fix:** in the `InsumosEditor` (mantenimiento + OT both consume it), block submit when any line has no item selected, with a row-level field error ("Seleccioná un insumo o eliminá la línea"). Belt-and-suspenders: server-side reject lines with `itemInventarioId == null`.
+- **Likely scope:** also check the equivalent editors in compras (requisición detalle, recepción detalle, factura detalle) — if they share the same shape they may have the same gap.
+
+## QA-010 · Horómetro create form: date field has no default
+
+- **Module:** Mantenimiento (Phase 6, Slice C)
+- **Severity:** low
+- **Status:** open
+- **Repro:** `/mantenimiento/horometros` → "Nuevo registro" → date picker is empty.
+- **Why this is wrong:** the common case is "I'm logging today's horometer reading." Forcing the user to pick a date every time obscures that they could leave it alone for the typical case.
+- **Proposed fix:** default the date input to today (`new Date().toISOString().slice(0, 10)`). Users overrride only when back-filling.
+
 ## QA-009 · Plantilla "aplicar a máquina" dropdown empty + casing inconsistency in `Maquinaria.estado`
 
 - **Module:** Mantenimiento (Phase 6, Slice B) + cross-cutting
@@ -96,11 +115,41 @@ Findings from the manual QA pass against the Neon dev DB (parity-verified vs `fl
   - The 3 originally-broken queries (`mantenimiento/nuevo`, `mantenimiento/horometros`, `mantenimiento/plantillas/[id]`) need no code change — they were already lowercase; data normalization makes them work.
 - **Verified:** parity-check (9 diffs all Postgres-has-more from QA-time additions, no losses), typecheck, build all green. 237 maquinaria rows confirmed lowercase post-migration.
 
+## QA-012 · Maquinaria tipos: delete option disabled (not toast-blocked) when tipo has instances
+
+- **Module:** Maquinaria (Phase 4, tipos listing)
+- **Severity:** low
+- **Status:** open
+- **Repro:** `/maquinaria/tipos` → row menu on a tipo with `instanciasCount > 0` → "Eliminar" option is disabled (greyed out).
+- **Spec/test plan said:** "Try deleting an existing tipo with instances — should be blocked with an error toast."
+- **Why this is a (small) gap:** disabled-without-explanation hides the *reason* (FK in use). A toast would say "no se puede eliminar: hay N máquinas en uso", which is more discoverable.
+- **Proposed fix:** keep menu item enabled, route through the delete confirm dialog, and let the server return `{ ok: false, error: "in_use", count }` → toast. Or: add a tooltip on hover of the disabled item explaining why.
+
+## QA-013 · Column config save fails — Prisma transaction timeout (5000 ms)
+
+- **Module:** Maquinaria (Phase 4, `/maquinaria/[tipoId]` column drawer)
+- **Severity:** **blocker** (admin can't customise columns)
+- **Status:** **fixed (uncommitted)**
+- **Symptom:** clicking "Guardar" in the column config drawer for a tipo with ~25 columns returns the generic "errorGuardar" toast.
+- **Root cause:** `saveColumnConfig` did `deleteMany` + a sequential `for` loop of `tx.tablaConfig.create()` (one round-trip per column). 25 round-trips against Neon overran Prisma's default 5000 ms interactive-transaction timeout (`A query cannot be executed on an expired transaction. ... 5405 ms passed`).
+- **Fix:** swapped the loop for a single `tx.tablaConfig.createMany({ data: rows })` — one round-trip instead of N. Also added `console.error` in the catch so future failures surface in the dev terminal instead of being swallowed.
+- **Related (not fixed):** other actions also have `for (...) tx.X.create(...)` loops inside transactions (`compras/facturas`, `compras/recepciones`, `compras/requisiciones/[id]/asignar`, `ordenes-trabajo`, `mantenimiento`). They interleave reads + updates per iteration so `createMany` doesn't drop in cleanly, but they share the same 5 s ceiling. Real-world line counts are small (≤10), so likely safe — flag only if QA trips one. Long-term: bump `$transaction(..., { timeout: 15000 })` selectively, or restructure to bulk operations.
+
+## QA-014 · Duplicate column when `es_principal` + an explicit principal-atributo entry are both visible
+
+- **Module:** Maquinaria (Phase 4, `/maquinaria/[tipoId]` table)
+- **Severity:** **blocker** (React duplicate-key warning, principal column rendered twice, sorting/cells inconsistent)
+- **Status:** **fixed (uncommitted)**
+- **Symptom:** after persisting a column config that has `es_principal=visible` AND an `attribute` entry whose id matches a principal atributo, the table renders the same `attr_<id>` column twice. Console: `Encountered two children with the same key, attr_1`.
+- **Root cause:** the column builder pushed one `attr_<id>` per principal atributo when handling `es_principal`, then again when handling each `attribute` config item — no dedup. Pre-existing bug, only surfaceable once `saveColumnConfig` actually persists (QA-013). Once QA-013 was fixed, this surfaced on the first real save.
+- **Fix:** `maquinaria-client.tsx:402` — track `seenAttrIds: Set<number>` in the column-build loop and skip any duplicate `attr_<id>`.
+- **Followup (UX, not blocker → backlog):** the drawer still lists principal atributos as separate togglable entries even when `es_principal` is on, which is what tempts users into the duplicate state. Either lock them while `es_principal` is visible, or hide them entirely from the drawer (they're already controlled together).
+
 ## Triage
 
-- **Blockers:** ~~QA-004, QA-008~~ — fixed (uncommitted).
-- **High / medium open:** QA-001, QA-002, QA-006 (needs product decision), QA-007.
-- **Low / deferred:** QA-003 (already on backlog), QA-005.
+- **Blockers:** ~~QA-004, QA-008, QA-009, QA-013, QA-014~~ — all fixed (uncommitted).
+- **High / medium open:** QA-001, QA-002, QA-006 (needs product decision), QA-007, QA-011.
+- **Low / deferred:** QA-003 (already on backlog), QA-005, QA-010, QA-012.
 
 ## Next steps
 

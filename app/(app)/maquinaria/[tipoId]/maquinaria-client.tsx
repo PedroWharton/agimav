@@ -401,12 +401,15 @@ export function MaquinariaClient({
 
   const columns: ColumnDef<MaquinaRow>[] = useMemo(() => {
     const cols: ColumnDef<MaquinaRow>[] = [];
+    const seenAttrIds = new Set<number>();
     for (const item of effectiveConfig) {
       if (!item.visible) continue;
       if (item.kind === "builtin") {
         switch (item.builtinKey) {
           case "es_principal": {
             for (const { atributo } of principalAtributos) {
+              if (seenAttrIds.has(atributo.id)) continue;
+              seenAttrIds.add(atributo.id);
               cols.push({
                 id: `attr_${atributo.id}`,
                 header: atributo.nombre,
@@ -489,6 +492,8 @@ export function MaquinariaClient({
         const info = atributosById.get(item.attributeId);
         if (!info) continue;
         const { atributo } = info;
+        if (seenAttrIds.has(atributo.id)) continue;
+        seenAttrIds.add(atributo.id);
         cols.push({
           id: `attr_${atributo.id}`,
           header: atributo.nombre,
