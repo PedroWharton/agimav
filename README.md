@@ -1,36 +1,114 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# agimav-web
 
-## Getting Started
+Next.js rewrite of the Tkinter/SQLite Agimav/flota7 application used by Cervi to manage maquinaria, inventario, compras, mantenimiento, and operational statistics. Preserves all 38 legacy tables and legacy ids; ships as a web app with Postgres (Neon) + Auth.js + Prisma.
 
-First, run the development server:
+## Quick links
+
+- **[`docs/roadmap-remaining.md`](docs/roadmap-remaining.md)** — phase status dashboard (Phases 0–7 done, Phase 8 cutover pending).
+- **[`docs/cutover-runbook.md`](docs/cutover-runbook.md)** — step-by-step playbook for migration day (T–30 → T+30, rollback plan).
+- **[`docs/post-cutover-backlog.md`](docs/post-cutover-backlog.md)** — deferred concerns with When / Shape / Why-deferred per item. **Skim this before starting any non-trivial task.**
+- **[`docs/ux-spec/`](docs/ux-spec/)** — per-module UX specs (spec-first per phase).
+- **[`AGENTS.md`](AGENTS.md)** — guidance for AI coding agents.
+
+## Getting started
 
 ```bash
+# Install deps
+npm install
+
+# Copy env template and fill in DATABASE_URL, AUTH_SECRET, etc.
+cp .env.example .env.local
+
+# Apply migrations to the target DB
+npx prisma migrate deploy
+
+# (Local dev only) seed roles + a default admin
+npm run db:seed
+
+# (One-off) import data from a flota7.db snapshot — idempotent
+npm run db:migrate-legacy -- /path/to/flota7.db
+
+# Run the dev server
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Open http://localhost:3000 to access the app.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+> **Do not run `db:seed` with a production `DATABASE_URL`.** The seed creates a weak-password admin (`admin@cervi.local` / `cambiar123`) intended for local dev only. See the cutover runbook's security note.
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## Scripts
 
-## Learn More
+| Command | Purpose |
+|---|---|
+| `npm run dev` | Dev server with hot reload. |
+| `npm run build` | Production build. |
+| `npm run start` | Run the production build. |
+| `npm run typecheck` | `tsc --noEmit`. **CI-blocking. Run before every commit.** |
+| `npm run lint` | ESLint. **CI-blocking.** |
+| `npm run db:generate` | Regenerate Prisma client. |
+| `npm run db:migrate` | Apply pending migrations in dev. |
+| `npm run db:migrate-legacy` | Import data from `flota7.db` into Postgres (idempotent). |
+| `npm run db:seed` | Seed roles + dev admin. Dev-only. |
+| `npm run db:studio` | Open Prisma Studio. |
+| `npm run db:cleanup-inventario` | One-off cleanup for inventario data drift. |
 
-To learn more about Next.js, take a look at the following resources:
+## Tech stack
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+- **Framework:** Next.js 16 (App Router, server components by default).
+- **DB:** Postgres on Neon; Prisma client via `@prisma/adapter-pg`.
+- **Auth:** Auth.js v5. Invite-link password flow (SMTP deferred — see backlog).
+- **i18n:** `next-intl`, Spanish locale.
+- **UI:** Tailwind v4 + shadcn/ui. Brand tokens only, no raw hex.
+- **Charts:** hand-rolled SVG (`components/stats/*`). Recharts deferred.
+- **PDF:** `@react-pdf/renderer` for OC export.
+- **Excel:** `xlsx` for inventario + estadísticas exports.
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+## Project conventions
 
-## Deploy on Vercel
+- **Spec-first per module.** Write the UX spec in `docs/ux-spec/` before any UI code.
+- **Spanish for domain, English for infra.** Matches legacy conventions.
+- **Brand tokens only.** Use `sky-*`, `amber-*`, `muted-*` token classes; never raw hex.
+- **Typecheck + lint clean before every commit.** Non-negotiable.
+- **Legacy ids preserved.** Migration script is idempotent; sequences reseeded to `max(id)+1`.
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+## Repo layout
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+```
+app/
+  (app)/                 # authenticated routes (module pages)
+    compras/             # requisiciones, oc, recepciones, facturas
+    maquinaria/          # tipos + instances + ficha
+    mantenimiento/       # mantenimientos + plantillas + horómetros
+    ordenes-trabajo/     # OTs
+    inventario/          # stock + movements
+    estadisticas/        # KPI dashboard + abc + precios + maquinaria + proveedores
+    listados/            # usuarios, roles, proveedores, localidades, etc.
+  api/
+    auth/                # Auth.js handlers
+    health/              # GET /api/health for uptime monitoring
+components/
+  app/                   # layout shell, PageHeader, Combobox, etc.
+  stats/                 # hand-rolled SVG charts
+  ui/                    # shadcn primitives
+docs/
+  cutover-runbook.md
+  post-cutover-backlog.md
+  roadmap-remaining.md
+  ux-spec/
+lib/
+  auth.ts                # Auth.js config
+  db.ts                  # Prisma singleton
+  rbac.ts                # role checks
+  generated/prisma/      # Prisma client (generated)
+prisma/
+  schema.prisma
+  migrations/
+  seed.ts
+scripts/
+  migrate-from-sqlite.ts # legacy data import (idempotent)
+  *-probe.ts             # one-off data-shape probes per phase
+```
+
+## License
+
+Private / Cervi-internal. Not for redistribution.

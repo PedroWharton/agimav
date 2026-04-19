@@ -10,6 +10,7 @@ Step-by-step playbook for the migration day. Written 2026-04-19. Every command i
 - [ ] Production Neon branch exists and its `DATABASE_URL` is set in Vercel prod env.
 - [ ] Vercel build is green on `main`.
 - [ ] You picked a low-activity window with Cervi (typically early weekend morning).
+- [ ] **Never run `npm run db:seed` with a prod `DATABASE_URL`.** The seed creates `admin@cervi.local` / `cambiar123`, meant for dev only. The migration script imports the real `usuarios` from `flota7.db`; prod will already have the correct admin. (See backlog item *seed prod-safety guard* — the runtime guard is not yet implemented, so discipline is the only safeguard today.)
 
 ## T–30 min: pre-flight
 
