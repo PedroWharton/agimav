@@ -94,7 +94,7 @@ Findings from the manual QA pass against the Neon dev DB (parity-verified vs `fl
 
 - **Module:** Mantenimiento (Phase 6, Slice C)
 - **Severity:** low
-- **Status:** open
+- **Status:** **fixed (uncommitted)** — `fechaRegistro` state now initialises with a local `todayISODate()` helper matching the factura/recepción precedent; `resetForm()` also restores today so reopening the dialog re-defaults. Server already fell back to `new Date()` when the field was empty, so server behavior is unchanged.
 - **Repro:** `/mantenimiento/horometros` → "Nuevo registro" → date picker is empty.
 - **Why this is wrong:** the common case is "I'm logging today's horometer reading." Forcing the user to pick a date every time obscures that they could leave it alone for the typical case.
 - **Proposed fix:** default the date input to today (`new Date().toISOString().slice(0, 10)`). Users overrride only when back-filling.
@@ -409,7 +409,8 @@ Legacy-vs-web feature sweep against `Agimav23b.py`. Items below are gaps the aud
 - **Blockers:** ~~QA-004, QA-008, QA-009, QA-013, QA-014, QA-015~~ — all fixed.
 - **High / medium open:** QA-001, QA-002, QA-006 (needs product decision), QA-007, QA-011, QA-016, QA-019, QA-023, QA-035, QA-037.
 - **Fixed (committed):** QA-005, QA-015, QA-017, QA-018, QA-020, QA-021, QA-022, QA-026, QA-030, QA-036.
-- **Low / deferred:** QA-003 (already on backlog), QA-010, QA-012, QA-024, QA-025, QA-027, QA-028, QA-029, QA-031, QA-032, QA-033, QA-034.
+- **Low / deferred:** QA-003 (already on backlog), QA-012, QA-024, QA-025, QA-027, QA-028, QA-029, QA-031, QA-032, QA-033, QA-034.
+- **Fixed (uncommitted):** QA-010 (default horómetro fecha to today).
 
 ## Next steps
 

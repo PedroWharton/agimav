@@ -50,6 +50,11 @@ export type MaquinariaOption = {
 
 const ALL = "__all__";
 
+function todayISODate(): string {
+  const d = new Date();
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+}
+
 export function HorometrosClient({
   rows,
   maquinarias,
@@ -67,7 +72,7 @@ export function HorometrosClient({
   const [open, setOpen] = useState(false);
   const [maquinariaId, setMaquinariaId] = useState<number | null>(null);
   const [horasNuevo, setHorasNuevo] = useState("");
-  const [fechaRegistro, setFechaRegistro] = useState("");
+  const [fechaRegistro, setFechaRegistro] = useState(todayISODate());
   const [observaciones, setObservaciones] = useState("");
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
 
@@ -96,7 +101,7 @@ export function HorometrosClient({
   const resetForm = () => {
     setMaquinariaId(null);
     setHorasNuevo("");
-    setFechaRegistro("");
+    setFechaRegistro(todayISODate());
     setObservaciones("");
     setFieldErrors({});
   };
