@@ -146,7 +146,11 @@ export function InsumosEditor({
                         disabled={disabled}
                         className="h-8"
                       />
-                      {overConsumption ? (
+                      {line.itemInventarioId == null ? (
+                        <div className="mt-1 text-xs text-destructive">
+                          {t("itemRequerido")}
+                        </div>
+                      ) : overConsumption ? (
                         <div className="mt-1 text-xs text-amber-700 dark:text-amber-300">
                           {t("sobreConsumoAviso")}
                         </div>

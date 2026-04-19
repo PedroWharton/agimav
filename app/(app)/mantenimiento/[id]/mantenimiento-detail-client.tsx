@@ -243,16 +243,18 @@ export function MantenimientoDetailClient({
   };
 
   const handleSaveInsumos = () => {
-    const lines = insumos
-      .filter((l) => l.itemInventarioId != null)
-      .map((l) => ({
-        id: l.id,
-        itemInventarioId: l.itemInventarioId as number,
-        cantidadSugerida: l.cantidadSugerida,
-        cantidadUtilizada: l.cantidadUtilizada,
-        unidadMedida: l.unidadMedida,
-        costoUnitario: l.costoUnitario,
-      }));
+    if (insumos.some((l) => l.itemInventarioId == null)) {
+      toast.error(tM("insumos.itemRequeridoToast"));
+      return;
+    }
+    const lines = insumos.map((l) => ({
+      id: l.id,
+      itemInventarioId: l.itemInventarioId as number,
+      cantidadSugerida: l.cantidadSugerida,
+      cantidadUtilizada: l.cantidadUtilizada,
+      unidadMedida: l.unidadMedida,
+      costoUnitario: l.costoUnitario,
+    }));
     startSaveInsumos(async () => {
       const res = await saveInsumos(data.id, { lines });
       if (!res.ok) {

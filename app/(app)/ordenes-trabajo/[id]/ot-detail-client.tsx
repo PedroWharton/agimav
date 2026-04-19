@@ -240,17 +240,19 @@ export function OtDetailClient({
   };
 
   const saveInsumos = () => {
+    if (insumosDraft.some((r) => r.itemInventarioId <= 0)) {
+      toast.error(tO("insumos.itemRequeridoToast"));
+      return;
+    }
     startInsumos(async () => {
       const payload = {
-        insumos: insumosDraft
-          .filter((r) => r.itemInventarioId > 0)
-          .map((r) => ({
-            id: r.id,
-            itemInventarioId: r.itemInventarioId,
-            cantidad: r.cantidad,
-            unidadMedida: r.unidadMedida ?? "",
-            costoUnitario: r.costoUnitario,
-          })),
+        insumos: insumosDraft.map((r) => ({
+          id: r.id,
+          itemInventarioId: r.itemInventarioId,
+          cantidad: r.cantidad,
+          unidadMedida: r.unidadMedida ?? "",
+          costoUnitario: r.costoUnitario,
+        })),
       };
       const res = await saveOtInsumos(ot.id, payload);
       if (!res.ok) {
@@ -676,19 +678,26 @@ export function OtDetailClient({
                               : (row.itemDescripcion ?? `#${row.itemInventarioId}`)}
                           </span>
                         ) : (
-                          <Combobox
-                            value={
-                              row.itemInventarioId
-                                ? String(row.itemInventarioId)
-                                : ""
-                            }
-                            onChange={(v) =>
-                              v ? pickItem(index, Number(v)) : null
-                            }
-                            options={inventarioOpts}
-                            placeholder={tO("insumos.item")}
-                            allowCreate={false}
-                          />
+                          <>
+                            <Combobox
+                              value={
+                                row.itemInventarioId
+                                  ? String(row.itemInventarioId)
+                                  : ""
+                              }
+                              onChange={(v) =>
+                                v ? pickItem(index, Number(v)) : null
+                              }
+                              options={inventarioOpts}
+                              placeholder={tO("insumos.item")}
+                              allowCreate={false}
+                            />
+                            {row.itemInventarioId <= 0 ? (
+                              <span className="mt-1 block text-xs text-destructive">
+                                {tO("insumos.itemRequerido")}
+                              </span>
+                            ) : null}
+                          </>
                         )}
                       </td>
                       <td className="py-2 pr-2">

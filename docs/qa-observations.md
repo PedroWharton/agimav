@@ -17,7 +17,7 @@ Findings from the manual QA pass against the Neon dev DB (parity-verified vs `fl
 
 - **Module:** Mantenimiento (Phase 6, Slice A)
 - **Severity:** medium
-- **Status:** **fixed (uncommitted)**
+- **Status:** **fixed (committed, ae6d778)**
 - **Repro:** `/mantenimiento`, set Estado filter to "Finalizado". Result: empty list. Must additionally tick "Incluir finalizados / cancelados" for rows to render.
 - **Fix:** gated the terminal-exclusion check on `estadoFilter === ALL`. When the user explicitly picks any estado (terminal or not), the estado selector is authoritative and the "incluir cerrados" toggle is ignored. The toggle still governs the default "all estados" view.
 
@@ -81,13 +81,12 @@ Findings from the manual QA pass against the Neon dev DB (parity-verified vs `fl
 
 ## QA-011 · Insumos editor accepts blank-item lines on save
 
-- **Module:** Mantenimiento (Slice A) + OT (Slice D) — shared `InsumosEditor` component
+- **Module:** Mantenimiento (Slice A — shared `InsumosEditor`) + OT (Slice D — inline editor)
 - **Severity:** medium
-- **Status:** open
-- **Repro:** open an OT or mantenimiento detail → "Agregar línea" in the insumos editor → leave the Item combobox empty → save / cerrar / finalizar. Save proceeds; an empty-item row is persisted (or silently dropped — needs verification).
-- **Why this is wrong:** an insumo line without an item is meaningless. Either it's persisted as junk (worst) or silently dropped (confusing — user doesn't know their click did nothing).
-- **Proposed fix:** in the `InsumosEditor` (mantenimiento + OT both consume it), block submit when any line has no item selected, with a row-level field error ("Seleccioná un insumo o eliminá la línea"). Belt-and-suspenders: server-side reject lines with `itemInventarioId == null`.
-- **Likely scope:** also check the equivalent editors in compras (requisición detalle, recepción detalle, factura detalle) — if they share the same shape they may have the same gap.
+- **Status:** **fixed (uncommitted)**
+- **Repro:** open an OT or mantenimiento detail → "Agregar línea" in the insumos editor → leave the Item combobox empty → save. Before fix: line was silently dropped.
+- **Fix:** each blank line now shows an inline `text-destructive` hint ("Seleccioná un ítem o eliminá la línea") and the save handler aborts with a toast instead of filtering rows out. `handleSaveInsumos` (mantenimiento) and `saveInsumos` (OT) both block; users see which rows need attention.
+- **Not in scope:** plantilla form still silently filters blank-item insumos (used for drafts while composing a plantilla — arguably OK, logging separately if it becomes a complaint). Compras detail editors (requisición/recepción/factura líneas) don't share this shape and were not touched.
 
 ## QA-010 · Horómetro create form: date field has no default
 
@@ -405,10 +404,10 @@ Legacy-vs-web feature sweep against `Agimav23b.py`. Items below are gaps the aud
 ## Triage
 
 - **Blockers:** ~~QA-004, QA-008, QA-009, QA-013, QA-014, QA-015~~ — all fixed.
-- **High / medium open:** QA-002, QA-006 (needs product decision), QA-007, QA-011, QA-016, QA-023, QA-035, QA-037.
-- **Fixed (committed):** QA-005, QA-010, QA-015, QA-017, QA-018, QA-019, QA-020, QA-021, QA-022, QA-026, QA-030, QA-036.
+- **High / medium open:** QA-002, QA-006 (needs product decision), QA-007, QA-016, QA-023, QA-035, QA-037.
+- **Fixed (committed):** QA-001, QA-005, QA-010, QA-015, QA-017, QA-018, QA-019, QA-020, QA-021, QA-022, QA-026, QA-030, QA-036.
 - **Low / deferred:** QA-003 (already on backlog), QA-012, QA-024, QA-025, QA-027, QA-028, QA-029, QA-031, QA-032, QA-033, QA-034.
-- **Fixed (uncommitted):** QA-001 (estado filter override).
+- **Fixed (uncommitted):** QA-011 (blank-item insumo lines).
 
 ## Next steps
 

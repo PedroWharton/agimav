@@ -895,6 +895,8 @@
       "costoTotal": "Total",
       "sinInsumos": "Sin insumos agregados.",
       "sobreConsumoAviso": "Supera el stock disponible.",
+      "itemRequerido": "Seleccioná un ítem o eliminá la línea.",
+      "itemRequeridoToast": "Seleccioná el ítem en todas las líneas o eliminá las vacías.",
       "agregar": "Agregar insumo"
     },
     "observaciones": {
@@ -1072,7 +1074,9 @@
       "costoTotal": "Total",
       "totalEstimado": "Total estimado",
       "sobreConsumoAviso": "Supera el stock disponible.",
-      "sobreConsumoAvisoFooter": "Algún insumo supera el stock — revisá antes de cerrar."
+      "sobreConsumoAvisoFooter": "Algún insumo supera el stock — revisá antes de cerrar.",
+      "itemRequerido": "Seleccioná un ítem o eliminá la línea.",
+      "itemRequeridoToast": "Seleccioná el ítem en todas las líneas o eliminá las vacías."
     },
     "avisos": {
       "vacio": "No hay órdenes de trabajo registradas.",
