@@ -1,33 +1,66 @@
 import Link from "next/link";
-import type { LucideIcon } from "lucide-react";
+import { ArrowDown, ArrowUp, Minus, type LucideIcon } from "lucide-react";
 
 import { Card } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
 
 type KpiTone = "neutral" | "warn" | "danger" | "ok" | "info";
+type TrendDirection = "up" | "down" | "flat";
 
-const TONE_STYLES: Record<KpiTone, { icon: string; value: string }> = {
+type KpiTrend = {
+  direction: TrendDirection;
+  /** Positive means "up is good"; negative means "up is bad" (flips arrow color). Default positive. */
+  polarity?: "positive" | "negative";
+  label: string;
+};
+
+const TONE_STYLES: Record<
+  KpiTone,
+  { value: string; tint: string; iconWrap: string }
+> = {
   neutral: {
-    icon: "bg-muted text-muted-foreground",
     value: "text-foreground",
+    tint: "",
+    iconWrap: "text-muted-foreground",
   },
   warn: {
-    icon: "bg-warn-weak text-warn",
     value: "text-warn",
+    tint: "bg-gradient-to-b from-warn-weak to-transparent to-70%",
+    iconWrap: "text-warn",
   },
   danger: {
-    icon: "bg-danger-weak text-danger",
     value: "text-danger",
+    tint: "bg-gradient-to-b from-danger-weak to-transparent to-70%",
+    iconWrap: "text-danger",
   },
   ok: {
-    icon: "bg-success-weak text-success",
     value: "text-success",
+    tint: "bg-gradient-to-b from-success-weak to-transparent to-70%",
+    iconWrap: "text-success",
   },
   info: {
-    icon: "bg-info-weak text-info",
     value: "text-info",
+    tint: "bg-gradient-to-b from-info-weak to-transparent to-70%",
+    iconWrap: "text-info",
   },
 };
+
+function trendTone(
+  direction: TrendDirection,
+  polarity: "positive" | "negative",
+): string {
+  if (direction === "flat") return "text-muted-foreground";
+  const good =
+    (direction === "up" && polarity === "positive") ||
+    (direction === "down" && polarity === "negative");
+  return good ? "text-success" : "text-danger";
+}
+
+function TrendIcon({ direction }: { direction: TrendDirection }) {
+  if (direction === "up") return <ArrowUp className="size-3" aria-hidden />;
+  if (direction === "down") return <ArrowDown className="size-3" aria-hidden />;
+  return <Minus className="size-3" aria-hidden />;
+}
 
 export function KpiCard({
   label,
@@ -37,6 +70,7 @@ export function KpiCard({
   href,
   children,
   tone = "neutral",
+  trend,
   className,
 }: {
   label: string;
@@ -50,6 +84,7 @@ export function KpiCard({
    * only so existing call sites don't break.
    */
   tone?: KpiTone | "default";
+  trend?: KpiTrend;
   className?: string;
 }) {
   const t: KpiTone = tone === "default" ? "neutral" : tone;
@@ -58,38 +93,47 @@ export function KpiCard({
   const body = (
     <Card
       className={cn(
-        "flex h-full flex-col gap-3 p-5",
+        "relative flex h-full min-h-[88px] flex-col gap-1.5 overflow-hidden p-4",
+        styles.tint,
         href &&
-          "transition-colors hover:bg-muted/40 hover:ring-foreground/20",
+          "transition-[border-color,box-shadow] hover:border-border-strong hover:shadow-sm cursor-pointer",
         className,
       )}
     >
-      <div className="flex items-start gap-3">
+      <div className="flex items-center gap-1.5 text-[11.5px] font-medium uppercase tracking-[0.04em] text-muted-foreground">
         {Icon ? (
-          <div className={cn("rounded-md p-2", styles.icon)}>
-            <Icon className="size-5" />
-          </div>
+          <Icon
+            className={cn("size-[13px] shrink-0", styles.iconWrap)}
+            strokeWidth={1.75}
+            aria-hidden
+          />
         ) : null}
-        <div className="flex min-w-0 flex-col gap-0.5">
-          <span className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
-            {label}
-          </span>
+        <span>{label}</span>
+      </div>
+      <div
+        className={cn(
+          "font-heading text-2xl font-semibold leading-[1.15] tracking-tight tabular-nums",
+          styles.value,
+        )}
+      >
+        {value}
+      </div>
+      {trend ? (
+        <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
           <span
             className={cn(
-              "font-heading text-3xl font-semibold leading-none",
-              styles.value,
+              "flex items-center gap-0.5 font-medium",
+              trendTone(trend.direction, trend.polarity ?? "positive"),
             )}
           >
-            {value}
+            <TrendIcon direction={trend.direction} />
+            {trend.label}
           </span>
-          {caption ? (
-            <span className="mt-1 text-xs text-muted-foreground">
-              {caption}
-            </span>
-          ) : null}
         </div>
-      </div>
-      {children ? <div className="mt-auto">{children}</div> : null}
+      ) : caption ? (
+        <div className="text-xs text-muted-foreground">{caption}</div>
+      ) : null}
+      {children ? <div className="mt-auto pt-1">{children}</div> : null}
     </Card>
   );
 

@@ -2,7 +2,7 @@ import { prisma } from "@/lib/db";
 import { auth } from "@/lib/auth";
 import { isAdmin } from "@/lib/rbac";
 
-import { RolesClient, type RolRow } from "./roles-client";
+import { RolesClient, type RolRow, type RolesKpis } from "./roles-client";
 
 export default async function RolesPage() {
   const session = await auth();
@@ -25,5 +25,11 @@ export default async function RolesPage() {
     createdAt: r.createdAt,
   }));
 
-  return <RolesClient roles={roles} isAdmin={admin} />;
+  const total = roles.length;
+  const asignados = roles.filter((r) => r.usuariosCount > 0).length;
+  const sinUsuarios = total - asignados;
+
+  const kpis: RolesKpis = { total, asignados, sinUsuarios };
+
+  return <RolesClient roles={roles} isAdmin={admin} kpis={kpis} />;
 }

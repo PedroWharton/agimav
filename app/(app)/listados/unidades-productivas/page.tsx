@@ -7,6 +7,7 @@ import {
   type UnidadProductivaRow,
   type LocalidadOption,
   type TipoUnidadOption,
+  type UnidadesProductivasKpis,
 } from "./unidades-productivas-client";
 
 export default async function UnidadesProductivasPage() {
@@ -66,12 +67,19 @@ export default async function UnidadesProductivasPage() {
     nombre: t.nombre,
   }));
 
+  const total = rows.length;
+  const enUso = rows.filter((r) => r.usageCount > 0).length;
+  const sinLocalidad = rows.filter((r) => r.localidadId == null).length;
+
+  const kpis: UnidadesProductivasKpis = { total, enUso, sinLocalidad };
+
   return (
     <UnidadesProductivasClient
       rows={rows}
       localidades={localidadOptions}
       tipos={tipoOptions}
       isAdmin={admin}
+      kpis={kpis}
     />
   );
 }

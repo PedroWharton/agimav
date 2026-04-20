@@ -1,10 +1,10 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useMemo, useState, useTransition } from "react";
 import { useTranslations } from "next-intl";
 import { format } from "date-fns";
 import { es } from "date-fns/locale";
-import { Plus } from "lucide-react";
+import { Plus, MapPin, Link2, Circle } from "lucide-react";
 import { toast } from "sonner";
 import { useForm } from "react-hook-form";
 import { standardSchemaResolver } from "@hookform/resolvers/standard-schema";
@@ -27,10 +27,12 @@ import {
 } from "@/components/ui/dropdown-menu";
 
 import { DataTable } from "@/components/app/data-table";
-import { FormDialog } from "@/components/app/form-dialog";
+import { FormSheet } from "@/components/app/form-sheet";
 import { ActionsMenu } from "@/components/app/actions-menu";
 import { ConfirmDialog } from "@/components/app/confirm-dialog";
 import { PageHeader } from "@/components/app/page-header";
+import { Toolbar } from "@/components/app/toolbar";
+import { KpiCard } from "@/components/stats/kpi-card";
 
 import { createLocalidad, updateLocalidad, deleteLocalidad } from "./actions";
 
@@ -41,21 +43,37 @@ export type LocalidadRow = {
   createdAt: Date;
 };
 
+export type LocalidadesKpis = {
+  total: number;
+  enUso: number;
+  sinUso: number;
+};
+
 const formSchema = z.object({
   nombre: z.string().trim().min(1, "Obligatorio").max(100),
 });
 type FormValues = z.infer<typeof formSchema>;
 
+function norm(s: unknown): string {
+  return String(s ?? "")
+    .normalize("NFD")
+    .replace(/\p{Diacritic}/gu, "")
+    .toLowerCase();
+}
+
 export function LocalidadesClient({
   rows,
   isAdmin,
+  kpis,
 }: {
   rows: LocalidadRow[];
   isAdmin: boolean;
+  kpis: LocalidadesKpis;
 }) {
   const t = useTranslations();
   const [open, setOpen] = useState(false);
   const [editing, setEditing] = useState<LocalidadRow | null>(null);
+  const [search, setSearch] = useState("");
 
   const form = useForm<FormValues>({
     resolver: standardSchemaResolver(formSchema),
@@ -63,6 +81,13 @@ export function LocalidadesClient({
   });
 
   const [isSubmitting, startSubmit] = useTransition();
+
+  const filtered = useMemo(() => {
+    const q = search.trim();
+    if (!q) return rows;
+    const qn = norm(q);
+    return rows.filter((r) => norm(r.nombre).includes(qn));
+  }, [rows, search]);
 
   function openCreate() {
     setEditing(null);
@@ -130,10 +155,14 @@ export function LocalidadesClient({
   }
 
   const columns: ColumnDef<LocalidadRow>[] = [
-    { accessorKey: "nombre", header: t("listados.localidades.nombre"), enableSorting: true },
+    {
+      accessorKey: "nombre",
+      header: t("listados.localidades.nombre"),
+      enableSorting: true,
+    },
     {
       accessorKey: "usageCount",
-      header: "Referencias",
+      header: t("listados.localidades.referencias"),
       enableSorting: true,
       cell: ({ row }) => (
         <span className="tabular-nums text-muted-foreground">
@@ -175,7 +204,9 @@ export function LocalidadesClient({
                     {t("listados.common.eliminar")}
                   </DropdownMenuItem>
                 }
-                title={t("listados.localidades.eliminarPregunta", { nombre: r.nombre })}
+                title={t("listados.localidades.eliminarPregunta", {
+                  nombre: r.nombre,
+                })}
                 description={t("listados.roles.eliminarAviso")}
                 confirmLabel={t("listados.common.eliminar")}
                 destructive
@@ -187,6 +218,10 @@ export function LocalidadesClient({
       },
     },
   ];
+
+  const title = editing
+    ? `${t("listados.common.editar")} ${t("listados.localidades.singular").toLowerCase()}`
+    : `${t("listados.common.crear")} ${t("listados.localidades.singular").toLowerCase()}`;
 
   return (
     <div className="flex flex-col gap-6 p-6">
@@ -203,27 +238,60 @@ export function LocalidadesClient({
         }
       />
 
+      <div className="grid grid-cols-2 gap-3 md:grid-cols-3">
+        <KpiCard
+          icon={MapPin}
+          tone="neutral"
+          label={t("listados.localidades.kpi.total")}
+          value={kpis.total.toLocaleString("es-AR")}
+          caption={t("listados.localidades.kpi.totalCaption")}
+        />
+        <KpiCard
+          icon={Link2}
+          tone="ok"
+          label={t("listados.localidades.kpi.enUso")}
+          value={kpis.enUso.toLocaleString("es-AR")}
+          caption={t("listados.localidades.kpi.enUsoCaption")}
+        />
+        <KpiCard
+          icon={Circle}
+          tone="neutral"
+          label={t("listados.localidades.kpi.sinUso")}
+          value={kpis.sinUso.toLocaleString("es-AR")}
+          caption={t("listados.localidades.kpi.sinUsoCaption")}
+        />
+      </div>
+
+      <Toolbar>
+        <Toolbar.Search
+          value={search}
+          onValueChange={setSearch}
+          placeholder={t("listados.localidades.buscarPlaceholder")}
+        />
+      </Toolbar>
+
       <DataTable<LocalidadRow>
         columns={columns}
-        data={rows}
-        searchableKeys={["nombre"]}
+        data={filtered}
         initialSort={[{ id: "nombre", desc: false }]}
         onRowClick={isAdmin ? openEdit : undefined}
         emptyState={
-          isAdmin
-            ? t("listados.common.vacioAdmin", { entidad: t("listados.localidades.plural") })
-            : t("listados.common.vacio", { entidad: t("listados.localidades.plural") })
+          search.trim()
+            ? t("listados.common.sinResultadosFiltrados")
+            : isAdmin
+              ? t("listados.common.vacioAdmin", {
+                  entidad: t("listados.localidades.plural"),
+                })
+              : t("listados.common.vacio", {
+                  entidad: t("listados.localidades.plural"),
+                })
         }
       />
 
-      <FormDialog
+      <FormSheet
         open={open}
         onOpenChange={setOpen}
-        title={
-          editing
-            ? `${t("listados.common.editar")} ${t("listados.localidades.singular").toLowerCase()}`
-            : `${t("listados.common.crear")} ${t("listados.localidades.singular").toLowerCase()}`
-        }
+        title={title}
         isDirty={form.formState.isDirty}
         isSubmitting={isSubmitting}
         onSubmit={submit}
@@ -243,7 +311,7 @@ export function LocalidadesClient({
             )}
           />
         </Form>
-      </FormDialog>
+      </FormSheet>
     </div>
   );
 }

@@ -1,6 +1,10 @@
 import { prisma } from "@/lib/db";
 
-import { RecepcionesListClient, type RecepcionRow } from "./recepciones-list-client";
+import {
+  RecepcionesListClient,
+  type RecepcionRow,
+  type RecepcionesKpis,
+} from "./recepciones-list-client";
 
 export default async function RecepcionesListPage() {
   const recepciones = await prisma.recepcion.findMany({
@@ -9,12 +13,16 @@ export default async function RecepcionesListPage() {
       numeroRemito: true,
       fechaRecepcion: true,
       recibidoPor: true,
+      cerradaSinFactura: true,
       oc: {
         select: {
           id: true,
           numeroOc: true,
           proveedor: { select: { nombre: true } },
         },
+      },
+      detalle: {
+        select: { facturado: true },
       },
       _count: { select: { detalle: true } },
     },
@@ -30,11 +38,31 @@ export default async function RecepcionesListPage() {
     ocNumero: r.oc.numeroOc ?? `#${r.oc.id}`,
     proveedor: r.oc.proveedor.nombre,
     lineasCount: r._count.detalle,
+    cerradaSinFactura: r.cerradaSinFactura,
+    algunaLineaSinFacturar: r.detalle.some((d) => !d.facturado),
   }));
 
   const proveedores = Array.from(
     new Set(rows.map((r) => r.proveedor).filter(Boolean)),
   ).sort((a, b) => a.localeCompare(b, "es"));
 
-  return <RecepcionesListClient rows={rows} proveedores={proveedores} />;
+  const now = new Date();
+  const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
+  const kpis: RecepcionesKpis = {
+    total: rows.length,
+    delMes: rows.filter((r) => new Date(r.fechaRecepcion) >= monthStart).length,
+    sinFacturar: rows.filter(
+      (r) => !r.cerradaSinFactura && r.algunaLineaSinFacturar,
+    ).length,
+    cerradas: rows.filter((r) => r.cerradaSinFactura).length,
+    monthStartIso: monthStart.toISOString(),
+  };
+
+  return (
+    <RecepcionesListClient
+      rows={rows}
+      proveedores={proveedores}
+      kpis={kpis}
+    />
+  );
 }

@@ -1,9 +1,14 @@
-import { notFound, redirect } from "next/navigation";
+import Link from "next/link";
+import { redirect } from "next/navigation";
+import { getTranslations } from "next-intl/server";
 
 import { prisma } from "@/lib/db";
 import { auth } from "@/lib/auth";
 import { isPañolero, userNameFromSession } from "@/lib/rbac";
 import { formatOCNumber } from "@/lib/compras/oc-number";
+
+import { EmptyState } from "@/components/app/states";
+import { Button } from "@/components/ui/button";
 
 import {
   RecepcionFormClient,
@@ -14,15 +19,34 @@ import {
 export default async function NuevaRecepcionPage({
   searchParams,
 }: {
-  searchParams: Promise<{ ocId?: string }>;
+  searchParams: Promise<{ ocId?: string; oc?: string }>;
 }) {
   const session = await auth();
   if (!session?.user) redirect("/login");
   if (!isPañolero(session)) redirect("/compras/recepciones");
 
-  const { ocId: ocIdParam } = await searchParams;
-  const ocId = ocIdParam ? Number.parseInt(ocIdParam, 10) : NaN;
-  if (!Number.isFinite(ocId)) notFound();
+  const tRec = await getTranslations("compras.recepciones");
+
+  const { ocId: ocIdParam, oc: ocParam } = await searchParams;
+  const rawOcId = ocIdParam ?? ocParam;
+  const ocId = rawOcId ? Number.parseInt(rawOcId, 10) : NaN;
+
+  if (!Number.isFinite(ocId)) {
+    return (
+      <div className="flex flex-1 items-center justify-center p-8">
+        <EmptyState
+          variant="no-data"
+          title={tRec("avisos.sinOcSeleccionada")}
+          description={tRec("avisos.sinOcSeleccionadaDesc")}
+          actions={
+            <Button asChild variant="outline" size="sm">
+              <Link href="/compras/oc">{tRec("volverAOc")}</Link>
+            </Button>
+          }
+        />
+      </div>
+    );
+  }
 
   const oc = await prisma.ordenCompra.findUnique({
     where: { id: ocId },
@@ -46,7 +70,21 @@ export default async function NuevaRecepcionPage({
       },
     },
   });
-  if (!oc) notFound();
+  if (!oc) {
+    return (
+      <div className="flex flex-1 items-center justify-center p-8">
+        <EmptyState
+          variant="no-data"
+          title={tRec("avisos.ocInexistente")}
+          actions={
+            <Button asChild variant="outline" size="sm">
+              <Link href="/compras/oc">{tRec("volverAOc")}</Link>
+            </Button>
+          }
+        />
+      </div>
+    );
+  }
   if (oc.estado !== "Emitida" && oc.estado !== "Parcialmente Recibida") {
     redirect(`/compras/oc/${ocId}`);
   }
@@ -66,6 +104,7 @@ export default async function NuevaRecepcionPage({
     id: oc.id,
     numeroOc: oc.numeroOc ?? formatOCNumber(oc.id),
     proveedor: oc.proveedor.nombre,
+    fechaEmision: oc.fechaEmision.toISOString(),
   };
 
   return (

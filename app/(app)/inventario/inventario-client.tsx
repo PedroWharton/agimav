@@ -4,9 +4,17 @@ import { useEffect, useMemo, useState, useTransition } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
-import { format } from "date-fns";
+import { format, formatDistanceToNowStrict } from "date-fns";
 import { es } from "date-fns/locale";
-import { Plus, Upload, Download } from "lucide-react";
+import {
+  Plus,
+  Upload,
+  Download,
+  Package,
+  AlertTriangle,
+  XCircle,
+  DollarSign,
+} from "lucide-react";
 import { toast } from "sonner";
 import { useForm } from "react-hook-form";
 import { standardSchemaResolver } from "@hookform/resolvers/standard-schema";
@@ -15,8 +23,6 @@ import type { ColumnDef } from "@tanstack/react-table";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Checkbox } from "@/components/ui/checkbox";
-import { Label } from "@/components/ui/label";
 import {
   Form,
   FormControl,
@@ -26,18 +32,12 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import {
-  Sheet,
-  SheetContent,
-  SheetDescription,
-  SheetHeader,
-  SheetTitle,
-} from "@/components/ui/sheet";
-import {
-  Tabs,
-  TabsContent,
-  TabsList,
-  TabsTrigger,
-} from "@/components/ui/tabs";
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import {
   DropdownMenuItem,
   DropdownMenuSeparator,
@@ -48,8 +48,13 @@ import { FormSheet } from "@/components/app/form-sheet";
 import { ActionsMenu } from "@/components/app/actions-menu";
 import { ConfirmDialog } from "@/components/app/confirm-dialog";
 import { PageHeader } from "@/components/app/page-header";
+import { Toolbar } from "@/components/app/toolbar";
 import { Combobox } from "@/components/app/combobox";
 import { CurrencyInput } from "@/components/app/currency-input";
+import { DetailDrawer } from "@/components/app/detail-drawer";
+import { StatusChip, type ChipTone } from "@/components/app/status-chip";
+import { EmptyState } from "@/components/app/states";
+import { KpiCard } from "@/components/stats/kpi-card";
 import { StockBadge } from "@/components/inventario/stock-badge";
 import {
   MovementDialog,
@@ -80,6 +85,29 @@ export type InventarioRow = {
   stock: number;
   stockMinimo: number;
   valorUnitario: number;
+};
+
+export type InventarioKpis = {
+  total: number;
+  bajoMinimo: number;
+  stockNegativo: number;
+  valorTotal: number;
+};
+
+type StockEstadoKey = "ok" | "bajo" | "negativo" | "cero";
+
+function stockEstado(row: InventarioRow): StockEstadoKey {
+  if (row.stock < 0) return "negativo";
+  if (row.stockMinimo > 0 && row.stock < row.stockMinimo) return "bajo";
+  if (row.stock === 0 && row.stockMinimo === 0) return "cero";
+  return "ok";
+}
+
+const ESTADO_TONES: Record<StockEstadoKey, ChipTone> = {
+  ok: "ok",
+  bajo: "warn",
+  negativo: "danger",
+  cero: "neutral",
 };
 
 const formSchema = z.object({
@@ -122,8 +150,48 @@ function toOptions(values: readonly string[]) {
   return values.map((v) => ({ value: v, label: v }));
 }
 
+function norm(s: unknown): string {
+  return String(s ?? "")
+    .normalize("NFD")
+    .replace(/\p{Diacritic}/gu, "")
+    .toLowerCase();
+}
+
+function formatARSShort(value: number): string {
+  const abs = Math.abs(value);
+  if (abs >= 1_000_000) {
+    return `$${(value / 1_000_000).toLocaleString("es-AR", {
+      maximumFractionDigits: 1,
+    })}M`;
+  }
+  if (abs >= 1_000) {
+    return `$${(value / 1_000).toLocaleString("es-AR", {
+      maximumFractionDigits: 1,
+    })}k`;
+  }
+  return formatARS(value);
+}
+
 const CATEGORIA_ALL = "__all__";
 const LOCALIDAD_ALL = "__all__";
+
+type EstadoPill = "todos" | "ok" | "bajo" | "negativo";
+
+function categoriaHue(name: string): string {
+  let h = 0;
+  for (let i = 0; i < name.length; i++) h = (h * 31 + name.charCodeAt(i)) >>> 0;
+  const tones = [
+    "bg-sky-500",
+    "bg-amber-500",
+    "bg-emerald-500",
+    "bg-rose-500",
+    "bg-violet-500",
+    "bg-teal-500",
+    "bg-orange-500",
+    "bg-fuchsia-500",
+  ] as const;
+  return tones[h % tones.length]!;
+}
 
 export function InventarioClient({
   rows,
@@ -133,6 +201,8 @@ export function InventarioClient({
   unidadesMedida,
   isAdmin,
   canRegisterMovimiento,
+  kpis,
+  lastMovimientoAt,
 }: {
   rows: InventarioRow[];
   categorias: string[];
@@ -141,6 +211,8 @@ export function InventarioClient({
   unidadesMedida: string[];
   isAdmin: boolean;
   canRegisterMovimiento: boolean;
+  kpis: InventarioKpis;
+  lastMovimientoAt: Date | null;
 }) {
   const t = useTranslations();
   const router = useRouter();
@@ -154,9 +226,10 @@ export function InventarioClient({
   const [recentMovs, setRecentMovs] = useState<RecentMovimiento[] | null>(null);
   const [recentLoading, setRecentLoading] = useState(false);
 
+  const [search, setSearch] = useState("");
   const [categoriaFilter, setCategoriaFilter] = useState<string>(CATEGORIA_ALL);
   const [localidadFilter, setLocalidadFilter] = useState<string>(LOCALIDAD_ALL);
-  const [bajoMinimoFilter, setBajoMinimoFilter] = useState(false);
+  const [estadoPill, setEstadoPill] = useState<EstadoPill>("todos");
   const [importOpen, setImportOpen] = useState(false);
   const [isExporting, startExport] = useTransition();
 
@@ -168,20 +241,36 @@ export function InventarioClient({
   const [isSubmitting, startSubmit] = useTransition();
 
   const filtered = useMemo(() => {
+    const q = search.trim();
+    const qn = q ? norm(q) : "";
     return rows.filter((r) => {
       if (categoriaFilter !== CATEGORIA_ALL && r.categoria !== categoriaFilter)
         return false;
       if (localidadFilter !== LOCALIDAD_ALL && r.localidad !== localidadFilter)
         return false;
-      if (bajoMinimoFilter && !(r.stockMinimo > 0 && r.stock < r.stockMinimo))
-        return false;
+      if (estadoPill !== "todos") {
+        const est = stockEstado(r);
+        if (estadoPill === "ok" && est !== "ok") return false;
+        if (estadoPill === "bajo" && est !== "bajo") return false;
+        if (estadoPill === "negativo" && est !== "negativo") return false;
+      }
+      if (qn) {
+        if (
+          !(
+            norm(r.codigo).includes(qn) ||
+            norm(r.descripcion).includes(qn) ||
+            norm(r.categoria).includes(qn)
+          )
+        )
+          return false;
+      }
       return true;
     });
-  }, [rows, categoriaFilter, localidadFilter, bajoMinimoFilter]);
+  }, [rows, search, categoriaFilter, localidadFilter, estadoPill]);
 
   const bajoMinimoCount = useMemo(
     () =>
-      filtered.filter((r) => r.stockMinimo > 0 && r.stock < r.stockMinimo)
+      filtered.filter((r) => r.stockMinimo > 0 && r.stock < r.stockMinimo && r.stock >= 0)
         .length,
     [filtered],
   );
@@ -341,8 +430,26 @@ export function InventarioClient({
       accessorKey: "categoria",
       header: t("inventario.campos.categoria"),
       enableSorting: true,
+      cell: ({ row }) => {
+        const c = row.original.categoria;
+        if (!c) return <span className="text-muted-foreground">—</span>;
+        return (
+          <span className="inline-flex items-center gap-1.5 rounded-md bg-muted px-2 py-0.5 text-[11.5px] font-medium text-foreground">
+            <span
+              className={`size-1.5 rounded-full ${categoriaHue(c)}`}
+              aria-hidden="true"
+            />
+            {c}
+          </span>
+        );
+      },
+    },
+    {
+      accessorKey: "localidad",
+      header: t("inventario.campos.localidad"),
+      enableSorting: true,
       cell: ({ row }) =>
-        row.original.categoria ?? (
+        row.original.localidad ?? (
           <span className="text-muted-foreground">—</span>
         ),
     },
@@ -365,7 +472,13 @@ export function InventarioClient({
       cell: ({ row }) => {
         const v = row.original.valorUnitario;
         return (
-          <span className={v === 0 ? "text-muted-foreground tabular-nums" : "tabular-nums"}>
+          <span
+            className={
+              v === 0
+                ? "text-muted-foreground tabular-nums"
+                : "tabular-nums"
+            }
+          >
             {formatARS(v)}
           </span>
         );
@@ -432,11 +545,20 @@ export function InventarioClient({
   const unidadesProductivasOptions = toOptions(unidadesProductivas);
   const unidadesMedidaOptions = toOptions(unidadesMedida);
 
+  const detailEstado: StockEstadoKey | null = detail ? stockEstado(detail) : null;
+
+  const lastMovDescription = lastMovimientoAt
+    ? `${rows.length.toLocaleString("es-AR")} items · última actualización ${formatDistanceToNowStrict(
+        lastMovimientoAt,
+        { addSuffix: true, locale: es },
+      )}`
+    : `${rows.length.toLocaleString("es-AR")} items · ${t("inventario.descripcion")}`;
+
   return (
     <div className="flex flex-col gap-6 p-6">
       <PageHeader
         title={t("inventario.titulo")}
-        description={t("inventario.descripcion")}
+        description={lastMovDescription}
         actions={
           <div className="flex items-center gap-2">
             <Button
@@ -477,55 +599,123 @@ export function InventarioClient({
         }
       />
 
+      <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
+        <KpiCard
+          icon={Package}
+          tone="neutral"
+          label={t("inventario.kpis.items")}
+          value={kpis.total.toLocaleString("es-AR")}
+          caption={t("inventario.kpis.itemsCaption")}
+        />
+        <KpiCard
+          icon={AlertTriangle}
+          tone={kpis.bajoMinimo > 0 ? "warn" : "neutral"}
+          label={t("inventario.kpis.bajoMinimo")}
+          value={kpis.bajoMinimo.toLocaleString("es-AR")}
+          caption={t("inventario.kpis.bajoMinimoCaption", {
+            count: kpis.bajoMinimo,
+          })}
+        />
+        <KpiCard
+          icon={XCircle}
+          tone={kpis.stockNegativo > 0 ? "danger" : "neutral"}
+          label={t("inventario.kpis.stockNegativo")}
+          value={kpis.stockNegativo.toLocaleString("es-AR")}
+          caption={t("inventario.kpis.stockNegativoCaption", {
+            count: kpis.stockNegativo,
+          })}
+        />
+        <KpiCard
+          icon={DollarSign}
+          tone="neutral"
+          label={t("inventario.kpis.valorTotal")}
+          value={formatARSShort(kpis.valorTotal)}
+          caption={t("inventario.kpis.valorTotalCaption")}
+        />
+      </div>
+
+      <Toolbar>
+        <Toolbar.Search
+          value={search}
+          onValueChange={setSearch}
+          placeholder={t("inventario.buscarPlaceholder")}
+        />
+        <Toolbar.Selects>
+          <Select
+            value={categoriaFilter}
+            onValueChange={(v) => setCategoriaFilter(v || CATEGORIA_ALL)}
+          >
+            <SelectTrigger className="h-9 w-[180px]">
+              <SelectValue placeholder={t("inventario.filtros.categoria")} />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value={CATEGORIA_ALL}>
+                {t("inventario.filtros.todos")}
+              </SelectItem>
+              {categoriaOptions.map((opt) => (
+                <SelectItem key={opt.value} value={opt.value}>
+                  {opt.label}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          <Select
+            value={localidadFilter}
+            onValueChange={(v) => setLocalidadFilter(v || LOCALIDAD_ALL)}
+          >
+            <SelectTrigger className="h-9 w-[180px]">
+              <SelectValue placeholder={t("inventario.filtros.localidad")} />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value={LOCALIDAD_ALL}>
+                {t("inventario.filtros.todos")}
+              </SelectItem>
+              {localidadOptions.map((opt) => (
+                <SelectItem key={opt.value} value={opt.value}>
+                  {opt.label}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </Toolbar.Selects>
+        <Toolbar.Pills>
+          <EstadoToggle
+            current={estadoPill}
+            value="ok"
+            tone="ok"
+            label={t("inventario.filtros.stockOk")}
+            onClick={setEstadoPill}
+          />
+          <EstadoToggle
+            current={estadoPill}
+            value="bajo"
+            tone="warn"
+            label={t("inventario.filtros.bajoMinimo")}
+            count={kpis.bajoMinimo}
+            onClick={setEstadoPill}
+          />
+          <EstadoToggle
+            current={estadoPill}
+            value="negativo"
+            tone="danger"
+            label={t("inventario.filtros.stockNegativo")}
+            count={kpis.stockNegativo}
+            onClick={setEstadoPill}
+          />
+        </Toolbar.Pills>
+        <span className="ml-auto text-xs text-muted-foreground">
+          {t("inventario.resultadosCount", {
+            total: filtered.length,
+            bajo: bajoMinimoCount,
+          })}
+        </span>
+      </Toolbar>
+
       <DataTable<InventarioRow>
         columns={columns}
         data={filtered}
-        searchableKeys={["codigo", "descripcion", "categoria"]}
-        searchPlaceholder={t("inventario.buscarPlaceholder")}
         initialSort={[{ id: "descripcion", desc: false }]}
         onRowClick={openDetail}
-        filterSlot={
-          <div className="flex flex-wrap items-center gap-3">
-            <Combobox
-              value={categoriaFilter === CATEGORIA_ALL ? "" : categoriaFilter}
-              onChange={(v) => setCategoriaFilter(v || CATEGORIA_ALL)}
-              options={[
-                { value: "", label: t("inventario.filtros.todos") },
-                ...categoriaOptions,
-              ]}
-              placeholder={t("inventario.filtros.categoria")}
-              allowCreate={false}
-              className="h-9 w-[180px]"
-            />
-            <Combobox
-              value={localidadFilter === LOCALIDAD_ALL ? "" : localidadFilter}
-              onChange={(v) => setLocalidadFilter(v || LOCALIDAD_ALL)}
-              options={[
-                { value: "", label: t("inventario.filtros.todos") },
-                ...localidadOptions,
-              ]}
-              placeholder={t("inventario.filtros.localidad")}
-              allowCreate={false}
-              className="h-9 w-[180px]"
-            />
-            <div className="flex items-center gap-2">
-              <Checkbox
-                id="bajo-minimo"
-                checked={bajoMinimoFilter}
-                onCheckedChange={(v) => setBajoMinimoFilter(v === true)}
-              />
-              <Label htmlFor="bajo-minimo" className="text-sm font-normal">
-                {t("inventario.filtros.bajoMinimo")}
-              </Label>
-            </div>
-            <span className="text-sm text-muted-foreground">
-              {t("inventario.resultadosCount", {
-                total: filtered.length,
-                bajo: bajoMinimoCount,
-              })}
-            </span>
-          </div>
-        }
         emptyState={
           isAdmin
             ? t("inventario.avisos.vacioAdmin")
@@ -708,139 +898,155 @@ export function InventarioClient({
         </Form>
       </FormSheet>
 
-      <Sheet
+      <DetailDrawer
         open={detailOpen}
         onOpenChange={(next) => {
           setDetailOpen(next);
           if (!next) setDetail(null);
         }}
-      >
-        <SheetContent className="flex w-full flex-col sm:max-w-2xl">
-          {detail ? (
+        width="lg"
+        title={detail ? (detail.descripcion || "—") : ""}
+        subtitle={
+          detail ? (
+            <div className="flex flex-wrap items-center gap-2 text-xs">
+              <span className="font-mono">{detail.codigo || "—"}</span>
+              {detail.categoria ? <span>· {detail.categoria}</span> : null}
+              {detail.unidadProductiva ? (
+                <span>· {detail.unidadProductiva}</span>
+              ) : null}
+              {detail.localidad ? <span>· {detail.localidad}</span> : null}
+              {detailEstado ? (
+                <StatusChip
+                  tone={ESTADO_TONES[detailEstado]}
+                  label={t(`inventario.estado.${detailEstado}`)}
+                  dot
+                  className="ml-1"
+                />
+              ) : null}
+            </div>
+          ) : null
+        }
+        footer={
+          detail ? (
             <>
-              <SheetHeader>
-                <div className="flex items-start justify-between gap-3">
-                  <div className="min-w-0 flex-1">
-                    <SheetTitle className="truncate">
-                      {detail.descripcion || "—"}
-                    </SheetTitle>
-                    <SheetDescription className="flex flex-wrap items-center gap-2 text-xs">
-                      <span className="font-mono">{detail.codigo || "—"}</span>
-                      {detail.categoria ? (
-                        <span>· {detail.categoria}</span>
-                      ) : null}
-                      {detail.unidadProductiva ? (
-                        <span>· {detail.unidadProductiva}</span>
-                      ) : null}
-                      {detail.localidad ? (
-                        <span>· {detail.localidad}</span>
-                      ) : null}
-                    </SheetDescription>
-                  </div>
-                  <div className="flex shrink-0 gap-2">
-                    {canRegisterMovimiento ? (
-                      <Button
-                        type="button"
-                        size="sm"
-                        onClick={() => openMovement(detail)}
-                      >
-                        {t("inventario.movimientos.registrar")}
-                      </Button>
-                    ) : null}
-                    {isAdmin ? (
-                      <Button
-                        type="button"
-                        size="sm"
-                        variant="outline"
-                        onClick={() => {
-                          setDetailOpen(false);
-                          openEdit(detail);
-                        }}
-                      >
-                        {t("listados.common.editar")}
-                      </Button>
-                    ) : null}
-                  </div>
-                </div>
-              </SheetHeader>
-              <div className="flex-1 overflow-y-auto px-4 pb-4">
-                <Tabs defaultValue="resumen" className="w-full">
-                  <TabsList>
-                    <TabsTrigger value="resumen">Resumen</TabsTrigger>
-                    <TabsTrigger value="movimientos">Movimientos</TabsTrigger>
-                    <TabsTrigger value="facturas" disabled>
-                      Facturas (próximamente)
-                    </TabsTrigger>
-                  </TabsList>
+              {isAdmin ? (
+                <Button
+                  type="button"
+                  size="sm"
+                  variant="outline"
+                  onClick={() => {
+                    setDetailOpen(false);
+                    openEdit(detail);
+                  }}
+                >
+                  {t("listados.common.editar")}
+                </Button>
+              ) : null}
+              {canRegisterMovimiento ? (
+                <Button
+                  type="button"
+                  size="sm"
+                  onClick={() => openMovement(detail)}
+                >
+                  {t("inventario.movimientos.registrar")}
+                </Button>
+              ) : null}
+            </>
+          ) : null
+        }
+        tabs={
+          detail
+            ? [
+                {
+                  id: "resumen",
+                  label: t("inventario.tabs.resumen"),
+                  content: (
+                    <div className="flex flex-col gap-4">
+                      <div className="grid grid-cols-3 gap-3">
+                        <MiniKpi label={t("inventario.campos.stock")}>
+                          <StockBadge
+                            stock={detail.stock}
+                            stockMinimo={detail.stockMinimo}
+                            unidad={detail.unidadMedida}
+                          />
+                        </MiniKpi>
+                        <MiniKpi label={t("inventario.campos.stockMinimo")}>
+                          <span className="tabular-nums">
+                            {formatNumber(detail.stockMinimo)}
+                            {detail.unidadMedida ? (
+                              <span className="ml-1 text-xs text-muted-foreground">
+                                {detail.unidadMedida}
+                              </span>
+                            ) : null}
+                          </span>
+                        </MiniKpi>
+                        <MiniKpi label={t("inventario.campos.valorUnitario")}>
+                          <span className="tabular-nums">
+                            {formatARS(detail.valorUnitario)}
+                          </span>
+                        </MiniKpi>
+                      </div>
+                      <div className="rounded-lg border border-border bg-muted-2/60 p-3 text-sm">
+                        <div className="flex items-center justify-between">
+                          <span className="text-muted-foreground">
+                            {t("inventario.campos.valorTotal")}
+                          </span>
+                          <span className="tabular-nums font-medium">
+                            {formatARS(
+                              Math.max(detail.stock, 0) * detail.valorUnitario,
+                            )}
+                          </span>
+                        </div>
+                      </div>
 
-                  <TabsContent value="resumen" className="mt-4 space-y-4">
-                    <div className="grid grid-cols-3 gap-3">
-                      <KpiCard label={t("inventario.campos.stock")}>
-                        <StockBadge
-                          stock={detail.stock}
-                          stockMinimo={detail.stockMinimo}
-                          unidad={detail.unidadMedida}
+                      <div>
+                        <div className="mb-2 flex items-center justify-between">
+                          <h3 className="text-sm font-medium">
+                            {t("inventario.movimientos.ultimos")}
+                          </h3>
+                          <Link
+                            href={`/inventario/${detail.id}/movimientos`}
+                            className="text-xs text-muted-foreground hover:text-foreground"
+                          >
+                            {t("inventario.movimientos.verTodo")} →
+                          </Link>
+                        </div>
+                        <RecentMovimientosList
+                          loading={recentLoading}
+                          movimientos={recentMovs}
                         />
-                      </KpiCard>
-                      <KpiCard label={t("inventario.campos.stockMinimo")}>
-                        <span className="tabular-nums">
-                          {formatNumber(detail.stockMinimo)}
-                          {detail.unidadMedida ? (
-                            <span className="ml-1 text-xs text-muted-foreground">
-                              {detail.unidadMedida}
-                            </span>
-                          ) : null}
-                        </span>
-                      </KpiCard>
-                      <KpiCard label={t("inventario.campos.valorUnitario")}>
-                        <span className="tabular-nums">
-                          {formatARS(detail.valorUnitario)}
-                        </span>
-                      </KpiCard>
-                    </div>
-                    <div className="rounded-md border border-border p-3 text-sm">
-                      <div className="flex items-center justify-between">
-                        <span className="text-muted-foreground">
-                          {t("inventario.campos.valorTotal")}
-                        </span>
-                        <span className="tabular-nums font-medium">
-                          {formatARS(detail.stock * detail.valorUnitario)}
-                        </span>
                       </div>
                     </div>
-
-                    <div>
-                      <div className="mb-2 flex items-center justify-between">
-                        <h3 className="text-sm font-medium">
-                          {t("inventario.movimientos.ultimos")}
-                        </h3>
-                        <Link
-                          href={`/inventario/${detail.id}/movimientos`}
-                          className="text-xs text-muted-foreground hover:text-foreground"
-                        >
-                          {t("inventario.movimientos.verTodo")} →
-                        </Link>
-                      </div>
-                      <RecentMovimientosList
-                        loading={recentLoading}
-                        movimientos={recentMovs}
-                      />
-                    </div>
-                  </TabsContent>
-
-                  <TabsContent value="movimientos" className="mt-4">
+                  ),
+                },
+                {
+                  id: "movimientos",
+                  label: t("inventario.tabs.movimientos"),
+                  content: (
                     <RecentMovimientosList
                       loading={recentLoading}
                       movimientos={recentMovs}
                       showModulo
                     />
-                  </TabsContent>
-                </Tabs>
-              </div>
-            </>
-          ) : null}
-        </SheetContent>
-      </Sheet>
+                  ),
+                },
+                {
+                  id: "facturas",
+                  label: t("inventario.tabs.facturas"),
+                  content: (
+                    <EmptyState
+                      variant="empty-tab"
+                      title={t("inventario.avisosDetail.facturasNoDisponible")}
+                      description={t(
+                        "inventario.avisosDetail.facturasPronto",
+                      )}
+                    />
+                  ),
+                },
+              ]
+            : undefined
+        }
+      />
 
       <MovementDialog
         target={movementTarget}
@@ -857,7 +1063,49 @@ export function InventarioClient({
   );
 }
 
-function KpiCard({
+function EstadoToggle({
+  current,
+  value,
+  label,
+  tone,
+  count,
+  onClick,
+}: {
+  current: EstadoPill;
+  value: Exclude<EstadoPill, "todos">;
+  label: string;
+  tone: ChipTone;
+  count?: number;
+  onClick: (next: EstadoPill) => void;
+}) {
+  const active = current === value;
+  const toneActive: Record<ChipTone, string> = {
+    neutral: "bg-muted text-foreground border-border",
+    ok: "bg-success-weak text-success border-success/30",
+    warn: "bg-warn-weak text-warn border-warn/30",
+    danger: "bg-danger-weak text-danger border-danger/30",
+    info: "bg-info-weak text-info border-info/30",
+  };
+  const base =
+    "inline-flex h-7 items-center gap-1.5 rounded-full border px-3 text-xs font-medium transition-colors";
+  const idle =
+    "border-transparent bg-muted text-muted-foreground hover:bg-muted-2";
+  return (
+    <button
+      type="button"
+      onClick={() => onClick(active ? "todos" : value)}
+      className={`${base} ${active ? toneActive[tone] : idle}`}
+      aria-pressed={active}
+    >
+      {label}
+      {typeof count === "number" && count > 0 ? (
+        <span className="font-mono text-[11px] opacity-80">{count}</span>
+      ) : null}
+    </button>
+  );
+}
+
+function MiniKpi({
   label,
   children,
 }: {
@@ -865,11 +1113,11 @@ function KpiCard({
   children: React.ReactNode;
 }) {
   return (
-    <div className="rounded-md border border-border p-3">
-      <div className="text-xs uppercase tracking-wide text-muted-foreground">
+    <div className="rounded-lg border border-border bg-card p-3">
+      <div className="text-[10.5px] font-medium uppercase tracking-wide text-muted-foreground">
         {label}
       </div>
-      <div className="mt-1 text-lg">{children}</div>
+      <div className="mt-1 text-lg leading-tight">{children}</div>
     </div>
   );
 }
@@ -885,20 +1133,20 @@ function RecentMovimientosList({
 }) {
   if (loading && !movimientos) {
     return (
-      <div className="rounded-md border border-border p-4 text-sm text-muted-foreground">
+      <div className="rounded-lg border border-border p-4 text-sm text-muted-foreground">
         Cargando…
       </div>
     );
   }
   if (!movimientos || movimientos.length === 0) {
     return (
-      <div className="rounded-md border border-border p-4 text-sm text-muted-foreground">
+      <div className="rounded-lg border border-border bg-muted-2/40 p-4 text-sm text-muted-foreground">
         Sin movimientos registrados.
       </div>
     );
   }
   return (
-    <ul className="divide-y divide-border rounded-md border border-border">
+    <ul className="divide-y divide-border rounded-lg border border-border">
       {movimientos.map((m) => {
         const isEntrada = m.tipo === "entrada";
         return (
@@ -908,14 +1156,13 @@ function RecentMovimientosList({
           >
             <div className="min-w-0">
               <div className="flex items-center gap-2">
-                <span className="text-xs text-muted-foreground tabular-nums">
+                <span className="text-xs text-muted-foreground tabular-nums font-mono">
                   {format(m.fecha, "yyyy-MM-dd", { locale: es })}
                 </span>
                 <span
                   className={
-                    isEntrada
-                      ? "text-xs font-medium text-foreground"
-                      : "text-xs font-medium text-destructive"
+                    "text-[10.5px] font-semibold uppercase tracking-wide " +
+                    (isEntrada ? "text-success" : "text-danger")
                   }
                 >
                   {m.tipo}
@@ -934,7 +1181,12 @@ function RecentMovimientosList({
               ) : null}
             </div>
             <div className="flex items-center gap-3 text-xs tabular-nums">
-              <span>
+              <span
+                className={
+                  "font-medium " +
+                  (isEntrada ? "text-success" : "text-danger")
+                }
+              >
                 {isEntrada ? "+" : "−"}
                 {formatNumber(m.cantidad)}
                 {m.unidadMedida ? ` ${m.unidadMedida}` : ""}

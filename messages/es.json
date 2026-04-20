@@ -1,14 +1,14 @@
 {
   "app": {
     "nombre": "Agimav",
-    "tagline": "Gestión de flota agrícola"
+    "tagline": "Gestión de flota"
   },
   "nav": {
     "maquinaria": "Maquinaria",
     "inventario": "Inventario",
     "compras": "Compras",
     "mantenimiento": "Mantenimiento",
-    "ordenesTrabajo": "Órdenes de Trabajo",
+    "ordenesTrabajo": "Órdenes de trabajo",
     "estadisticas": "Estadísticas",
     "listados": "Listados",
     "cerrarSesion": "Cerrar sesión"
@@ -26,6 +26,49 @@
       "etiqueta": "Notificaciones",
       "proximamente": "Próximamente"
     }
+  },
+  "calendar": {
+    "diasCortos": {
+      "lun": "Lun",
+      "mar": "Mar",
+      "mie": "Mié",
+      "jue": "Jue",
+      "vie": "Vie",
+      "sab": "Sáb",
+      "dom": "Dom"
+    },
+    "diasMini": {
+      "L": "L",
+      "M": "M",
+      "X": "M",
+      "J": "J",
+      "V": "V",
+      "S": "S",
+      "D": "D"
+    },
+    "meses": {
+      "1": "Enero",
+      "2": "Febrero",
+      "3": "Marzo",
+      "4": "Abril",
+      "5": "Mayo",
+      "6": "Junio",
+      "7": "Julio",
+      "8": "Agosto",
+      "9": "Septiembre",
+      "10": "Octubre",
+      "11": "Noviembre",
+      "12": "Diciembre"
+    },
+    "tipos": {
+      "mant": "Mantenimiento",
+      "inv": "Inventario",
+      "comp": "Compras",
+      "log": "Logística",
+      "ins": "Inspección"
+    },
+    "mesAnterior": "Mes anterior",
+    "mesSiguiente": "Mes siguiente"
   },
   "auth": {
     "login": {
@@ -71,7 +114,35 @@
       "categoria": "Categoría",
       "localidad": "Localidad",
       "todos": "Todos",
-      "bajoMinimo": "Bajo mínimo"
+      "bajoMinimo": "Bajo mínimo",
+      "stockNegativo": "Stock negativo",
+      "stockOk": "Stock OK"
+    },
+    "kpis": {
+      "items": "Items en catálogo",
+      "itemsCaption": "Activos y disponibles",
+      "bajoMinimo": "Bajo mínimo",
+      "bajoMinimoCaption": "{count, plural, =0 {Nada bajo mínimo} one {# item requiere reposición} other {# items requieren reposición}}",
+      "stockNegativo": "Stock negativo",
+      "stockNegativoCaption": "{count, plural, =0 {Sin deuda} one {# ítem con deuda} other {# items con deuda}}",
+      "valorTotal": "Valor total",
+      "valorTotalCaption": "Stock × valor unitario"
+    },
+    "estado": {
+      "label": "Estado",
+      "ok": "Stock OK",
+      "bajo": "Bajo mínimo",
+      "negativo": "Negativo",
+      "cero": "Sin stock"
+    },
+    "tabs": {
+      "resumen": "Resumen",
+      "movimientos": "Movimientos",
+      "facturas": "Facturas"
+    },
+    "avisosDetail": {
+      "facturasNoDisponible": "No disponible",
+      "facturasPronto": "La integración con facturas llegará en una próxima versión."
     },
     "campos": {
       "codigo": "Código",
@@ -246,7 +317,45 @@
       "creadaExitosa": "Máquina creada.",
       "actualizadaExitosa": "Máquina actualizada.",
       "eliminadaExitosa": "Máquina eliminada.",
-      "noEncontrada": "La máquina ya no existe."
+      "noEncontrada": "La máquina ya no existe.",
+      "verTarjetas": "Tarjetas",
+      "verTabla": "Tabla",
+      "verDetalle": "Ver detalle",
+      "totalEquipos": "{count, plural, =0 {Sin equipos} one {# equipo} other {# equipos}}",
+      "kpi": {
+        "total": "Total",
+        "totalCaption": "Máquinas cargadas en {tipo}",
+        "activos": "Activas",
+        "activosCaption": "En servicio",
+        "inactivos": "Fuera de servicio",
+        "inactivosCaption": "{inactivos} inactivas · {baja} baja",
+        "horometro": "Horómetro total",
+        "horometroCaption": "Suma de todas las unidades"
+      }
+    },
+    "detalle": {
+      "tabs": {
+        "resumen": "Resumen",
+        "historial": "Historial",
+        "checklists": "Checklists",
+        "documentos": "Documentos"
+      },
+      "abrir": "Abrir ficha",
+      "editar": "Editar",
+      "sinDatosSeccion": "(sin datos)",
+      "altaEl": "Alta: {fecha}",
+      "historial": {
+        "titulo": "Historial no disponible",
+        "descripcion": "El historial de intervenciones todavía no está expuesto desde el backend. Vas a verlo acá cuando se habilite."
+      },
+      "checklists": {
+        "titulo": "Checklists no disponibles",
+        "descripcion": "Esta sección todavía no está conectada. Va a listar los checklists ejecutados sobre la máquina."
+      },
+      "documentos": {
+        "titulo": "Documentos no disponibles",
+        "descripcion": "Esta sección todavía no está conectada. Va a mostrar manuales, seguros y documentación adjunta."
+      }
     },
     "tipos": {
       "titulo": "Tipos de maquinaria",
@@ -265,11 +374,26 @@
       "instancias": "Instancias",
       "atributos": "Atributos",
       "nivelesCount": "{count, plural, one {# nivel} other {# niveles}}",
+      "atributosCount": "{count, plural, one {# atributo} other {# atributos}}",
       "creado": "Creado",
       "verEstructura": "Ver estructura",
+      "abrir": "Abrir {nombre}",
+      "accionesTitulo": "Acciones de {nombre}",
+      "buscarPlaceholder": "Buscar por nombre o unidad…",
       "eliminarPregunta": "¿Eliminar el tipo \"{nombre}\"?",
       "eliminarAviso": "Se pueden borrar los niveles y atributos asociados. Esta acción no se puede deshacer.",
-      "eliminarEnUso": "No se puede eliminar \"{nombre}\": {count, plural, one {hay # máquina cargada} other {hay # máquinas cargadas}} con este tipo."
+      "eliminarEnUso": "No se puede eliminar \"{nombre}\": {count, plural, one {hay # máquina cargada} other {hay # máquinas cargadas}} con este tipo.",
+      "kpi": {
+        "total": "Tipos",
+        "totalCaption": "{activos} activos · {inactivos} inactivos",
+        "instancias": "Máquinas",
+        "instanciasCaption": "Total de instancias cargadas",
+        "instanciasLabel": "{count, plural, =0 {Sin instancias} one {# instancia} other {# instancias}}",
+        "atributos": "Atributos",
+        "atributosCaption": "Campos definidos en las estructuras",
+        "estado": "Activos",
+        "estadoCaption": "{inactivos, plural, =0 {Todos en uso} one {# tipo inactivo} other {# tipos inactivos}}"
+      }
     },
     "estructura": {
       "titulo": "{nombre} — Estructura",
@@ -375,6 +499,8 @@
     "descripcion": "Resumen operativo del mes y tendencias.",
     "adminSeccion": "Admin",
     "exportar": "Exportar",
+    "exportarCsv": "Exportar CSV",
+    "reportePdf": "Reporte PDF",
     "exportarError": "No se pudo exportar. Probá de nuevo.",
     "rangos": {
       "7d": "Últimos 7 días",
@@ -408,6 +534,70 @@
       "proveedores": "Gasto por proveedor",
       "proveedoresDesc": "Ranking de proveedores por facturación."
     },
+    "dashboard": {
+      "subtitulo": "Indicadores operativos de flota, taller y abastecimiento · últimos 90 días",
+      "kpi": {
+        "disponibilidad": "Disponibilidad flota",
+        "disponibilidadCaption": "{activas} activas de {total}",
+        "mantPendientes": "Mantenimientos pendientes",
+        "mantPendientesCaption": "sin asignar o sin empezar",
+        "otEnCurso": "OT en curso",
+        "otEnCursoCaption": "órdenes de trabajo abiertas",
+        "facturacionMes": "Facturación del mes",
+        "facturacionMesCaption": "{count, plural, =0 {Sin facturas en {mes}} one {# factura · {mes}} other {# facturas · {mes}}}"
+      },
+      "mezcla": {
+        "titulo": "Mezcla de mantenimientos",
+        "subtitulo": "Creados en los últimos 90 días",
+        "ratio": "Ratio P/C",
+        "totalCaption": "Mant. / 90d",
+        "verMas": "Métricas por máquina"
+      },
+      "repuestos": {
+        "titulo": "Repuestos más consumidos",
+        "subtitulo": "90 días · por valor total",
+        "verMas": "Análisis ABC"
+      },
+      "backlog": {
+        "titulo": "Backlog por máquina",
+        "subtitulo": "Mantenimientos pendientes + en proceso",
+        "verMas": "Métricas por máquina"
+      },
+      "otif": {
+        "titulo": "Performance de proveedores",
+        "subtitulo": "% recibido sobre pedido · OCs últimos 90 días",
+        "objetivo": "objetivo 90%",
+        "verMas": "Gasto por proveedor"
+      },
+      "tecnicos": {
+        "titulo": "Productividad de técnicos",
+        "subtitulo": "Mantenimientos a cargo · últimos 90 días"
+      },
+      "taller": {
+        "titulo": "Carga de taller & gasto",
+        "subtitulo": "Mantenimientos creados y facturación por mes · últimos 12 meses",
+        "legendaMant": "Mantenimientos",
+        "legendaGasto": "Gasto (ARS)"
+      },
+      "gasto": {
+        "titulo": "Gasto mensual por rubro",
+        "subtitulo": "Facturación por categoría de inventario · últimos 6 meses",
+        "otros": "Otros"
+      },
+      "heatmap": {
+        "titulo": "Correctivos por máquina · calendario",
+        "subtitulo": "Top {count} máquinas × últimas {weeks} semanas",
+        "leyendaMenos": "Menos",
+        "leyendaMas": "Más"
+      },
+      "tipos": {
+        "correctivo": "Correctivo",
+        "preventivo": "Preventivo",
+        "mejora": "Mejora",
+        "otro": "Otro"
+      },
+      "sinDatos": "Sin datos en el período"
+    },
     "precios": {
       "titulo": "Evolución de precios",
       "descripcion": "Historial de precios en ARS y USD por ítem y proveedor.",
@@ -415,6 +605,18 @@
       "sinHistorial": "Todavía no hay precios históricos cargados.",
       "elegirItem": "Elegí un ítem para ver su evolución.",
       "unSoloPunto": "Este ítem solo tiene un punto de precio en el período. No hay evolución para graficar.",
+      "chartTitulo": "Precio en el tiempo",
+      "chartSubtitulo": "ARS (línea continua) y USD (línea punteada)",
+      "tablaTitulo": "Historial de precios",
+      "tablaSubtitulo": "Cargas ordenadas por fecha ascendente",
+      "kpi": {
+        "registros": "Registros",
+        "registrosCaption": "{count, plural, one {# punto de precio} other {# puntos de precio}} en el período",
+        "ultimoArs": "Último precio ARS",
+        "ultimoArsCaption": "Carga del {fecha}",
+        "variacion": "Variación del período",
+        "variacionCaption": "Primer vs. último registro"
+      },
       "columnas": {
         "fecha": "Fecha",
         "ars": "Precio ARS",
@@ -428,8 +630,19 @@
       "volver": "Volver a Estadísticas",
       "vacio": "No hay facturas en el período seleccionado.",
       "top": "Top 10",
+      "topSubtitulo": "Proveedores por total facturado",
+      "tablaTitulo": "Gasto por proveedor",
+      "tablaSubtitulo": "Ordenado por total facturado",
       "totalGeneral": "Total del período",
       "resumen": "{con} de {total} proveedores con facturas en el período.",
+      "kpi": {
+        "total": "Total facturado",
+        "totalCaption": "Facturas registradas en el período",
+        "proveedores": "Proveedores activos",
+        "proveedoresCaption": "de {total, plural, one {# proveedor} other {# proveedores}} en el sistema",
+        "topShare": "Concentración top 5",
+        "topShareCaption": "Participación de los 5 más grandes"
+      },
       "columnas": {
         "proveedor": "Proveedor",
         "facturas": "Facturas",
@@ -445,6 +658,18 @@
       "vacio": "No hay máquinas que cumplan el filtro seleccionado.",
       "sinHistorial": "{count, plural, =0 {Todas las máquinas tienen historial.} one {# máquina sin historial en el período.} other {# máquinas sin historial en el período.}}",
       "totales": "{total, plural, one {# máquina en total} other {# máquinas en total}}",
+      "topCostoTitulo": "Top máquinas por costo",
+      "topCostoSubtitulo": "Máquinas con mayor gasto de mantenimiento",
+      "tablaTitulo": "Métricas por máquina",
+      "tablaSubtitulo": "Filtrado por mínimo de mantenimientos",
+      "kpi": {
+        "totales": "Máquinas",
+        "totalesCaption": "en el sistema",
+        "conHistorial": "Con historial",
+        "conHistorialCaption": "máquinas con mantenimientos en el período",
+        "costoTotal": "Costo acumulado",
+        "costoTotalCaption": "suma de insumos consumidos"
+      },
       "filtros": {
         "min2": "≥ 2 mantenimientos",
         "min3": "≥ 3 mantenimientos",
@@ -466,8 +691,19 @@
       "volver": "Volver a Estadísticas",
       "vacio": "No hay movimientos de salida en el período seleccionado.",
       "distribucion": "Distribución por clase",
+      "distribucionSubtitulo": "Valor consumido por clase A/B/C",
+      "tablaTitulo": "Ítems clasificados",
+      "tablaSubtitulo": "Ordenado por valor consumido",
       "totalValor": "Valor total del período",
       "sinConsumo": "{count, plural, =0 {Todos los ítems tuvieron movimientos en el período.} one {# ítem sin consumo en el período.} other {# ítems sin consumo en el período.}}",
+      "kpi": {
+        "valorTotal": "Valor total",
+        "valorTotalCaption": "consumido en el período",
+        "items": "Ítems clasificados",
+        "itemsCaption": "{count, plural, one {# ítem con consumo} other {# ítems con consumo}}",
+        "claseA": "Clase A",
+        "claseACaption": "{count, plural, one {# ítem} other {# ítems}} · 80% del valor"
+      },
       "clases": {
         "a": "A · 80% del valor",
         "b": "B · 15% del valor",
@@ -549,6 +785,16 @@
         "unidadProductiva": "Unidad productiva",
         "incluirRechazadas": "Incluir rechazadas",
         "todos": "Todos"
+      },
+      "kpi": {
+        "total": "Total requisiciones",
+        "totalCaption": "cargadas en el sistema",
+        "pendientes": "Pendientes de revisión",
+        "pendientesCaption": "{count, plural, =0 {Nada pendiente} one {# esperando aprobación} other {# esperando aprobación}}",
+        "aprobadas": "Aprobadas sin OC",
+        "aprobadasCaption": "listas para emitir orden",
+        "delMes": "Nuevas este mes",
+        "delMesCaption": "creadas en {mes}"
       },
       "acciones": {
         "enviarRevision": "Enviar a revisión",
@@ -742,6 +988,16 @@
         "proveedor": "Proveedor",
         "todos": "Todos"
       },
+      "kpi": {
+        "total": "Total recepciones",
+        "totalCaption": "remitos registrados",
+        "delMes": "Del mes",
+        "delMesCaption": "{count, plural, =0 {Sin recepciones en {mes}} one {# recepción · {mes}} other {# recepciones · {mes}}}",
+        "sinFacturar": "Sin facturar",
+        "sinFacturarCaption": "remitos con líneas pendientes",
+        "cerradas": "Cerradas sin factura",
+        "cerradasCaption": "devoluciones o remitos anulados"
+      },
       "destinos": {
         "Stock": "Stock",
         "Directa": "Directa"
@@ -762,7 +1018,26 @@
         "creadaExitoso": "Recepción #{id} registrada.",
         "sobreRecepcion": "Alguna cantidad supera el pendiente. Revisá las líneas.",
         "ocNoRecibible": "La OC ya no admite recepciones.",
-        "nadaParaRecibir": "Cargá al menos una cantidad antes de guardar."
+        "nadaParaRecibir": "Cargá al menos una cantidad antes de guardar.",
+        "sinOcSeleccionada": "Seleccioná una OC",
+        "sinOcSeleccionadaDesc": "Para registrar una recepción, abrí una orden de compra y usá el botón «Registrar recepción».",
+        "ocInexistente": "La OC solicitada no existe."
+      },
+      "volverAOc": "Volver a órdenes de compra",
+      "resumenSidebar": {
+        "titulo": "Resumen",
+        "lineas": "Líneas",
+        "unidadesPedidas": "Pedidas",
+        "unidadesRecibidas": "A recibir",
+        "notas": "Notas",
+        "notasPlaceholder": "Observaciones generales (opcional)",
+        "adjuntos": "Adjuntos",
+        "adjuntosNota": "Los archivos se guardan en el navegador por ahora (sin subida)."
+      },
+      "footer": {
+        "cancelar": "Cancelar",
+        "confirmar": "Confirmar recepción",
+        "guardando": "Guardando…"
       },
       "cerrarSinFactura": {
         "accion": "Cerrar sin factura",
@@ -797,7 +1072,11 @@
         "fecha": "Fecha",
         "usuario": "Usuario",
         "lineas": "Líneas",
-        "total": "Total"
+        "total": "Total",
+        "tipo": "Tipo",
+        "puntoDeVenta": "Punto de venta",
+        "notas": "Notas internas",
+        "notasPlaceholder": "Observaciones internas (opcional)…"
       },
       "columnas": {
         "remito": "Remito",
@@ -813,8 +1092,19 @@
         "proveedor": "Proveedor",
         "todos": "Todos"
       },
+      "kpi": {
+        "total": "Total facturas",
+        "totalCaption": "registradas en el sistema",
+        "delMes": "Del mes",
+        "delMesCaption": "{count, plural, =0 {Sin facturas en {mes}} one {# factura · {mes}} other {# facturas · {mes}}}",
+        "montoMes": "Facturación del mes",
+        "montoMesCaption": "neto acumulado de {mes}",
+        "proveedoresMes": "Proveedores facturando",
+        "proveedoresMesCaption": "distintos en {mes}"
+      },
       "acciones": {
-        "guardar": "Guardar factura"
+        "guardar": "Guardar factura",
+        "cancelar": "Cancelar"
       },
       "faltan": {
         "proveedor": "proveedor",
@@ -861,16 +1151,65 @@
     "index": {
       "titulo": "Mantenimientos",
       "descripcion": "Correctivos y preventivos sobre la flota.",
+      "descripcionRica": "{activos, plural, =0 {Sin órdenes activas} one {# orden activa} other {# órdenes activas}} · {vencidas, plural, =0 {sin vencidas} one {# vencida} other {# vencidas}} · {enTaller, plural, =0 {ninguna en taller} one {# en taller} other {# en taller}}",
       "nuevo": "Nuevo mantenimiento",
       "volver": "Volver a mantenimientos",
       "buscarPlaceholder": "Buscar por máquina o responsable…",
       "resultadosCount": "{count, plural, one {# mantenimiento} other {# mantenimientos}}"
     },
+    "kpis": {
+      "vencidas": "Vencidas",
+      "vencidasCaption": "{count, plural, =0 {Nada vencido} one {# orden vencida} other {# órdenes vencidas}}",
+      "proximas": "Próximas 7 días",
+      "proximasCaption": "Órdenes programadas próximas",
+      "enCurso": "En curso",
+      "enCursoCaption": "En chacra o taller",
+      "pendientes": "Pendientes",
+      "pendientesCaption": "Por iniciar"
+    },
+    "lista": {
+      "vista": "Lista"
+    },
+    "tablero": {
+      "vista": "Tablero",
+      "laneVacia": "Sin mantenimientos en esta columna.",
+      "vence": "vence {label}",
+      "vencidoHace": "vencido hace {days}d",
+      "venceHoy": "vence hoy",
+      "venceEn": "vence en {days}d",
+      "sinFecha": "sin fecha",
+      "tareas": "{done}/{total} tareas",
+      "prioridad": "Prioridad {nivel}"
+    },
     "nuevo": {
-      "titulo": "Nuevo mantenimiento",
-      "descripcion": "Registrá un correctivo o preventivo sobre una máquina.",
-      "crear": "Crear mantenimiento",
-      "opcionesAvanzadas": "Opciones avanzadas"
+      "titulo": "Nueva orden de trabajo",
+      "descripcion": "Creá una OT de mantenimiento con máquina, tipo de trabajo, repuestos y asignación. Se generará con estado Pendiente hasta que el técnico la inicie.",
+      "crear": "Crear OT",
+      "cancelar": "Cancelar",
+      "dirty": "Cambios sin guardar",
+      "opcionesAvanzadas": "Opciones avanzadas",
+      "requerido": "requerido",
+      "opcional": "opcional",
+      "secciones": {
+        "maquina": "Máquina",
+        "tipo": "Tipo de trabajo",
+        "descripcion": "Descripción del trabajo",
+        "repuestos": "Repuestos e insumos",
+        "asignacion": "Asignación y programación"
+      },
+      "hints": {
+        "repuestos": "se reservan al crear · se consumen al finalizar",
+        "asignacion": "Asigná un responsable y definí cuándo se hará el trabajo."
+      },
+      "plantilla": {
+        "label": "Plantilla de checklist",
+        "info": "opcional · se aplica al preventivo",
+        "placeholder": "— sin plantilla —",
+        "ayuda": "Seleccioná una plantilla para precargar tareas e insumos sugeridos."
+      },
+      "descripcionLabel": "Descripción detallada",
+      "descripcionPlaceholder": "Instrucciones, observaciones o historial relevante para el técnico…",
+      "volver": "Volver a Mantenimiento"
     },
     "columnas": {
       "numero": "Nº",
@@ -977,6 +1316,25 @@
     "historial": {
       "titulo": "Historial",
       "sinEventos": "Sin eventos registrados."
+    },
+    "detalle": {
+      "datosGenerales": "Datos generales",
+      "descripcionTitulo": "Descripción",
+      "checklist": "Checklist",
+      "repuestos": "Repuestos asignados",
+      "repuestosTotal": "Total repuestos",
+      "partes": "Partes de trabajo",
+      "archivos": "Archivos adjuntos",
+      "acciones": "Acciones",
+      "costos": "Costos",
+      "costoRepuestos": "Repuestos",
+      "costoManoObra": "Mano de obra",
+      "costoTotal": "Total",
+      "bitacoraRapida": "Bitácora rápida",
+      "prioridadBaja": "Prioridad baja",
+      "prioridadMedia": "Prioridad media",
+      "prioridadAlta": "Prioridad alta",
+      "cambiarEstado": "Cambiar estado"
     },
     "plantillas": {
       "titulo": "Plantillas de mantenimiento",
@@ -1126,6 +1484,27 @@
       "todos": "Todos",
       "incluirCerradas": "Incluir cerradas"
     },
+    "calendario": {
+      "descripcion": "{count, plural, =0 {Sin OTs creadas esta semana} one {# OT creada esta semana} other {# OTs creadas esta semana}}",
+      "eventosCount": "{count, plural, one {# evento visible} other {# eventos visibles}}",
+      "nav": {
+        "anterior": "Semana anterior",
+        "siguiente": "Semana siguiente",
+        "hoy": "Hoy"
+      },
+      "filtros": {
+        "categorias": "Categorías",
+        "responsable": "Responsable",
+        "maquina": "Máquina",
+        "maquinaPlaceholder": "Buscar título…",
+        "todos": "Todos"
+      },
+      "proximas": {
+        "titulo": "Próximas",
+        "subtitulo": "{count, plural, =0 {Nada en cola} one {# próxima OT} other {# próximas OTs}}",
+        "vacio": "No hay OTs visibles en esta semana."
+      }
+    },
     "insumos": {
       "titulo": "Insumos",
       "vacio": "Sin insumos cargados.",
@@ -1163,7 +1542,11 @@
   "listados": {
     "index": {
       "titulo": "Listados",
-      "descripcion": "Datos maestros del sistema"
+      "descripcion": "Datos maestros que alimentan al resto de Agimav: personas, proveedores, estructura operativa y unidades de medida.",
+      "exportar": "Exportar todos (CSV)",
+      "importar": "Importar",
+      "auditHint": "Los listados son <strong>datos maestros</strong>: los valores que elijas acá aparecen en los selectores de Inventario, Compras, Maquinaria y Mantenimiento. Desactivá (en lugar de eliminar) para preservar el historial.",
+      "vistaCompleta": "vista completa"
     },
     "tiles": {
       "grupos": {
@@ -1173,6 +1556,15 @@
       },
       "meta": {
         "activosInactivos": "{activos} activos · {inactivos} inactivos"
+      },
+      "descripciones": {
+        "usuarios": "Personas con acceso al sistema. Invitá, asigná roles y gestioná altas y bajas.",
+        "roles": "Perfiles de acceso que agrupan permisos para cada área del sistema.",
+        "proveedores": "Empresas que proveen repuestos, servicios y combustible. Usado en compras y recepciones.",
+        "localidades": "Ciudades y regiones donde Agimav opera. Se usan en proveedores y unidades productivas.",
+        "unidadesProductivas": "Obras y bases operativas. Las máquinas y OTs se asocian a una unidad.",
+        "tiposUnidad": "Clasificación de unidades productivas: obra vial, cantera, base logística, etc.",
+        "unidadesMedida": "Unidades que usan los items de inventario: litros, kilos, unidades, metros."
       }
     },
     "common": {
@@ -1189,6 +1581,7 @@
       "campoRequerido": "Este campo es obligatorio",
       "resultados": "{count, plural, one {# resultado} other {# resultados}}",
       "sinResultados": "No hay resultados para \"{query}\"",
+      "sinResultadosFiltrados": "No hay resultados con los filtros actuales.",
       "paginacion": {
         "pagina": "Página {current} de {total}",
         "anterior": "Anterior",
@@ -1219,9 +1612,18 @@
       "plural": "roles",
       "nombre": "Nombre",
       "usuariosCount": "Usuarios",
+      "buscarPlaceholder": "Buscar rol…",
       "eliminarPregunta": "¿Eliminar el rol \"{nombre}\"?",
       "eliminarAviso": "Esta acción no se puede deshacer.",
-      "eliminarEnUso": "No se puede eliminar \"{nombre}\": {count, plural, one {# usuario tiene} other {# usuarios tienen}} este rol. Reasignalos primero."
+      "eliminarEnUso": "No se puede eliminar \"{nombre}\": {count, plural, one {# usuario tiene} other {# usuarios tienen}} este rol. Reasignalos primero.",
+      "kpi": {
+        "total": "Total roles",
+        "totalCaption": "definidos en el sistema",
+        "asignados": "Con usuarios",
+        "asignadosCaption": "al menos un usuario asignado",
+        "sinUsuarios": "Sin usuarios",
+        "sinUsuariosCaption": "creados pero sin asignar"
+      }
     },
     "unidadesMedida": {
       "titulo": "Unidades de medida",
@@ -1230,8 +1632,13 @@
       "plural": "unidades de medida",
       "nombre": "Nombre",
       "abreviacion": "Abreviación",
+      "buscarPlaceholder": "Buscar nombre o abreviación…",
       "eliminarPregunta": "¿Eliminar la unidad \"{nombre}\"?",
-      "eliminarEnUso": "No se puede eliminar \"{nombre}\": hay {count, plural, one {# ítem} other {# ítems}} de inventario que la usan."
+      "eliminarEnUso": "No se puede eliminar \"{nombre}\": hay {count, plural, one {# ítem} other {# ítems}} de inventario que la usan.",
+      "kpi": {
+        "total": "Total unidades",
+        "totalCaption": "configuradas"
+      }
     },
     "tiposUnidad": {
       "titulo": "Tipos de unidad productiva",
@@ -1240,8 +1647,15 @@
       "plural": "tipos de unidad",
       "nombre": "Nombre",
       "unidadesCount": "Unidades",
+      "buscarPlaceholder": "Buscar tipo…",
       "eliminarPregunta": "¿Eliminar el tipo \"{nombre}\"?",
-      "eliminarEnUso": "No se puede eliminar \"{nombre}\": {count, plural, one {# unidad productiva lo usa} other {# unidades productivas lo usan}}."
+      "eliminarEnUso": "No se puede eliminar \"{nombre}\": {count, plural, one {# unidad productiva lo usa} other {# unidades productivas lo usan}}.",
+      "kpi": {
+        "total": "Total tipos",
+        "totalCaption": "disponibles",
+        "enUso": "En uso",
+        "enUsoCaption": "clasifican unidades"
+      }
     },
     "localidades": {
       "titulo": "Localidades",
@@ -1249,8 +1663,18 @@
       "singular": "Localidad",
       "plural": "localidades",
       "nombre": "Nombre",
+      "referencias": "Referencias",
+      "buscarPlaceholder": "Buscar localidad…",
       "eliminarPregunta": "¿Eliminar la localidad \"{nombre}\"?",
-      "eliminarEnUso": "No se puede eliminar \"{nombre}\": {count, plural, one {# registro la referencia} other {# registros la referencian}}."
+      "eliminarEnUso": "No se puede eliminar \"{nombre}\": {count, plural, one {# registro la referencia} other {# registros la referencian}}.",
+      "kpi": {
+        "total": "Total localidades",
+        "totalCaption": "cargadas",
+        "enUso": "En uso",
+        "enUsoCaption": "con referencias",
+        "sinUso": "Sin uso",
+        "sinUsoCaption": "podrían eliminarse"
+      }
     },
     "usuarios": {
       "titulo": "Usuarios",
@@ -1262,6 +1686,17 @@
       "rol": "Rol",
       "estado": "Estado",
       "sinRol": "Sin rol",
+      "buscarPlaceholder": "Buscar nombre, email o rol…",
+      "kpi": {
+        "total": "Total usuarios",
+        "totalCaption": "cargados en el sistema",
+        "activos": "Activos",
+        "activosCaption": "pueden iniciar sesión",
+        "inactivos": "Inactivos",
+        "inactivosCaption": "conservan historial, no acceden",
+        "sinRol": "Sin rol",
+        "sinRolCaption": "asignales uno"
+      },
       "invitacion": {
         "titulo": "Enlace de invitación",
         "ayudaNuevo": "Enviale este enlace al usuario para que defina su contraseña. Caduca el {fecha}.",
@@ -1318,8 +1753,20 @@
       "nombre": "Nombre",
       "localidad": "Localidad",
       "tipo": "Tipo",
+      "referencias": "Referencias",
+      "buscarPlaceholder": "Buscar nombre, localidad o tipo…",
       "eliminarPregunta": "¿Eliminar la unidad \"{nombre}\"?",
-      "eliminarEnUso": "No se puede eliminar \"{nombre}\": hay registros que la referencian."
+      "eliminarEnUso": "No se puede eliminar \"{nombre}\": hay registros que la referencian.",
+      "filtroLocalidadTodas": "Todas las localidades",
+      "filtroTipoTodos": "Todos los tipos",
+      "kpi": {
+        "total": "Total unidades",
+        "totalCaption": "productivas cargadas",
+        "enUso": "En uso",
+        "enUsoCaption": "con OTs o mantenimientos",
+        "sinLocalidad": "Sin localidad",
+        "sinLocalidadCaption": "asignales una"
+      }
     }
   }
 }

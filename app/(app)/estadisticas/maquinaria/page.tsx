@@ -1,11 +1,18 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { getTranslations } from "next-intl/server";
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeft, ClipboardList, Tractor, Wallet } from "lucide-react";
 
 import { auth } from "@/lib/auth";
 import { Button } from "@/components/ui/button";
 import { PageHeader } from "@/components/app/page-header";
+import { InlineState } from "@/components/app/states";
+import { ChartCard } from "@/components/stats/chart-card";
+import {
+  HorizontalBars,
+  type HorizontalBarRow,
+} from "@/components/stats/horizontal-bars";
+import { KpiCard } from "@/components/stats/kpi-card";
 import { RangeSelect } from "@/components/stats/range-select";
 
 import { computeMaqMetrics } from "./actions";
@@ -13,6 +20,22 @@ import { MaquinariaStatsClient } from "./maquinaria-stats-client";
 import { MAQ_RANGES, type MaqRange } from "./types";
 
 export const dynamic = "force-dynamic";
+
+function formatCurrencyARS(n: number) {
+  return new Intl.NumberFormat("es-AR", {
+    style: "currency",
+    currency: "ARS",
+    maximumFractionDigits: 0,
+  }).format(n);
+}
+
+function formatCurrencyShort(n: number) {
+  if (!Number.isFinite(n) || n === 0) return "$0";
+  const abs = Math.abs(n);
+  if (abs >= 1_000_000) return `$${(n / 1_000_000).toFixed(1)}M`;
+  if (abs >= 1_000) return `$${Math.round(n / 1_000)}k`;
+  return `$${Math.round(n)}`;
+}
 
 export default async function MaquinariaStatsPage({
   searchParams,
@@ -39,6 +62,18 @@ export default async function MaquinariaStatsPage({
     label: t(`rangos.${r}`),
   }));
 
+  const costoTotal = rows.reduce((acc, r) => acc + r.costoTotal, 0);
+  const conHistorial = totalMaquinas - sinHistorial;
+
+  const topCosto: HorizontalBarRow[] = rows
+    .filter((r) => r.costoTotal > 0)
+    .slice(0, 8)
+    .map((r) => ({
+      label: r.nombre,
+      value: r.costoTotal,
+      tone: "brand",
+    }));
+
   return (
     <div className="flex flex-col gap-6 p-6">
       <div>
@@ -61,16 +96,66 @@ export default async function MaquinariaStatsPage({
         />
       </div>
 
-      <MaquinariaStatsClient rows={rows} />
+      {/* KPI strip */}
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+        <KpiCard
+          icon={Tractor}
+          label={t("maquinaria.kpi.totales")}
+          value={totalMaquinas.toLocaleString("es-AR")}
+          caption={t("maquinaria.kpi.totalesCaption")}
+          href="/maquinaria"
+        />
+        <KpiCard
+          icon={ClipboardList}
+          tone={conHistorial === 0 ? "warn" : "info"}
+          label={t("maquinaria.kpi.conHistorial")}
+          value={`${conHistorial} / ${totalMaquinas}`}
+          caption={t("maquinaria.kpi.conHistorialCaption")}
+        />
+        <KpiCard
+          icon={Wallet}
+          label={t("maquinaria.kpi.costoTotal")}
+          value={formatCurrencyARS(costoTotal)}
+          caption={t("maquinaria.kpi.costoTotalCaption")}
+        />
+      </div>
 
-      <div className="flex flex-wrap items-center gap-3 text-xs text-muted-foreground">
-        <div className="rounded-md border border-border px-3 py-1.5">
-          {t("maquinaria.totales", { total: totalMaquinas })}
+      {/* Chart grid */}
+      <div className="grid grid-cols-1 gap-4 lg:grid-cols-12">
+        <div className="lg:col-span-5">
+          <ChartCard
+            title={t("maquinaria.topCostoTitulo")}
+            subtitle={t("maquinaria.topCostoSubtitulo")}
+          >
+            {topCosto.length === 0 ? (
+              <div className="flex flex-1 items-center justify-center">
+                <InlineState>{t("maquinaria.vacio")}</InlineState>
+              </div>
+            ) : (
+              <HorizontalBars
+                data={topCosto}
+                formatValue={formatCurrencyShort}
+              />
+            )}
+            <p className="mt-3 text-[11px] text-muted-foreground">
+              {t("maquinaria.sinHistorial", { count: sinHistorial })}
+            </p>
+          </ChartCard>
         </div>
-        <div className="rounded-md border border-dashed border-border px-3 py-1.5">
-          {t("maquinaria.sinHistorial", { count: sinHistorial })}
+
+        <div className="lg:col-span-7">
+          <ChartCard
+            title={t("maquinaria.tablaTitulo")}
+            subtitle={t("maquinaria.tablaSubtitulo")}
+          >
+            <MaquinariaStatsClient rows={rows} />
+          </ChartCard>
         </div>
       </div>
+
+      <p className="text-xs text-muted-foreground">
+        {t("maquinaria.totales", { total: totalMaquinas })}
+      </p>
     </div>
   );
 }

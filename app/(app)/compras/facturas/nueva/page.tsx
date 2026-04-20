@@ -8,19 +8,53 @@ import {
   FacturaFormClient,
   type FacturaProveedorOption,
   type FacturaRecepcionLinea,
+  type OcLinkContext,
 } from "./factura-form-client";
+
+export const dynamic = "force-dynamic";
 
 export default async function NuevaFacturaPage({
   searchParams,
 }: {
-  searchParams: Promise<{ proveedorId?: string }>;
+  searchParams: Promise<{ proveedorId?: string; oc?: string }>;
 }) {
   const session = await auth();
   if (!session?.user) redirect("/login");
   if (!isAdmin(session)) redirect("/compras/facturas");
 
-  const { proveedorId: rawPid } = await searchParams;
-  const proveedorId = rawPid ? Number.parseInt(rawPid, 10) : null;
+  const { proveedorId: rawPid, oc: rawOc } = await searchParams;
+  const ocIdParam = rawOc ? Number.parseInt(rawOc, 10) : null;
+  const ocId = ocIdParam && Number.isFinite(ocIdParam) ? ocIdParam : null;
+
+  // If an OC was passed, derive the proveedor from it and restrict the
+  // pre-populated lines to that OC's unbilled recepciones.
+  let ocContext: OcLinkContext | null = null;
+  let derivedProveedorId: number | null = null;
+
+  if (ocId) {
+    const oc = await prisma.ordenCompra.findUnique({
+      where: { id: ocId },
+      select: {
+        id: true,
+        numeroOc: true,
+        proveedorId: true,
+        totalEstimado: true,
+      },
+    });
+    if (oc) {
+      derivedProveedorId = oc.proveedorId;
+      ocContext = {
+        id: oc.id,
+        numero: oc.numeroOc ?? `OC-${oc.id}`,
+        total: oc.totalEstimado,
+      };
+    }
+  }
+
+  const rawPidNumber = rawPid ? Number.parseInt(rawPid, 10) : null;
+  const proveedorId =
+    derivedProveedorId ??
+    (rawPidNumber && Number.isFinite(rawPidNumber) ? rawPidNumber : null);
 
   const proveedores = await prisma.proveedor.findMany({
     where: { estado: "activo" },
@@ -34,7 +68,12 @@ export default async function NuevaFacturaPage({
       where: {
         facturado: false,
         recepcion: { cerradaSinFactura: false },
-        ocDetalle: { oc: { proveedorId } },
+        ocDetalle: {
+          oc: {
+            proveedorId,
+            ...(ocId ? { id: ocId } : {}),
+          },
+        },
       },
       orderBy: [{ recepcion: { fechaRecepcion: "asc" } }, { id: "asc" }],
       include: {
@@ -71,8 +110,9 @@ export default async function NuevaFacturaPage({
       remito: r.recepcion.numeroRemito,
       recepcionId: r.recepcion.id,
       fechaRecepcion: r.recepcion.fechaRecepcion.toISOString(),
+      ocDetalleId: r.ocDetalle.id,
       ocId: r.ocDetalle.oc.id,
-      ocNumero: r.ocDetalle.oc.numeroOc ?? `#${r.ocDetalle.oc.id}`,
+      ocNumero: r.ocDetalle.oc.numeroOc ?? `OC-${r.ocDetalle.oc.id}`,
       itemId: r.ocDetalle.requisicionDetalle.item.id,
       itemCodigo: r.ocDetalle.requisicionDetalle.item.codigo ?? "",
       itemDescripcion: r.ocDetalle.requisicionDetalle.item.descripcion ?? "",
@@ -89,10 +129,9 @@ export default async function NuevaFacturaPage({
   return (
     <FacturaFormClient
       proveedores={proveedorOptions}
-      initialProveedorId={
-        proveedorId && Number.isFinite(proveedorId) ? proveedorId : null
-      }
+      initialProveedorId={proveedorId}
       lineas={unfacturadas}
+      ocContext={ocContext}
     />
   );
 }

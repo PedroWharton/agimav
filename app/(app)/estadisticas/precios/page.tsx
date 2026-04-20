@@ -1,12 +1,15 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { getTranslations } from "next-intl/server";
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeft, Activity, DollarSign, ListOrdered } from "lucide-react";
 
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/db";
 import { Button } from "@/components/ui/button";
 import { PageHeader } from "@/components/app/page-header";
+import { InlineState } from "@/components/app/states";
+import { ChartCard } from "@/components/stats/chart-card";
+import { KpiCard } from "@/components/stats/kpi-card";
 import { PriceChart } from "@/components/stats/price-chart";
 import { RangeSelect } from "@/components/stats/range-select";
 
@@ -22,6 +25,11 @@ function formatCurrencyARS(n: number) {
     currency: "ARS",
     maximumFractionDigits: 2,
   }).format(n);
+}
+
+function formatPercent(n: number) {
+  const sign = n > 0 ? "+" : "";
+  return `${sign}${n.toFixed(1)}%`;
 }
 
 async function loadItemOptions(): Promise<ItemOption[]> {
@@ -92,6 +100,16 @@ export default async function PreciosPage({
     label: t(`rangos.${r}`),
   }));
 
+  const first = series?.points[0] ?? null;
+  const last =
+    series && series.points.length > 0
+      ? series.points[series.points.length - 1]!
+      : null;
+  const variacion =
+    first && last && first.precioArs > 0
+      ? ((last.precioArs - first.precioArs) / first.precioArs) * 100
+      : null;
+
   return (
     <div className="flex flex-col gap-6 p-6">
       <div>
@@ -118,98 +136,173 @@ export default async function PreciosPage({
       </div>
 
       {options.length === 0 ? (
-        <div className="rounded-lg border border-dashed border-border p-10 text-center text-sm text-muted-foreground">
-          {t("precios.sinHistorial")}
-        </div>
+        <ChartCard
+          title={t("precios.chartTitulo")}
+          subtitle={t("precios.chartSubtitulo")}
+        >
+          <div className="flex flex-1 items-center justify-center">
+            <InlineState>{t("precios.sinHistorial")}</InlineState>
+          </div>
+        </ChartCard>
       ) : !series ? (
-        <div className="rounded-lg border border-dashed border-border p-10 text-center text-sm text-muted-foreground">
-          {t("precios.elegirItem")}
-        </div>
-      ) : series.points.length < 2 ? (
-        <div className="flex flex-col gap-3">
-          <div className="text-sm">
-            <span className="font-medium">
-              {series.codigo ?? "—"}
-            </span>{" "}
-            — {series.descripcion ?? "—"}
+        <ChartCard
+          title={t("precios.chartTitulo")}
+          subtitle={t("precios.chartSubtitulo")}
+        >
+          <div className="flex flex-1 items-center justify-center">
+            <InlineState>{t("precios.elegirItem")}</InlineState>
           </div>
-          <div className="rounded-lg border border-dashed border-border p-10 text-center text-sm text-muted-foreground">
-            {t("precios.unSoloPunto")}
-          </div>
-        </div>
+        </ChartCard>
       ) : (
-        <div className="flex flex-col gap-4">
-          <div className="flex flex-wrap items-center justify-between gap-4">
-            <div className="text-sm">
-              <div className="font-medium">{series.codigo ?? "—"}</div>
-              <div className="text-muted-foreground">
+        <>
+          {/* Item identity */}
+          <div className="flex flex-wrap items-baseline justify-between gap-3">
+            <div className="min-w-0">
+              <div className="text-sm font-medium">{series.codigo ?? "—"}</div>
+              <div className="text-sm text-muted-foreground">
                 {series.descripcion ?? "—"}
                 {series.unidadMedida ? ` · ${series.unidadMedida}` : ""}
               </div>
             </div>
             <div className="flex items-center gap-4 text-xs">
               <span className="flex items-center gap-2">
-                <span className="h-0.5 w-4 bg-sky-600" />
+                <span
+                  className="h-0.5 w-4"
+                  style={{ backgroundColor: "var(--brand)" }}
+                />
                 ARS
               </span>
               <span className="flex items-center gap-2">
-                <span className="h-0.5 w-4 border-t border-dashed border-amber-600" />
+                <span
+                  className="h-0 w-4 border-t border-dashed"
+                  style={{ borderColor: "var(--warn)" }}
+                />
                 USD
               </span>
             </div>
           </div>
 
-          <div className="overflow-x-auto rounded-lg border border-border p-4">
-            <PriceChart
-              points={series.points}
-              dolarFrom={series.dolarFrom}
-              width={720}
-              height={280}
+          {/* KPI strip */}
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+            <KpiCard
+              icon={ListOrdered}
+              tone="info"
+              label={t("precios.kpi.registros")}
+              value={series.points.length.toLocaleString("es-AR")}
+              caption={t("precios.kpi.registrosCaption", {
+                count: series.points.length,
+              })}
+            />
+            <KpiCard
+              icon={DollarSign}
+              label={t("precios.kpi.ultimoArs")}
+              value={last ? formatCurrencyARS(last.precioArs) : "—"}
+              caption={
+                last
+                  ? t("precios.kpi.ultimoArsCaption", {
+                      fecha: last.fecha,
+                    })
+                  : ""
+              }
+            />
+            <KpiCard
+              icon={Activity}
+              tone={
+                variacion === null
+                  ? "neutral"
+                  : variacion > 10
+                    ? "warn"
+                    : variacion < -5
+                      ? "ok"
+                      : "neutral"
+              }
+              label={t("precios.kpi.variacion")}
+              value={variacion !== null ? formatPercent(variacion) : "—"}
+              caption={t("precios.kpi.variacionCaption")}
             />
           </div>
 
-          <div className="rounded-lg border border-border">
-            <table className="min-w-full text-sm">
-              <thead className="bg-muted/40 text-xs uppercase text-muted-foreground">
-                <tr>
-                  <th scope="col" className="px-3 py-2 text-left">
-                    {t("precios.columnas.fecha")}
-                  </th>
-                  <th scope="col" className="px-3 py-2 text-right">
-                    {t("precios.columnas.ars")}
-                  </th>
-                  <th scope="col" className="px-3 py-2 text-right">
-                    {t("precios.columnas.usd")}
-                  </th>
-                  <th scope="col" className="px-3 py-2 text-left">
-                    {t("precios.columnas.proveedor")}
-                  </th>
-                </tr>
-              </thead>
-              <tbody>
-                {series.points.map((p, i) => (
-                  <tr
-                    key={`${p.fecha}-${i}`}
-                    className="border-t border-border"
-                  >
-                    <td className="px-3 py-2 font-mono text-xs">{p.fecha}</td>
-                    <td className="px-3 py-2 text-right tabular-nums">
-                      {formatCurrencyARS(p.precioArs)}
-                    </td>
-                    <td className="px-3 py-2 text-right tabular-nums text-amber-700 dark:text-amber-400">
-                      {p.precioUsd !== null
-                        ? `US$ ${p.precioUsd.toFixed(2)}`
-                        : "—"}
-                    </td>
-                    <td className="px-3 py-2 text-xs text-muted-foreground">
-                      {p.proveedor ?? "—"}
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        </div>
+          {series.points.length < 2 ? (
+            <ChartCard
+              title={t("precios.chartTitulo")}
+              subtitle={t("precios.chartSubtitulo")}
+            >
+              <div className="flex flex-1 items-center justify-center">
+                <InlineState>{t("precios.unSoloPunto")}</InlineState>
+              </div>
+            </ChartCard>
+          ) : (
+            <div className="grid grid-cols-1 gap-4">
+              <ChartCard
+                title={t("precios.chartTitulo")}
+                subtitle={t("precios.chartSubtitulo")}
+              >
+                <div className="overflow-x-auto">
+                  <PriceChart
+                    points={series.points}
+                    dolarFrom={series.dolarFrom}
+                    width={720}
+                    height={280}
+                  />
+                </div>
+              </ChartCard>
+
+              <ChartCard
+                title={t("precios.tablaTitulo")}
+                subtitle={t("precios.tablaSubtitulo")}
+              >
+                <div className="-mx-5 -mb-5 overflow-hidden border-t border-border">
+                  <div className="max-h-[400px] overflow-auto">
+                    <table className="min-w-full text-sm">
+                      <thead className="sticky top-0 z-10 bg-muted text-xs uppercase text-muted-foreground">
+                        <tr>
+                          <th scope="col" className="px-3 py-2 text-left">
+                            {t("precios.columnas.fecha")}
+                          </th>
+                          <th scope="col" className="px-3 py-2 text-right">
+                            {t("precios.columnas.ars")}
+                          </th>
+                          <th scope="col" className="px-3 py-2 text-right">
+                            {t("precios.columnas.usd")}
+                          </th>
+                          <th scope="col" className="px-3 py-2 text-left">
+                            {t("precios.columnas.proveedor")}
+                          </th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {series.points.map((p, i) => (
+                          <tr
+                            key={`${p.fecha}-${i}`}
+                            className="border-t border-border hover:bg-muted/40"
+                          >
+                            <td className="px-3 py-2 font-mono text-xs">
+                              {p.fecha}
+                            </td>
+                            <td className="px-3 py-2 text-right tabular-nums">
+                              {formatCurrencyARS(p.precioArs)}
+                            </td>
+                            <td
+                              className="px-3 py-2 text-right tabular-nums"
+                              style={{ color: "var(--warn)" }}
+                            >
+                              {p.precioUsd !== null
+                                ? `US$ ${p.precioUsd.toFixed(2)}`
+                                : "—"}
+                            </td>
+                            <td className="px-3 py-2 text-xs text-muted-foreground">
+                              {p.proveedor ?? "—"}
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              </ChartCard>
+            </div>
+          )}
+        </>
       )}
     </div>
   );

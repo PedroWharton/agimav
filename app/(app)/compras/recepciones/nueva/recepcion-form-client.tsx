@@ -4,19 +4,25 @@ import { useMemo, useState, useTransition } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
-import { ArrowLeft, CheckCheck, Save } from "lucide-react";
+import { ArrowLeft } from "lucide-react";
 import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
+import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import {
-  RadioGroup,
-  RadioGroupItem,
-} from "@/components/ui/radio-group";
 
 import { PageHeader } from "@/components/app/page-header";
+import {
+  AttachBox,
+  POStrip,
+  ProgressRing,
+  ReceiveBulkBar,
+  ReceiveTable,
+  type AttachedDraft,
+  type ReceiveLine,
+} from "@/components/compras/recepcion";
 
 import { createRecepcion } from "../actions";
 
@@ -35,13 +41,8 @@ export type RecepcionFormOc = {
   id: number;
   numeroOc: string;
   proveedor: string;
-};
-
-type LineaState = {
-  id: number;
-  cantidad: string;
-  destino: "Stock" | "Directa";
-  observaciones: string;
+  /** ISO string; server converts Date before passing. */
+  fechaEmision: string;
 };
 
 function todayISODate(): string {
@@ -68,15 +69,20 @@ export function RecepcionFormClient({
   const [numeroRemito, setNumeroRemito] = useState("");
   const [fecha, setFecha] = useState<string>(todayISODate());
   const [recibidoPor, setRecibidoPor] = useState(defaultRecibidoPor);
-  const [observaciones, setObservaciones] = useState("");
-  const [lineState, setLineState] = useState<LineaState[]>(() =>
+  const [notas, setNotas] = useState("");
+  const [files, setFiles] = useState<AttachedDraft[]>([]);
+
+  // `recibirAhora` per-line (number) in state. Destino + observaciones per line
+  // are retained to keep the existing transactional payload intact.
+  const [lineState, setLineState] = useState(() =>
     initialLineas.map((l) => ({
       id: l.id,
-      cantidad: "",
-      destino: "Stock" as const,
+      recibirAhora: 0,
+      destino: "Stock" as "Stock" | "Directa",
       observaciones: "",
     })),
   );
+  const [selectedIds, setSelectedIds] = useState<Set<number>>(new Set());
   const [isSaving, startSave] = useTransition();
 
   const pendientesById = useMemo(() => {
@@ -87,44 +93,40 @@ export function RecepcionFormClient({
     return m;
   }, [initialLineas]);
 
-  function updateLinea(id: number, patch: Partial<LineaState>) {
-    setLineState((prev) =>
-      prev.map((l) => (l.id === id ? { ...l, ...patch } : l)),
-    );
-  }
-
-  function recibirTodo() {
-    setLineState((prev) =>
-      prev.map((l) => {
-        const p = pendientesById.get(l.id) ?? 0;
-        return { ...l, cantidad: p > 0 ? String(p) : "" };
-      }),
-    );
-  }
-
-  const activeRows = lineState.filter((l) => {
-    const n = Number(l.cantidad);
-    return Number.isFinite(n) && n > 0;
-  });
-
-  const stockEntradas = activeRows.filter((l) => l.destino === "Stock").length;
-  const directas = activeRows.filter((l) => l.destino === "Directa").length;
-
-  const overReception = lineState.some((l) => {
-    const n = Number(l.cantidad);
-    if (!Number.isFinite(n) || n <= 0) return false;
-    const p = pendientesById.get(l.id) ?? 0;
-    return n > p + 1e-9;
-  });
-
-  const saldoAllFull = useMemo(() => {
-    return initialLineas.every((l) => {
+  const receiveLines: ReceiveLine[] = useMemo(() => {
+    return initialLineas.map((l) => {
       const st = lineState.find((s) => s.id === l.id);
-      const n = st ? Number(st.cantidad) : 0;
-      const afterRecv = l.cantidadRecibida + (Number.isFinite(n) ? n : 0);
-      return afterRecv >= l.cantidadSolicitada - 1e-9;
+      return {
+        id: l.id,
+        sku: l.itemCodigo || `#${l.orden}`,
+        nombre: l.itemDescripcion || "—",
+        pedidos: l.cantidadSolicitada,
+        recibidosPrev: l.cantidadRecibida,
+        recibirAhora: st?.recibirAhora ?? 0,
+      };
     });
   }, [initialLineas, lineState]);
+
+  const totalLineas = initialLineas.length;
+  const totalPedidos = initialLineas.reduce(
+    (a, l) => a + l.cantidadSolicitada,
+    0,
+  );
+  const totalRecibidosPrev = initialLineas.reduce(
+    (a, l) => a + l.cantidadRecibida,
+    0,
+  );
+  const totalRecibirAhora = lineState.reduce((a, l) => a + l.recibirAhora, 0);
+  const totalTrasRecepcion = totalRecibidosPrev + totalRecibirAhora;
+  const progressValue =
+    totalPedidos > 0 ? totalTrasRecepcion / totalPedidos : 0;
+
+  const overReception = lineState.some((l) => {
+    const pendiente = pendientesById.get(l.id) ?? 0;
+    return l.recibirAhora > pendiente + 1e-9;
+  });
+
+  const activeRows = lineState.filter((l) => l.recibirAhora > 0);
 
   const canSave =
     !isSaving &&
@@ -133,6 +135,43 @@ export function RecepcionFormClient({
     activeRows.length > 0 &&
     !overReception;
 
+  const handleLineChange = (id: number, recibirAhora: number) => {
+    const pendiente = pendientesById.get(id) ?? 0;
+    const clamped = Math.max(0, Math.min(recibirAhora, pendiente));
+    setLineState((prev) =>
+      prev.map((l) => (l.id === id ? { ...l, recibirAhora: clamped } : l)),
+    );
+  };
+
+  const handleSelectChange = (id: number, selected: boolean) => {
+    setSelectedIds((prev) => {
+      const next = new Set(prev);
+      if (selected) next.add(id);
+      else next.delete(id);
+      return next;
+    });
+  };
+
+  const handleReceiveAllSelected = () => {
+    setLineState((prev) =>
+      prev.map((l) => {
+        if (!selectedIds.has(l.id)) return l;
+        const pendiente = pendientesById.get(l.id) ?? 0;
+        return { ...l, recibirAhora: Math.max(0, pendiente) };
+      }),
+    );
+  };
+
+  const handleClearSelection = () => setSelectedIds(new Set());
+
+  const handleAddFiles = (incoming: AttachedDraft[]) => {
+    setFiles((prev) => [...prev, ...incoming]);
+  };
+
+  const handleRemoveFile = (id: string) => {
+    setFiles((prev) => prev.filter((f) => f.id !== id));
+  };
+
   function handleSave() {
     startSave(async () => {
       const payload = {
@@ -140,15 +179,12 @@ export function RecepcionFormClient({
         numeroRemito: numeroRemito.trim(),
         fechaRecepcion: new Date(fecha),
         recibidoPor: recibidoPor.trim(),
-        observaciones: observaciones.trim() || null,
+        observaciones: notas.trim() || null,
         lineas: lineState
-          .filter((l) => {
-            const n = Number(l.cantidad);
-            return Number.isFinite(n) && n > 0;
-          })
+          .filter((l) => l.recibirAhora > 0)
           .map((l) => ({
             ocDetalleId: l.id,
-            cantidadRecibidaAhora: Number(l.cantidad),
+            cantidadRecibidaAhora: l.recibirAhora,
             destino: l.destino,
             observaciones: l.observaciones.trim() || null,
           })),
@@ -166,16 +202,19 @@ export function RecepcionFormClient({
         toast.error(tRec("avisos.nadaParaRecibir"));
       } else if (result.error === "forbidden") {
         toast.error(tCommon("errorForbidden"));
-      } else if (result.error === "invalid") {
-        toast.error(tCommon("errorGuardar"));
       } else {
         toast.error(tCommon("errorGuardar"));
       }
     });
   }
 
+  const fechaEmision = useMemo(
+    () => new Date(oc.fechaEmision),
+    [oc.fechaEmision],
+  );
+
   return (
-    <div className="flex flex-col gap-6 p-6">
+    <div className="flex flex-col gap-5 p-6 pb-28">
       <div>
         <Button variant="ghost" size="sm" asChild className="mb-2 -ml-2">
           <Link href={`/compras/oc/${oc.id}`}>
@@ -189,191 +228,167 @@ export function RecepcionFormClient({
             proveedor: oc.proveedor,
           })}
           description={tRec("nuevaDescripcion")}
-          actions={
-            <div className="flex flex-wrap items-center gap-2">
-              <Button
-                type="button"
-                variant="outline"
-                onClick={recibirTodo}
-                disabled={isSaving}
-              >
-                <CheckCheck className="size-4" />
-                {tRec("acciones.recibirTodo")}
-              </Button>
-              <Button type="button" onClick={handleSave} disabled={!canSave}>
-                <Save className="size-4" />
-                {tRec("acciones.guardar")}
-              </Button>
-            </div>
-          }
         />
       </div>
 
-      <div className="grid grid-cols-1 gap-4 md:grid-cols-4">
-        <div className="md:col-span-1">
-          <Label htmlFor="numeroRemito">{tRec("campos.remito")}</Label>
-          <Input
-            id="numeroRemito"
-            value={numeroRemito}
-            onChange={(e) => setNumeroRemito(e.target.value)}
-            disabled={isSaving}
+      <div className="sticky top-0 z-10 bg-background/80 pt-2 pb-1 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+        <POStrip
+          ocNumero={oc.numeroOc}
+          proveedor={oc.proveedor}
+          fechaEmitida={fechaEmision}
+          totalLineas={totalLineas}
+          totalUnidades={totalPedidos}
+          unidadesRecibidas={totalTrasRecepcion}
+        />
+      </div>
+
+      <div className="grid grid-cols-1 gap-5 xl:grid-cols-[minmax(0,1fr)_320px]">
+        {/* Main column: doc header + receive table */}
+        <div className="flex flex-col gap-4">
+          <Card size="sm" className="px-4 py-4">
+            <div className="grid grid-cols-1 gap-3 md:grid-cols-3">
+              <div className="flex flex-col gap-1">
+                <Label htmlFor="numeroRemito">
+                  {tRec("campos.remito")}
+                </Label>
+                <Input
+                  id="numeroRemito"
+                  value={numeroRemito}
+                  onChange={(e) => setNumeroRemito(e.target.value)}
+                  disabled={isSaving}
+                />
+              </div>
+              <div className="flex flex-col gap-1">
+                <Label htmlFor="fechaRecepcion">
+                  {tRec("campos.fecha")}
+                </Label>
+                <Input
+                  id="fechaRecepcion"
+                  type="date"
+                  value={fecha}
+                  onChange={(e) => setFecha(e.target.value)}
+                  disabled={isSaving}
+                />
+              </div>
+              <div className="flex flex-col gap-1">
+                <Label htmlFor="recibidoPor">
+                  {tRec("campos.recibidoPor")}
+                </Label>
+                <Input
+                  id="recibidoPor"
+                  value={recibidoPor}
+                  onChange={(e) => setRecibidoPor(e.target.value)}
+                  disabled={isSaving}
+                />
+              </div>
+            </div>
+          </Card>
+
+          <ReceiveTable
+            lines={receiveLines}
+            onLineChange={handleLineChange}
+            onSelectChange={handleSelectChange}
+            selectedIds={selectedIds}
           />
         </div>
-        <div className="md:col-span-1">
-          <Label htmlFor="fechaRecepcion">{tRec("campos.fecha")}</Label>
-          <Input
-            id="fechaRecepcion"
-            type="date"
-            value={fecha}
-            onChange={(e) => setFecha(e.target.value)}
+
+        {/* Sidebar */}
+        <aside className="flex flex-col gap-4 xl:sticky xl:top-24 xl:self-start">
+          <Card size="sm" className="px-4 py-4">
+            <h3 className="text-[11px] font-semibold uppercase tracking-[0.06em] text-muted-foreground">
+              {tRec("resumenSidebar.titulo")}
+            </h3>
+            <div className="flex items-center gap-4">
+              <ProgressRing value={progressValue} size={64} strokeWidth={6} />
+              <div className="flex flex-1 flex-col gap-1 text-[12.5px]">
+                <div className="flex justify-between">
+                  <span className="text-muted-foreground">
+                    {tRec("resumenSidebar.lineas")}
+                  </span>
+                  <span className="font-mono font-medium tabular-nums">
+                    {totalLineas}
+                  </span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-muted-foreground">
+                    {tRec("resumenSidebar.unidadesPedidas")}
+                  </span>
+                  <span className="font-mono font-medium tabular-nums">
+                    {totalPedidos}
+                  </span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-muted-foreground">
+                    {tRec("resumenSidebar.unidadesRecibidas")}
+                  </span>
+                  <span className="font-mono font-medium tabular-nums">
+                    {totalRecibirAhora}
+                  </span>
+                </div>
+              </div>
+            </div>
+          </Card>
+
+          <Card size="sm" className="px-4 py-4">
+            <h3 className="text-[11px] font-semibold uppercase tracking-[0.06em] text-muted-foreground">
+              {tRec("resumenSidebar.notas")}
+            </h3>
+            <Textarea
+              value={notas}
+              onChange={(e) => setNotas(e.target.value)}
+              rows={4}
+              disabled={isSaving}
+              placeholder={tRec("resumenSidebar.notasPlaceholder")}
+            />
+          </Card>
+
+          <Card size="sm" className="px-4 py-4">
+            <h3 className="text-[11px] font-semibold uppercase tracking-[0.06em] text-muted-foreground">
+              {tRec("resumenSidebar.adjuntos")}
+            </h3>
+            <AttachBox
+              files={files}
+              onAdd={handleAddFiles}
+              onRemove={handleRemoveFile}
+            />
+            <p className="text-[11px] leading-relaxed text-muted-foreground">
+              {tRec("resumenSidebar.adjuntosNota")}
+            </p>
+          </Card>
+        </aside>
+      </div>
+
+      {/* Sticky footer */}
+      <div className="fixed inset-x-0 bottom-0 z-10 border-t border-border bg-background/95 px-6 py-3 backdrop-blur supports-[backdrop-filter]:bg-background/80">
+        <div className="mx-auto flex max-w-[1600px] items-center justify-end gap-2">
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            asChild
             disabled={isSaving}
-          />
-        </div>
-        <div className="md:col-span-1">
-          <Label htmlFor="recibidoPor">{tRec("campos.recibidoPor")}</Label>
-          <Input
-            id="recibidoPor"
-            value={recibidoPor}
-            onChange={(e) => setRecibidoPor(e.target.value)}
-            disabled={isSaving}
-          />
-        </div>
-        <div className="md:col-span-4">
-          <Label htmlFor="observaciones">{tRec("campos.observaciones")}</Label>
-          <Textarea
-            id="observaciones"
-            value={observaciones}
-            onChange={(e) => setObservaciones(e.target.value)}
-            rows={2}
-            disabled={isSaving}
-          />
+          >
+            <Link href={`/compras/oc/${oc.id}`}>
+              {tRec("footer.cancelar")}
+            </Link>
+          </Button>
+          <Button
+            type="button"
+            size="sm"
+            onClick={handleSave}
+            disabled={!canSave}
+          >
+            {isSaving ? tRec("footer.guardando") : tRec("footer.confirmar")}
+          </Button>
         </div>
       </div>
 
-      <div className="overflow-x-auto rounded-md border border-border">
-        <table className="w-full text-sm">
-          <thead className="bg-muted/40 text-xs uppercase tracking-wide text-muted-foreground">
-            <tr>
-              <th className="px-2 py-2 text-left font-medium w-10">#</th>
-              <th className="px-2 py-2 text-left font-medium">
-                {tRec("columnas.descripcion")}
-              </th>
-              <th className="px-2 py-2 text-right font-medium w-20">
-                {tRec("columnas.pendiente")}
-              </th>
-              <th className="px-2 py-2 text-right font-medium w-28">
-                {tRec("columnas.recibirAhora")}
-              </th>
-              <th className="px-2 py-2 text-left font-medium w-40">
-                {tRec("columnas.destino")}
-              </th>
-              <th className="px-2 py-2 text-left font-medium">
-                {tRec("columnas.observaciones")}
-              </th>
-            </tr>
-          </thead>
-          <tbody>
-            {initialLineas.map((l) => {
-              const st = lineState.find((s) => s.id === l.id)!;
-              const pendiente = pendientesById.get(l.id) ?? 0;
-              const n = Number(st.cantidad);
-              const invalid =
-                st.cantidad !== "" &&
-                (!Number.isFinite(n) || n < 0 || n > pendiente + 1e-9);
-              return (
-                <tr key={l.id} className="border-t border-border align-top">
-                  <td className="px-2 py-2 text-xs text-muted-foreground tabular-nums">
-                    {l.orden}
-                  </td>
-                  <td className="px-2 py-2">
-                    <div className="font-medium">
-                      {l.itemDescripcion || "—"}
-                    </div>
-                    {l.itemCodigo ? (
-                      <div className="font-mono text-xs text-muted-foreground">
-                        {l.itemCodigo}
-                      </div>
-                    ) : null}
-                  </td>
-                  <td className="px-2 py-2 text-right tabular-nums">
-                    {pendiente}
-                    {l.unidadMedida ? (
-                      <span className="ml-1 text-xs text-muted-foreground">
-                        {l.unidadMedida}
-                      </span>
-                    ) : null}
-                  </td>
-                  <td className="px-2 py-2">
-                    <Input
-                      type="number"
-                      step="0.01"
-                      min={0}
-                      max={pendiente}
-                      value={st.cantidad}
-                      onChange={(e) =>
-                        updateLinea(l.id, { cantidad: e.target.value })
-                      }
-                      onBlur={(e) => {
-                        const v = Number(e.target.value);
-                        if (!Number.isFinite(v) || v <= 0) {
-                          updateLinea(l.id, { cantidad: "" });
-                          return;
-                        }
-                        updateLinea(l.id, { cantidad: v.toFixed(2) });
-                      }}
-                      disabled={isSaving || pendiente <= 0}
-                      className={
-                        invalid ? "border-destructive focus-visible:ring-destructive" : ""
-                      }
-                    />
-                  </td>
-                  <td className="px-2 py-2">
-                    <RadioGroup
-                      value={st.destino}
-                      onValueChange={(v) =>
-                        updateLinea(l.id, {
-                          destino: v as "Stock" | "Directa",
-                        })
-                      }
-                      disabled={isSaving}
-                      className="flex gap-3"
-                    >
-                      <Label className="flex items-center gap-1 text-xs">
-                        <RadioGroupItem value="Stock" /> {tRec("destinos.Stock")}
-                      </Label>
-                      <Label className="flex items-center gap-1 text-xs">
-                        <RadioGroupItem value="Directa" />{" "}
-                        {tRec("destinos.Directa")}
-                      </Label>
-                    </RadioGroup>
-                  </td>
-                  <td className="px-2 py-2">
-                    <Input
-                      value={st.observaciones}
-                      onChange={(e) =>
-                        updateLinea(l.id, { observaciones: e.target.value })
-                      }
-                      disabled={isSaving}
-                    />
-                  </td>
-                </tr>
-              );
-            })}
-          </tbody>
-        </table>
-      </div>
-
-      <div className="rounded-md border border-border p-3 text-sm text-muted-foreground">
-        {activeRows.length === 0
-          ? tRec("resumen.sinLineas")
-          : tRec("resumen.detalle", {
-              saldo: saldoAllFull
-                ? tRec("resumen.completa")
-                : tRec("resumen.parcial"),
-              stock: stockEntradas,
-              directa: directas,
-            })}
-      </div>
+      {/* Bulk bar — visible when rows are selected */}
+      <ReceiveBulkBar
+        selectedCount={selectedIds.size}
+        onReceiveAll={handleReceiveAllSelected}
+        onClear={handleClearSelection}
+      />
     </div>
   );
 }

@@ -1,9 +1,21 @@
 "use client";
 
-import { useMemo, useState, useTransition } from "react";
+import { useEffect, useMemo, useState, useTransition } from "react";
 import Link from "next/link";
 import { useTranslations } from "next-intl";
-import { ArrowDown, ArrowUp, Columns3, Plus } from "lucide-react";
+import {
+  ArrowDown,
+  ArrowUp,
+  CheckCircle2,
+  Columns3,
+  Gauge,
+  LayoutGrid,
+  PauseCircle,
+  Pencil,
+  Plus,
+  Rows3,
+  Truck,
+} from "lucide-react";
 import { toast } from "sonner";
 import {
   useForm,
@@ -49,6 +61,19 @@ import { ActionsMenu } from "@/components/app/actions-menu";
 import { ConfirmDialog } from "@/components/app/confirm-dialog";
 import { PageHeader } from "@/components/app/page-header";
 import { Combobox, type ComboboxOption } from "@/components/app/combobox";
+import { Toolbar } from "@/components/app/toolbar";
+import { KpiCard } from "@/components/stats/kpi-card";
+import { StatusChip } from "@/components/app/status-chip";
+import { EmptyState } from "@/components/app/states";
+import {
+  MaquinariaCard,
+  type MaquinariaCardData,
+} from "@/components/maquinaria/maquinaria-card";
+import {
+  MaquinariaDetailDrawer,
+  type MaquinariaDetailData,
+} from "@/components/maquinaria/maquinaria-detail-drawer";
+import { statusChip as statusChipMap } from "@/components/maquinaria/helpers";
 import { cn } from "@/lib/utils";
 
 import {
@@ -279,6 +304,22 @@ export function MaquinariaClient({
   const [editing, setEditing] = useState<MaquinaRow | null>(null);
   const [estadoFilter, setEstadoFilter] = useState<string>("all");
   const [columnsOpen, setColumnsOpen] = useState(false);
+  const viewStorageKey = `maquinaria:view:${tipo.id}`;
+  // Cards is the design-primary view per `/tmp/design-package/agimav/project/maquinaria.html`.
+  // Persist across reloads via localStorage; lazy init keeps SSR deterministic.
+  const [view, setView] = useState<"cards" | "table">(() => {
+    if (typeof window === "undefined") return "cards";
+    const stored = window.localStorage.getItem(viewStorageKey);
+    return stored === "table" ? "table" : "cards";
+  });
+  const [searchQuery, setSearchQuery] = useState("");
+  const [detailId, setDetailId] = useState<number | null>(null);
+  const [detailOpen, setDetailOpen] = useState(false);
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    window.localStorage.setItem(viewStorageKey, view);
+  }, [view, viewStorageKey]);
 
   const effectiveConfig = useMemo(() => {
     const normalized = normalizeColumnConfig(columnConfig, niveles);
@@ -384,10 +425,38 @@ export function MaquinariaClient({
     return map;
   }, [niveles]);
 
+  function principalValue(row: MaquinaRow): string {
+    for (const { atributo } of principalAtributos) {
+      const v = row.values[atributo.id];
+      if (v && v.trim()) return v.trim();
+    }
+    return "";
+  }
+
+  const normalize = (s: string) =>
+    s
+      .toLocaleLowerCase("es-AR")
+      .normalize("NFD")
+      .replace(/\p{Diacritic}/gu, "");
+
   const filteredRows = useMemo(() => {
-    if (estadoFilter === "all") return rows;
-    return rows.filter((r) => r.estado === estadoFilter);
-  }, [rows, estadoFilter]);
+    const q = normalize(searchQuery.trim());
+    return rows.filter((r) => {
+      if (estadoFilter !== "all" && r.estado !== estadoFilter) return false;
+      if (q) {
+        const parts: string[] = [];
+        if (r.nroSerie) parts.push(r.nroSerie);
+        const principal = principalValue(r);
+        if (principal) parts.push(principal);
+        // Include any principal atributo values + root-level values (cheap).
+        for (const p of Object.values(r.values)) if (p) parts.push(p);
+        const hay = normalize(parts.join(" "));
+        if (!hay.includes(q)) return false;
+      }
+      return true;
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [rows, estadoFilter, searchQuery, principalAtributos]);
 
   const dateFormatter = useMemo(
     () =>
@@ -448,10 +517,8 @@ export function MaquinariaClient({
               header: t("maquinaria.maquinas.estado"),
               enableSorting: true,
               cell: ({ row }) => {
-                const v = row.original.estado;
-                const variant =
-                  v.toLowerCase() === "activo" ? "default" : "secondary";
-                return <Badge variant={variant}>{v}</Badge>;
+                const chip = statusChipMap(row.original.estado);
+                return <StatusChip tone={chip.tone} dot label={chip.label} />;
               },
             });
             break;
@@ -555,7 +622,117 @@ export function MaquinariaClient({
     dateFormatter,
   ]);
 
-  const searchableKeys: (keyof MaquinaRow)[] = ["nroSerie"];
+  // Note: the DataTable has its own search slot, but we drive search through
+  // the Toolbar (so it applies to both cards + table view). Passing an empty
+  // searchableKeys array hides the DataTable's internal search field.
+  const searchableKeys: (keyof MaquinaRow)[] = [];
+
+  function openDetail(row: MaquinaRow) {
+    setDetailId(row.id);
+    setDetailOpen(true);
+  }
+
+  function cardDataFor(row: MaquinaRow): MaquinariaCardData {
+    const principal = principalValue(row);
+    const title = principal || row.nroSerie || `#${row.id}`;
+    const subtitleParts: string[] = [];
+    if (row.nroSerie) subtitleParts.push(`Nº ${row.nroSerie}`);
+    const meta: Array<{ label: string; value: string }> = [
+      { label: t("maquinaria.tipos.nombre"), value: tipo.nombre },
+    ];
+    // Secondary principal-ish: if there are multiple esPrincipal atributos on
+    // different niveles, show the second as meta; otherwise show the first
+    // root-nivel `ref` atributo value if available.
+    const rootAtrs = niveles
+      .filter((n) => n.parentLevelId == null)
+      .flatMap((n) => n.atributos);
+    const firstRef = rootAtrs.find(
+      (a) => a.dataType === "ref" && a.activo && row.values[a.id],
+    );
+    if (firstRef) {
+      meta.push({ label: firstRef.nombre, value: row.values[firstRef.id] ?? "" });
+    }
+    return {
+      id: row.id,
+      title,
+      subtitle: subtitleParts.join(" · ") || null,
+      tipoNombre: tipo.nombre,
+      unidadAbrev: tipo.abrevUnidad,
+      codigo: row.nroSerie,
+      estado: row.estado,
+      horasAcumuladas: row.horasAcumuladas,
+      meta,
+    };
+  }
+
+  function detailDataFor(row: MaquinaRow): MaquinariaDetailData {
+    const principal = principalValue(row);
+    const title = principal || row.nroSerie || `#${row.id}`;
+    const summary = [
+      {
+        label: t("maquinaria.detalle.resumen.estado"),
+        value: (() => {
+          const c = statusChipMap(row.estado);
+          return <StatusChip tone={c.tone} dot label={c.label} />;
+        })(),
+      },
+      {
+        label: t("maquinaria.detalle.resumen.horometro"),
+        value: (
+          <span className="tabular-nums">
+            {row.horasAcumuladas.toLocaleString("es-AR")}
+            {tipo.abrevUnidad ? ` ${tipo.abrevUnidad}` : " hs"}
+          </span>
+        ),
+      },
+      {
+        label: t("maquinaria.detalle.resumen.nroSerie"),
+        value: row.nroSerie ? (
+          <span className="font-mono text-sm">{row.nroSerie}</span>
+        ) : (
+          ""
+        ),
+      },
+    ];
+
+    const byNivel = new Map(
+      row.niveles.map((n) => [
+        n.nivelId,
+        new Map(n.atributos.map((a) => [a.atributoId, a.valueText])),
+      ]),
+    );
+    const sections = niveles.map((n) => {
+      const valuesForNivel = byNivel.get(n.id) ?? new Map<number, string>();
+      const items = n.atributos
+        .filter((a) => a.activo)
+        .map((a) => ({
+          label: a.nombre,
+          value: (valuesForNivel.get(a.id) ?? "").trim(),
+        }))
+        .filter((x) => x.value !== "");
+      return { title: n.nombre, items };
+    });
+
+    return {
+      id: row.id,
+      title,
+      codigo: row.nroSerie,
+      subtitle: null,
+      tipoNombre: tipo.nombre,
+      estado: row.estado,
+      horasAcumuladas: row.horasAcumuladas,
+      unidadAbrev: tipo.abrevUnidad,
+      createdAt: dateFormatter.format(new Date(row.createdAt)),
+      summary,
+      sections,
+    };
+  }
+
+  const detailRow = useMemo(
+    () => (detailId == null ? null : rows.find((r) => r.id === detailId) ?? null),
+    [detailId, rows],
+  );
+  const detailData = detailRow ? detailDataFor(detailRow) : null;
 
   const rootNiveles = niveles.filter((n) => n.parentLevelId == null);
   const childrenByParent = new Map<number, NivelDef[]>();
@@ -572,6 +749,30 @@ export function MaquinariaClient({
     : t("maquinaria.maquinas.nuevoTitulo");
 
   const sinEstructura = niveles.length === 0;
+
+  const kpis = useMemo(() => {
+    let activos = 0;
+    let inactivos = 0;
+    let baja = 0;
+    let horasTotales = 0;
+    for (const r of rows) {
+      if (r.estado === "activo") activos += 1;
+      else if (r.estado === "inactivo") inactivos += 1;
+      else if (r.estado === "baja") baja += 1;
+      horasTotales += r.horasAcumuladas;
+    }
+    return {
+      total: rows.length,
+      activos,
+      inactivos,
+      baja,
+      horasTotales,
+    };
+  }, [rows]);
+
+  const horasLabel = `${kpis.horasTotales.toLocaleString("es-AR", {
+    maximumFractionDigits: 0,
+  })}${tipo.abrevUnidad ? ` ${tipo.abrevUnidad}` : " hs"}`;
 
   return (
     <>
@@ -602,6 +803,42 @@ export function MaquinariaClient({
         }
       />
 
+      <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
+        <KpiCard
+          icon={Truck}
+          tone="neutral"
+          label={t("maquinaria.maquinas.kpi.total")}
+          value={kpis.total.toLocaleString("es-AR")}
+          caption={t("maquinaria.maquinas.kpi.totalCaption", {
+            tipo: tipo.nombre,
+          })}
+        />
+        <KpiCard
+          icon={CheckCircle2}
+          tone="ok"
+          label={t("maquinaria.maquinas.kpi.activos")}
+          value={kpis.activos.toLocaleString("es-AR")}
+          caption={t("maquinaria.maquinas.kpi.activosCaption")}
+        />
+        <KpiCard
+          icon={PauseCircle}
+          tone={kpis.inactivos + kpis.baja > 0 ? "warn" : "neutral"}
+          label={t("maquinaria.maquinas.kpi.inactivos")}
+          value={(kpis.inactivos + kpis.baja).toLocaleString("es-AR")}
+          caption={t("maquinaria.maquinas.kpi.inactivosCaption", {
+            inactivos: kpis.inactivos,
+            baja: kpis.baja,
+          })}
+        />
+        <KpiCard
+          icon={Gauge}
+          tone="info"
+          label={t("maquinaria.maquinas.kpi.horometro")}
+          value={horasLabel}
+          caption={t("maquinaria.maquinas.kpi.horometroCaption")}
+        />
+      </div>
+
       {tipos.length > 1 ? (
         <div className="flex flex-wrap items-center gap-2">
           <span className="text-xs uppercase tracking-wide text-muted-foreground">
@@ -626,34 +863,117 @@ export function MaquinariaClient({
           {t("maquinaria.maquinas.sinEstructura")}
         </div>
       ) : (
-        <DataTable<MaquinaRow>
-          columns={columns}
-          data={filteredRows}
-          searchableKeys={searchableKeys}
-          searchPlaceholder={t("maquinaria.maquinas.buscarPlaceholder")}
-          onRowClick={admin ? openEdit : undefined}
-          emptyState={
-            admin
-              ? t("maquinaria.maquinas.vacioAdmin")
-              : t("maquinaria.maquinas.vacio")
-          }
-          filterSlot={
-            <Select value={estadoFilter} onValueChange={setEstadoFilter}>
-              <SelectTrigger className="w-[160px]">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">
-                  {t("maquinaria.maquinas.estadoTodos")}
-                </SelectItem>
-                <SelectItem value="activo">Activo</SelectItem>
-                <SelectItem value="inactivo">Inactivo</SelectItem>
-                <SelectItem value="baja">Baja</SelectItem>
-              </SelectContent>
-            </Select>
-          }
-        />
+        <>
+          <Toolbar>
+            <Toolbar.Search
+              value={searchQuery}
+              onValueChange={setSearchQuery}
+              placeholder={t("maquinaria.maquinas.buscarPlaceholder")}
+            />
+            <Toolbar.Selects>
+              <Select value={estadoFilter} onValueChange={setEstadoFilter}>
+                <SelectTrigger className="h-9 w-[160px]">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">
+                    {t("maquinaria.maquinas.estadoTodos")}
+                  </SelectItem>
+                  <SelectItem value="activo">Activo</SelectItem>
+                  <SelectItem value="inactivo">Inactivo</SelectItem>
+                  <SelectItem value="baja">Baja</SelectItem>
+                </SelectContent>
+              </Select>
+            </Toolbar.Selects>
+            <div className="ml-auto flex items-center gap-3">
+              <span className="text-xs text-muted-foreground">
+                {t("maquinaria.maquinas.totalEquipos", {
+                  count: filteredRows.length,
+                })}
+              </span>
+              <Toolbar.ViewMode<"cards" | "table">
+                value={view}
+                onValueChange={setView}
+                className="ml-0"
+                options={[
+                  {
+                    value: "cards",
+                    icon: <LayoutGrid className="size-3.5" />,
+                    label: t("maquinaria.maquinas.verTarjetas"),
+                  },
+                  {
+                    value: "table",
+                    icon: <Rows3 className="size-3.5" />,
+                    label: t("maquinaria.maquinas.verTabla"),
+                  },
+                ]}
+              />
+            </div>
+          </Toolbar>
+
+          {filteredRows.length === 0 ? (
+            <div className="rounded-lg border border-border bg-card">
+              <EmptyState
+                variant={searchQuery.trim() ? "no-results" : "no-data"}
+                title={
+                  searchQuery.trim()
+                    ? undefined
+                    : admin
+                      ? t("maquinaria.maquinas.vacioAdmin")
+                      : t("maquinaria.maquinas.vacio")
+                }
+              />
+            </div>
+          ) : view === "cards" ? (
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+              {filteredRows.map((row) => (
+                <MaquinariaCard
+                  key={row.id}
+                  data={cardDataFor(row)}
+                  onClick={() => openDetail(row)}
+                />
+              ))}
+            </div>
+          ) : (
+            <DataTable<MaquinaRow>
+              columns={columns}
+              data={filteredRows}
+              searchableKeys={searchableKeys}
+              searchPlaceholder={t("maquinaria.maquinas.buscarPlaceholder")}
+              onRowClick={openDetail}
+              emptyState={
+                admin
+                  ? t("maquinaria.maquinas.vacioAdmin")
+                  : t("maquinaria.maquinas.vacio")
+              }
+            />
+          )}
+        </>
       )}
+
+      <MaquinariaDetailDrawer
+        open={detailOpen}
+        onOpenChange={(next) => {
+          setDetailOpen(next);
+          if (!next) setDetailId(null);
+        }}
+        data={detailData}
+        footer={
+          admin && detailRow ? (
+            <Button
+              type="button"
+              size="sm"
+              onClick={() => {
+                setDetailOpen(false);
+                openEdit(detailRow);
+              }}
+            >
+              <Pencil className="size-4" />
+              {t("maquinaria.detalle.editar")}
+            </Button>
+          ) : null
+        }
+      />
 
       <FormSheet
         open={open}

@@ -2,7 +2,11 @@ import { prisma } from "@/lib/db";
 import { auth } from "@/lib/auth";
 import { isAdmin } from "@/lib/rbac";
 
-import { UnidadesMedidaClient, type UnidadMedidaRow } from "./unidades-medida-client";
+import {
+  UnidadesMedidaClient,
+  type UnidadMedidaRow,
+  type UnidadesMedidaKpis,
+} from "./unidades-medida-client";
 
 export default async function UnidadesMedidaPage() {
   const session = await auth();
@@ -15,5 +19,7 @@ export default async function UnidadesMedidaPage() {
 
   const data: UnidadMedidaRow[] = rows.map((r) => ({ ...r }));
 
-  return <UnidadesMedidaClient rows={data} isAdmin={admin} />;
+  const kpis: UnidadesMedidaKpis = { total: data.length };
+
+  return <UnidadesMedidaClient rows={data} isAdmin={admin} kpis={kpis} />;
 }

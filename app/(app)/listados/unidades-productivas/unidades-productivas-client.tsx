@@ -1,10 +1,10 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useMemo, useState, useTransition } from "react";
 import { useTranslations } from "next-intl";
 import { format } from "date-fns";
 import { es } from "date-fns/locale";
-import { Plus } from "lucide-react";
+import { Plus, Factory, Link2, MapPinOff } from "lucide-react";
 import { toast } from "sonner";
 import { useForm } from "react-hook-form";
 import { standardSchemaResolver } from "@hookform/resolvers/standard-schema";
@@ -38,6 +38,8 @@ import { FormSheet } from "@/components/app/form-sheet";
 import { ActionsMenu } from "@/components/app/actions-menu";
 import { ConfirmDialog } from "@/components/app/confirm-dialog";
 import { PageHeader } from "@/components/app/page-header";
+import { Toolbar } from "@/components/app/toolbar";
+import { KpiCard } from "@/components/stats/kpi-card";
 
 import {
   createUnidadProductiva,
@@ -59,7 +61,14 @@ export type UnidadProductivaRow = {
 export type LocalidadOption = { id: number; nombre: string };
 export type TipoUnidadOption = { id: number; nombre: string };
 
+export type UnidadesProductivasKpis = {
+  total: number;
+  enUso: number;
+  sinLocalidad: number;
+};
+
 const NONE = "__none__";
+const ALL = "__all__";
 
 const formSchema = z.object({
   nombre: z.string().trim().min(1, "Obligatorio").max(200),
@@ -74,20 +83,32 @@ const emptyForm: FormValues = {
   tipoUnidadId: NONE,
 };
 
+function norm(s: unknown): string {
+  return String(s ?? "")
+    .normalize("NFD")
+    .replace(/\p{Diacritic}/gu, "")
+    .toLowerCase();
+}
+
 export function UnidadesProductivasClient({
   rows,
   localidades,
   tipos,
   isAdmin,
+  kpis,
 }: {
   rows: UnidadProductivaRow[];
   localidades: LocalidadOption[];
   tipos: TipoUnidadOption[];
   isAdmin: boolean;
+  kpis: UnidadesProductivasKpis;
 }) {
   const t = useTranslations();
   const [open, setOpen] = useState(false);
   const [editing, setEditing] = useState<UnidadProductivaRow | null>(null);
+  const [search, setSearch] = useState("");
+  const [localidadFilter, setLocalidadFilter] = useState<string>(ALL);
+  const [tipoFilter, setTipoFilter] = useState<string>(ALL);
 
   const form = useForm<FormValues>({
     resolver: standardSchemaResolver(formSchema),
@@ -95,6 +116,32 @@ export function UnidadesProductivasClient({
   });
 
   const [isSubmitting, startSubmit] = useTransition();
+
+  const filtered = useMemo(() => {
+    let out = rows;
+    if (localidadFilter !== ALL) {
+      const id = Number(localidadFilter);
+      out = out.filter((r) => r.localidadId === id);
+    }
+    if (tipoFilter !== ALL) {
+      const id = Number(tipoFilter);
+      out = out.filter((r) => r.tipoUnidadId === id);
+    }
+    const q = search.trim();
+    if (q) {
+      const qn = norm(q);
+      out = out.filter(
+        (r) =>
+          norm(r.nombre).includes(qn) ||
+          norm(r.localidadNombre).includes(qn) ||
+          norm(r.tipoUnidadNombre).includes(qn),
+      );
+    }
+    return out;
+  }, [rows, search, localidadFilter, tipoFilter]);
+
+  const hasActiveFilters =
+    search.trim().length > 0 || localidadFilter !== ALL || tipoFilter !== ALL;
 
   function openCreate() {
     setEditing(null);
@@ -196,7 +243,7 @@ export function UnidadesProductivasClient({
     },
     {
       accessorKey: "usageCount",
-      header: "Referencias",
+      header: t("listados.unidadesProductivas.referencias"),
       enableSorting: true,
       cell: ({ row }) => (
         <span className="tabular-nums text-muted-foreground">
@@ -272,20 +319,85 @@ export function UnidadesProductivasClient({
         }
       />
 
+      <div className="grid grid-cols-2 gap-3 md:grid-cols-3">
+        <KpiCard
+          icon={Factory}
+          tone="neutral"
+          label={t("listados.unidadesProductivas.kpi.total")}
+          value={kpis.total.toLocaleString("es-AR")}
+          caption={t("listados.unidadesProductivas.kpi.totalCaption")}
+        />
+        <KpiCard
+          icon={Link2}
+          tone="ok"
+          label={t("listados.unidadesProductivas.kpi.enUso")}
+          value={kpis.enUso.toLocaleString("es-AR")}
+          caption={t("listados.unidadesProductivas.kpi.enUsoCaption")}
+        />
+        <KpiCard
+          icon={MapPinOff}
+          tone={kpis.sinLocalidad > 0 ? "warn" : "neutral"}
+          label={t("listados.unidadesProductivas.kpi.sinLocalidad")}
+          value={kpis.sinLocalidad.toLocaleString("es-AR")}
+          caption={t("listados.unidadesProductivas.kpi.sinLocalidadCaption")}
+        />
+      </div>
+
+      <Toolbar>
+        <Toolbar.Search
+          value={search}
+          onValueChange={setSearch}
+          placeholder={t("listados.unidadesProductivas.buscarPlaceholder")}
+        />
+        <Toolbar.Selects>
+          <Select value={localidadFilter} onValueChange={setLocalidadFilter}>
+            <SelectTrigger className="h-9 min-w-[160px]">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value={ALL}>
+                {t("listados.unidadesProductivas.filtroLocalidadTodas")}
+              </SelectItem>
+              {localidades.map((l) => (
+                <SelectItem key={l.id} value={String(l.id)}>
+                  {l.nombre}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          <Select value={tipoFilter} onValueChange={setTipoFilter}>
+            <SelectTrigger className="h-9 min-w-[140px]">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value={ALL}>
+                {t("listados.unidadesProductivas.filtroTipoTodos")}
+              </SelectItem>
+              {tipos.map((tu) => (
+                <SelectItem key={tu.id} value={String(tu.id)}>
+                  {tu.nombre}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </Toolbar.Selects>
+      </Toolbar>
+
       <DataTable<UnidadProductivaRow>
         columns={columns}
-        data={rows}
-        searchableKeys={["nombre", "localidadNombre", "tipoUnidadNombre"]}
+        data={filtered}
         initialSort={[{ id: "nombre", desc: false }]}
         onRowClick={isAdmin ? openEdit : undefined}
         emptyState={
-          isAdmin
-            ? t("listados.common.vacioAdmin", {
-                entidad: t("listados.unidadesProductivas.plural"),
-              })
-            : t("listados.common.vacio", {
-                entidad: t("listados.unidadesProductivas.plural"),
-              })
+          hasActiveFilters
+            ? t("listados.common.sinResultadosFiltrados")
+            : isAdmin
+              ? t("listados.common.vacioAdmin", {
+                  entidad: t("listados.unidadesProductivas.plural"),
+                })
+              : t("listados.common.vacio", {
+                  entidad: t("listados.unidadesProductivas.plural"),
+                })
         }
       />
 

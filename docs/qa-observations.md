@@ -393,6 +393,17 @@ Legacy-vs-web feature sweep against `Agimav23b.py`. Items below are gaps the aud
 
 ---
 
+## QA-038 · Inventario sidebar badge shows a count that doesn't match the page KPIs
+
+- **Module:** Inventario (nav badge)
+- **Severity:** low
+- **Status:** **open**
+- **Repro:** `/inventario`. Sidebar shows "Inventario 44". Page KPI strip shows "5 bajo mínimo" and "268 stock negativo". 44 matches neither.
+- **Suspected cause:** the nav badge counter is a separate query that either (a) counts items with `stockMinimo > 0 AND stock < stockMinimo` but with a different filter than the KPI (e.g., excluding negatives), or (b) is stale cached. Needs tracing through the component that renders the sidebar item count for inventario.
+- **Next step:** grep for where the inventario nav badge is computed (likely in `lib/nav.ts` consumers or a sibling of `lib/compras/pending-badge.ts`), confirm whether it was written to a spec, and either align with the KPI or update the caption so the number is explainable.
+
+---
+
 ## Triage
 
 - **Blockers:** ~~QA-004, QA-008, QA-009, QA-013, QA-014, QA-015~~ — all fixed.

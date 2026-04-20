@@ -2,7 +2,11 @@ import { prisma } from "@/lib/db";
 import { auth } from "@/lib/auth";
 import { isAdmin } from "@/lib/rbac";
 
-import { TiposUnidadClient, type TipoUnidadRow } from "./tipos-unidad-client";
+import {
+  TiposUnidadClient,
+  type TipoUnidadRow,
+  type TiposUnidadKpis,
+} from "./tipos-unidad-client";
 
 export default async function TiposUnidadPage() {
   const session = await auth();
@@ -25,5 +29,10 @@ export default async function TiposUnidadPage() {
     createdAt: r.createdAt,
   }));
 
-  return <TiposUnidadClient rows={data} isAdmin={admin} />;
+  const total = data.length;
+  const enUso = data.filter((r) => r.unidadesCount > 0).length;
+
+  const kpis: TiposUnidadKpis = { total, enUso };
+
+  return <TiposUnidadClient rows={data} isAdmin={admin} kpis={kpis} />;
 }

@@ -5,6 +5,7 @@ import { isAdmin, userNameFromSession } from "@/lib/rbac";
 import {
   RequisicionesClient,
   type RequisicionRow,
+  type RequisicionesKpis,
 } from "./requisiciones-client";
 
 export default async function RequisicionesPage() {
@@ -52,12 +53,27 @@ export default async function RequisicionesPage() {
     a.localeCompare(b, "es"),
   );
 
+  const now = new Date();
+  const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
+  const kpis: RequisicionesKpis = {
+    total: reqs.length,
+    pendientes: reqs.filter((r) => r.estado === "En Revisión").length,
+    aprobadasSinOc: reqs.filter(
+      (r) => r.estado === "Aprobada" || r.estado === "Asignado a Proveedor",
+    ).length,
+    delMes: reqs.filter(
+      (r) => r.fechaCreacion && r.fechaCreacion >= monthStart,
+    ).length,
+    monthStartIso: monthStart.toISOString(),
+  };
+
   return (
     <RequisicionesClient
       rows={rows}
       unidadesProductivas={upOptions}
       isAdmin={admin}
       currentUserName={currentUser}
+      kpis={kpis}
     />
   );
 }

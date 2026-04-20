@@ -2,7 +2,11 @@ import { prisma } from "@/lib/db";
 import { auth } from "@/lib/auth";
 import { isAdmin } from "@/lib/rbac";
 
-import { LocalidadesClient, type LocalidadRow } from "./localidades-client";
+import {
+  LocalidadesClient,
+  type LocalidadRow,
+  type LocalidadesKpis,
+} from "./localidades-client";
 
 export default async function LocalidadesPage() {
   const session = await auth();
@@ -32,5 +36,11 @@ export default async function LocalidadesPage() {
       r._count.unidadesProductivas + r._count.proveedores + r._count.ordenesTrabajo,
   }));
 
-  return <LocalidadesClient rows={data} isAdmin={admin} />;
+  const total = data.length;
+  const enUso = data.filter((r) => r.usageCount > 0).length;
+  const sinUso = total - enUso;
+
+  const kpis: LocalidadesKpis = { total, enUso, sinUso };
+
+  return <LocalidadesClient rows={data} isAdmin={admin} kpis={kpis} />;
 }

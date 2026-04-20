@@ -48,11 +48,11 @@ export function MaquinariaStatsClient({ rows }: { rows: MaqRow[] }) {
   }));
 
   return (
-    <>
+    <div className="flex h-full flex-col gap-3">
       <div className="flex items-center gap-2">
         <Select value={min} onValueChange={(v) => setMin(v as MinFiltro)}>
           <SelectTrigger
-            className="w-[160px]"
+            className="w-[200px]"
             aria-label={t("maquinaria.titulo")}
           >
             <SelectValue />
@@ -67,13 +67,13 @@ export function MaquinariaStatsClient({ rows }: { rows: MaqRow[] }) {
         </Select>
       </div>
 
-      <div className="overflow-hidden rounded-lg border border-border">
+      <div className="-mx-5 -mb-5 flex-1 overflow-hidden border-t border-border">
         {filtered.length === 0 ? (
-          <div className="p-10 text-center text-sm text-muted-foreground">
+          <div className="flex h-full items-center justify-center p-10 text-sm text-muted-foreground">
             {t("maquinaria.vacio")}
           </div>
         ) : (
-          <div className="max-h-[600px] overflow-auto">
+          <div className="max-h-[560px] overflow-auto">
             <table className="min-w-full text-sm">
               <thead className="sticky top-0 z-10 bg-muted text-xs uppercase text-muted-foreground">
                 <tr>
@@ -151,6 +151,6 @@ export function MaquinariaStatsClient({ rows }: { rows: MaqRow[] }) {
           </div>
         )}
       </div>
-    </>
+    </div>
   );
 }

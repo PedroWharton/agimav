@@ -4,7 +4,7 @@ import { prisma } from "@/lib/db";
 import { auth } from "@/lib/auth";
 import { isAdmin } from "@/lib/rbac";
 
-import { TiposClient, type TipoRow } from "./tipos-client";
+import { TiposClient, type TipoRow, type TiposKpis } from "./tipos-client";
 
 export default async function MaquinariaTiposPage() {
   const session = await auth();
@@ -44,5 +44,18 @@ export default async function MaquinariaTiposPage() {
     atributosCount: t.niveles.reduce((s, n) => s + n._count.atributos, 0),
   }));
 
-  return <TiposClient rows={rows} />;
+  const activos = rows.filter((r) => r.estado !== "inactivo").length;
+  const inactivos = rows.length - activos;
+  const instanciasTotales = rows.reduce((s, r) => s + r.instanciasCount, 0);
+  const atributosTotales = rows.reduce((s, r) => s + r.atributosCount, 0);
+
+  const kpis: TiposKpis = {
+    total: rows.length,
+    activos,
+    inactivos,
+    instanciasTotales,
+    atributosTotales,
+  };
+
+  return <TiposClient rows={rows} kpis={kpis} />;
 }

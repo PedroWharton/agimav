@@ -1,10 +1,10 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useMemo, useState, useTransition } from "react";
 import { useTranslations } from "next-intl";
 import { format } from "date-fns";
 import { es } from "date-fns/locale";
-import { Plus } from "lucide-react";
+import { Plus, Tag, Link2 } from "lucide-react";
 import { toast } from "sonner";
 import { useForm } from "react-hook-form";
 import { standardSchemaResolver } from "@hookform/resolvers/standard-schema";
@@ -27,10 +27,12 @@ import {
 } from "@/components/ui/dropdown-menu";
 
 import { DataTable } from "@/components/app/data-table";
-import { FormDialog } from "@/components/app/form-dialog";
+import { FormSheet } from "@/components/app/form-sheet";
 import { ActionsMenu } from "@/components/app/actions-menu";
 import { ConfirmDialog } from "@/components/app/confirm-dialog";
 import { PageHeader } from "@/components/app/page-header";
+import { Toolbar } from "@/components/app/toolbar";
+import { KpiCard } from "@/components/stats/kpi-card";
 
 import { createTipoUnidad, updateTipoUnidad, deleteTipoUnidad } from "./actions";
 
@@ -41,21 +43,36 @@ export type TipoUnidadRow = {
   createdAt: Date;
 };
 
+export type TiposUnidadKpis = {
+  total: number;
+  enUso: number;
+};
+
 const formSchema = z.object({
   nombre: z.string().trim().min(1, "Obligatorio").max(100),
 });
 type FormValues = z.infer<typeof formSchema>;
 
+function norm(s: unknown): string {
+  return String(s ?? "")
+    .normalize("NFD")
+    .replace(/\p{Diacritic}/gu, "")
+    .toLowerCase();
+}
+
 export function TiposUnidadClient({
   rows,
   isAdmin,
+  kpis,
 }: {
   rows: TipoUnidadRow[];
   isAdmin: boolean;
+  kpis: TiposUnidadKpis;
 }) {
   const t = useTranslations();
   const [open, setOpen] = useState(false);
   const [editing, setEditing] = useState<TipoUnidadRow | null>(null);
+  const [search, setSearch] = useState("");
 
   const form = useForm<FormValues>({
     resolver: standardSchemaResolver(formSchema),
@@ -63,6 +80,13 @@ export function TiposUnidadClient({
   });
 
   const [isSubmitting, startSubmit] = useTransition();
+
+  const filtered = useMemo(() => {
+    const q = search.trim();
+    if (!q) return rows;
+    const qn = norm(q);
+    return rows.filter((r) => norm(r.nombre).includes(qn));
+  }, [rows, search]);
 
   function openCreate() {
     setEditing(null);
@@ -130,13 +154,19 @@ export function TiposUnidadClient({
   }
 
   const columns: ColumnDef<TipoUnidadRow>[] = [
-    { accessorKey: "nombre", header: t("listados.tiposUnidad.nombre"), enableSorting: true },
+    {
+      accessorKey: "nombre",
+      header: t("listados.tiposUnidad.nombre"),
+      enableSorting: true,
+    },
     {
       accessorKey: "unidadesCount",
       header: t("listados.tiposUnidad.unidadesCount"),
       enableSorting: true,
       cell: ({ row }) => (
-        <span className="tabular-nums">{row.original.unidadesCount}</span>
+        <span className="tabular-nums text-muted-foreground">
+          {row.original.unidadesCount}
+        </span>
       ),
     },
     {
@@ -173,7 +203,9 @@ export function TiposUnidadClient({
                     {t("listados.common.eliminar")}
                   </DropdownMenuItem>
                 }
-                title={t("listados.tiposUnidad.eliminarPregunta", { nombre: r.nombre })}
+                title={t("listados.tiposUnidad.eliminarPregunta", {
+                  nombre: r.nombre,
+                })}
                 description={t("listados.roles.eliminarAviso")}
                 confirmLabel={t("listados.common.eliminar")}
                 destructive
@@ -185,6 +217,10 @@ export function TiposUnidadClient({
       },
     },
   ];
+
+  const title = editing
+    ? `${t("listados.common.editar")} ${t("listados.tiposUnidad.singular").toLowerCase()}`
+    : `${t("listados.common.crear")} ${t("listados.tiposUnidad.singular").toLowerCase()}`;
 
   return (
     <div className="flex flex-col gap-6 p-6">
@@ -201,27 +237,53 @@ export function TiposUnidadClient({
         }
       />
 
+      <div className="grid grid-cols-2 gap-3">
+        <KpiCard
+          icon={Tag}
+          tone="neutral"
+          label={t("listados.tiposUnidad.kpi.total")}
+          value={kpis.total.toLocaleString("es-AR")}
+          caption={t("listados.tiposUnidad.kpi.totalCaption")}
+        />
+        <KpiCard
+          icon={Link2}
+          tone="ok"
+          label={t("listados.tiposUnidad.kpi.enUso")}
+          value={kpis.enUso.toLocaleString("es-AR")}
+          caption={t("listados.tiposUnidad.kpi.enUsoCaption")}
+        />
+      </div>
+
+      <Toolbar>
+        <Toolbar.Search
+          value={search}
+          onValueChange={setSearch}
+          placeholder={t("listados.tiposUnidad.buscarPlaceholder")}
+        />
+      </Toolbar>
+
       <DataTable<TipoUnidadRow>
         columns={columns}
-        data={rows}
-        searchableKeys={["nombre"]}
+        data={filtered}
         initialSort={[{ id: "nombre", desc: false }]}
         onRowClick={isAdmin ? openEdit : undefined}
         emptyState={
-          isAdmin
-            ? t("listados.common.vacioAdmin", { entidad: t("listados.tiposUnidad.plural") })
-            : t("listados.common.vacio", { entidad: t("listados.tiposUnidad.plural") })
+          search.trim()
+            ? t("listados.common.sinResultadosFiltrados")
+            : isAdmin
+              ? t("listados.common.vacioAdmin", {
+                  entidad: t("listados.tiposUnidad.plural"),
+                })
+              : t("listados.common.vacio", {
+                  entidad: t("listados.tiposUnidad.plural"),
+                })
         }
       />
 
-      <FormDialog
+      <FormSheet
         open={open}
         onOpenChange={setOpen}
-        title={
-          editing
-            ? `${t("listados.common.editar")} ${t("listados.tiposUnidad.singular").toLowerCase()}`
-            : `${t("listados.common.crear")} ${t("listados.tiposUnidad.singular").toLowerCase()}`
-        }
+        title={title}
         isDirty={form.formState.isDirty}
         isSubmitting={isSubmitting}
         onSubmit={submit}
@@ -241,7 +303,7 @@ export function TiposUnidadClient({
             )}
           />
         </Form>
-      </FormDialog>
+      </FormSheet>
     </div>
   );
 }

@@ -2,7 +2,12 @@ import { prisma } from "@/lib/db";
 import { auth } from "@/lib/auth";
 import { isAdmin, userIdFromSession } from "@/lib/rbac";
 
-import { UsuariosClient, type UsuarioRow, type RolOption } from "./usuarios-client";
+import {
+  UsuariosClient,
+  type UsuarioRow,
+  type RolOption,
+  type UsuariosKpis,
+} from "./usuarios-client";
 
 export default async function UsuariosPage() {
   const session = await auth();
@@ -38,7 +43,17 @@ export default async function UsuariosPage() {
     createdAt: u.createdAt,
   }));
 
-  const rolOptions: RolOption[] = roles.map((r) => ({ id: r.id, nombre: r.nombre }));
+  const rolOptions: RolOption[] = roles.map((r) => ({
+    id: r.id,
+    nombre: r.nombre,
+  }));
+
+  const total = rows.length;
+  const activos = rows.filter((r) => r.estado === "activo").length;
+  const inactivos = total - activos;
+  const sinRol = rows.filter((r) => r.rolId == null).length;
+
+  const kpis: UsuariosKpis = { total, activos, inactivos, sinRol };
 
   return (
     <UsuariosClient
@@ -46,6 +61,7 @@ export default async function UsuariosPage() {
       roles={rolOptions}
       isAdmin={admin}
       currentUserId={currentUserId}
+      kpis={kpis}
     />
   );
 }

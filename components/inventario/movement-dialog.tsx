@@ -28,6 +28,7 @@ import {
   FormLabel,
   FormMessage,
 } from "@/components/ui/form";
+import { ArrowDown, ArrowUp, SlidersHorizontal, AlertTriangle } from "lucide-react";
 
 import { CurrencyInput } from "@/components/app/currency-input";
 import { StockBadge } from "@/components/inventario/stock-badge";
@@ -211,16 +212,25 @@ export function MovementDialog({
                       <TipoOption
                         value="entrada"
                         label={t("tipos.entrada")}
+                        hint="Aumenta stock, recalcula costo"
+                        tone="ok"
+                        icon={<ArrowDown className="size-3.5" />}
                         selected={field.value === "entrada"}
                       />
                       <TipoOption
                         value="salida"
                         label={t("tipos.salida")}
+                        hint="Consumo manual"
+                        tone="danger"
+                        icon={<ArrowUp className="size-3.5" />}
                         selected={field.value === "salida"}
                       />
                       <TipoOption
                         value="ajuste_precio"
                         label={t("tipos.ajustePrecio")}
+                        hint="Solo cambia precio"
+                        tone="info"
+                        icon={<SlidersHorizontal className="size-3.5" />}
                         selected={field.value === "ajuste_precio"}
                       />
                     </RadioGroup>
@@ -313,7 +323,7 @@ export function MovementDialog({
             )}
 
             {tipo === "entrada" ? (
-              <div className="flex items-center justify-between rounded-md bg-muted/40 px-3 py-2 text-sm">
+              <div className="flex items-center justify-between rounded-lg border border-border bg-muted-2/60 px-3 py-2 text-sm">
                 <span className="text-muted-foreground">
                   {t("campos.total")}
                 </span>
@@ -324,12 +334,13 @@ export function MovementDialog({
             ) : null}
 
             {tipo !== "ajuste_precio" ? (
-              <div className="flex items-center justify-between text-sm">
-                <span className="text-muted-foreground">
-                  {t("avisos.stockResultante", {
-                    stock: formatNumber(stockResultante),
-                  })}
-                </span>
+              <div className="flex items-center justify-between rounded-lg border border-border bg-card px-3 py-2 text-sm">
+                <div className="flex items-center gap-2 text-muted-foreground">
+                  <span className="tabular-nums">
+                    {formatNumber(target.stock)}
+                  </span>
+                  <span aria-hidden>→</span>
+                </div>
                 <StockBadge
                   stock={stockResultante}
                   stockMinimo={target.stockMinimo}
@@ -371,10 +382,13 @@ export function MovementDialog({
             />
 
             {driveNegative ? (
-              <div className="rounded-md border border-destructive/30 bg-destructive/5 p-3 text-sm text-destructive">
-                {t("avisos.negativoConfirmar", {
-                  stock: formatNumber(stockResultante),
-                })}
+              <div className="flex items-start gap-2 rounded-lg border border-danger/30 bg-danger-weak p-3 text-sm text-danger">
+                <AlertTriangle className="mt-0.5 size-4 shrink-0" />
+                <span>
+                  {t("avisos.negativoConfirmar", {
+                    stock: formatNumber(stockResultante),
+                  })}
+                </span>
               </div>
             ) : null}
 
@@ -405,23 +419,47 @@ export function MovementDialog({
 function TipoOption({
   value,
   label,
+  hint,
+  icon,
+  tone,
   selected,
 }: {
   value: string;
   label: string;
+  hint?: string;
+  icon?: React.ReactNode;
+  tone?: "ok" | "danger" | "info";
   selected: boolean;
 }) {
+  const toneText =
+    tone === "ok"
+      ? "text-success"
+      : tone === "danger"
+        ? "text-danger"
+        : "text-info";
   return (
     <Label
       htmlFor={`tipo-${value}`}
       className={
         selected
-          ? "flex cursor-pointer items-center gap-2 rounded-md border border-primary bg-primary/5 px-3 py-2 text-sm"
-          : "flex cursor-pointer items-center gap-2 rounded-md border border-border px-3 py-2 text-sm hover:border-border/70"
+          ? "flex cursor-pointer flex-col gap-1 rounded-lg border border-brand bg-brand-weak px-3 py-2 text-sm"
+          : "flex cursor-pointer flex-col gap-1 rounded-lg border border-border bg-card px-3 py-2 text-sm hover:border-muted-foreground/30"
       }
     >
-      <RadioGroupItem id={`tipo-${value}`} value={value} />
-      <span>{label}</span>
+      <div className="flex items-center gap-2">
+        <RadioGroupItem
+          id={`tipo-${value}`}
+          value={value}
+          className="sr-only"
+        />
+        <span className={selected && tone ? toneText : "text-foreground"}>
+          {icon}
+        </span>
+        <span className="font-medium">{label}</span>
+      </div>
+      {hint ? (
+        <span className="text-[11.5px] text-muted-foreground">{hint}</span>
+      ) : null}
     </Label>
   );
 }

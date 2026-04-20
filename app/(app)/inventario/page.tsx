@@ -9,36 +9,45 @@ export default async function InventarioPage() {
   const admin = isAdmin(session);
   const panolero = isPañolero(session);
 
-  const [items, localidadesListado, unidadesProductivas, unidadesMedida] =
-    await Promise.all([
-      prisma.inventario.findMany({
-        select: {
-          id: true,
-          codigo: true,
-          descripcion: true,
-          categoria: true,
-          localidad: true,
-          unidadProductiva: true,
-          unidadMedida: true,
-          stock: true,
-          stockMinimo: true,
-          valorUnitario: true,
-        },
-        orderBy: { descripcion: "asc" },
-      }),
-      prisma.localidad.findMany({
-        select: { nombre: true },
-        orderBy: { nombre: "asc" },
-      }),
-      prisma.unidadProductiva.findMany({
-        select: { nombre: true },
-        orderBy: { nombre: "asc" },
-      }),
-      prisma.unidadMedida.findMany({
-        select: { nombre: true, abreviacion: true },
-        orderBy: { nombre: "asc" },
-      }),
-    ]);
+  const [
+    items,
+    localidadesListado,
+    unidadesProductivas,
+    unidadesMedida,
+    lastMovimiento,
+  ] = await Promise.all([
+    prisma.inventario.findMany({
+      select: {
+        id: true,
+        codigo: true,
+        descripcion: true,
+        categoria: true,
+        localidad: true,
+        unidadProductiva: true,
+        unidadMedida: true,
+        stock: true,
+        stockMinimo: true,
+        valorUnitario: true,
+      },
+      orderBy: { descripcion: "asc" },
+    }),
+    prisma.localidad.findMany({
+      select: { nombre: true },
+      orderBy: { nombre: "asc" },
+    }),
+    prisma.unidadProductiva.findMany({
+      select: { nombre: true },
+      orderBy: { nombre: "asc" },
+    }),
+    prisma.unidadMedida.findMany({
+      select: { nombre: true, abreviacion: true },
+      orderBy: { nombre: "asc" },
+    }),
+    prisma.inventarioMovimiento.findFirst({
+      select: { fecha: true },
+      orderBy: { fecha: "desc" },
+    }),
+  ]);
 
   const rows: InventarioRow[] = items.map((i) => ({
     id: i.id,
@@ -69,6 +78,22 @@ export default async function InventarioPage() {
   const unidadesProductivasNombres = unidadesProductivas.map((u) => u.nombre);
   const unidadesMedidaNombres = unidadesMedida.map((u) => u.nombre);
 
+  let bajoMinimoTotal = 0;
+  let stockNegativoTotal = 0;
+  let valorTotalAcum = 0;
+  for (const r of rows) {
+    if (r.stock < 0) stockNegativoTotal++;
+    else if (r.stockMinimo > 0 && r.stock < r.stockMinimo) bajoMinimoTotal++;
+    valorTotalAcum += Math.max(r.stock, 0) * r.valorUnitario;
+  }
+
+  const kpis = {
+    total: rows.length,
+    bajoMinimo: bajoMinimoTotal,
+    stockNegativo: stockNegativoTotal,
+    valorTotal: valorTotalAcum,
+  };
+
   return (
     <InventarioClient
       rows={rows}
@@ -78,6 +103,8 @@ export default async function InventarioPage() {
       unidadesMedida={unidadesMedidaNombres}
       isAdmin={admin}
       canRegisterMovimiento={panolero}
+      kpis={kpis}
+      lastMovimientoAt={lastMovimiento?.fecha ?? null}
     />
   );
 }

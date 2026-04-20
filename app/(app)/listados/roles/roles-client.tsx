@@ -1,10 +1,10 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useMemo, useState, useTransition } from "react";
 import { useTranslations } from "next-intl";
 import { format } from "date-fns";
 import { es } from "date-fns/locale";
-import { Plus } from "lucide-react";
+import { Plus, ShieldCheck, UserCheck, UserMinus } from "lucide-react";
 import { toast } from "sonner";
 import { useForm } from "react-hook-form";
 import { standardSchemaResolver } from "@hookform/resolvers/standard-schema";
@@ -27,10 +27,12 @@ import {
 } from "@/components/ui/dropdown-menu";
 
 import { DataTable } from "@/components/app/data-table";
-import { FormDialog } from "@/components/app/form-dialog";
+import { FormSheet } from "@/components/app/form-sheet";
 import { ActionsMenu } from "@/components/app/actions-menu";
 import { ConfirmDialog } from "@/components/app/confirm-dialog";
 import { PageHeader } from "@/components/app/page-header";
+import { Toolbar } from "@/components/app/toolbar";
+import { KpiCard } from "@/components/stats/kpi-card";
 
 import { createRol, updateRol, deleteRol } from "./actions";
 
@@ -41,15 +43,37 @@ export type RolRow = {
   createdAt: Date;
 };
 
+export type RolesKpis = {
+  total: number;
+  asignados: number;
+  sinUsuarios: number;
+};
+
 const rolFormSchema = z.object({
   nombre: z.string().trim().min(1, "El nombre es obligatorio").max(100),
 });
 type RolFormValues = z.infer<typeof rolFormSchema>;
 
-export function RolesClient({ roles, isAdmin }: { roles: RolRow[]; isAdmin: boolean }) {
+function norm(s: unknown): string {
+  return String(s ?? "")
+    .normalize("NFD")
+    .replace(/\p{Diacritic}/gu, "")
+    .toLowerCase();
+}
+
+export function RolesClient({
+  roles,
+  isAdmin,
+  kpis,
+}: {
+  roles: RolRow[];
+  isAdmin: boolean;
+  kpis: RolesKpis;
+}) {
   const t = useTranslations();
   const [open, setOpen] = useState(false);
   const [editing, setEditing] = useState<RolRow | null>(null);
+  const [search, setSearch] = useState("");
 
   const form = useForm<RolFormValues>({
     resolver: standardSchemaResolver(rolFormSchema),
@@ -57,6 +81,13 @@ export function RolesClient({ roles, isAdmin }: { roles: RolRow[]; isAdmin: bool
   });
 
   const [isSubmitting, startSubmit] = useTransition();
+
+  const filtered = useMemo(() => {
+    const q = search.trim();
+    if (!q) return roles;
+    const qn = norm(q);
+    return roles.filter((r) => norm(r.nombre).includes(qn));
+  }, [roles, search]);
 
   function openCreate() {
     setEditing(null);
@@ -134,7 +165,9 @@ export function RolesClient({ roles, isAdmin }: { roles: RolRow[]; isAdmin: bool
       header: t("listados.roles.usuariosCount"),
       enableSorting: true,
       cell: ({ row }) => (
-        <span className="tabular-nums">{row.original.usuariosCount}</span>
+        <span className="tabular-nums text-muted-foreground">
+          {row.original.usuariosCount}
+        </span>
       ),
     },
     {
@@ -184,6 +217,10 @@ export function RolesClient({ roles, isAdmin }: { roles: RolRow[]; isAdmin: bool
     },
   ];
 
+  const title = editing
+    ? `${t("listados.common.editar")} ${t("listados.roles.singular").toLowerCase()}`
+    : `${t("listados.common.crear")} ${t("listados.roles.singular").toLowerCase()}`;
+
   return (
     <div className="flex flex-col gap-6 p-6">
       <PageHeader
@@ -199,27 +236,60 @@ export function RolesClient({ roles, isAdmin }: { roles: RolRow[]; isAdmin: bool
         }
       />
 
+      <div className="grid grid-cols-2 gap-3 md:grid-cols-3">
+        <KpiCard
+          icon={ShieldCheck}
+          tone="neutral"
+          label={t("listados.roles.kpi.total")}
+          value={kpis.total.toLocaleString("es-AR")}
+          caption={t("listados.roles.kpi.totalCaption")}
+        />
+        <KpiCard
+          icon={UserCheck}
+          tone="ok"
+          label={t("listados.roles.kpi.asignados")}
+          value={kpis.asignados.toLocaleString("es-AR")}
+          caption={t("listados.roles.kpi.asignadosCaption")}
+        />
+        <KpiCard
+          icon={UserMinus}
+          tone={kpis.sinUsuarios > 0 ? "warn" : "neutral"}
+          label={t("listados.roles.kpi.sinUsuarios")}
+          value={kpis.sinUsuarios.toLocaleString("es-AR")}
+          caption={t("listados.roles.kpi.sinUsuariosCaption")}
+        />
+      </div>
+
+      <Toolbar>
+        <Toolbar.Search
+          value={search}
+          onValueChange={setSearch}
+          placeholder={t("listados.roles.buscarPlaceholder")}
+        />
+      </Toolbar>
+
       <DataTable<RolRow>
         columns={columns}
-        data={roles}
-        searchableKeys={["nombre"]}
+        data={filtered}
         initialSort={[{ id: "nombre", desc: false }]}
         onRowClick={isAdmin ? openEdit : undefined}
         emptyState={
-          isAdmin
-            ? t("listados.common.vacioAdmin", { entidad: t("listados.roles.plural") })
-            : t("listados.common.vacio", { entidad: t("listados.roles.plural") })
+          search.trim()
+            ? t("listados.common.sinResultadosFiltrados")
+            : isAdmin
+              ? t("listados.common.vacioAdmin", {
+                  entidad: t("listados.roles.plural"),
+                })
+              : t("listados.common.vacio", {
+                  entidad: t("listados.roles.plural"),
+                })
         }
       />
 
-      <FormDialog
+      <FormSheet
         open={open}
         onOpenChange={setOpen}
-        title={
-          editing
-            ? `${t("listados.common.editar")} ${t("listados.roles.singular").toLowerCase()}`
-            : `${t("listados.common.crear")} ${t("listados.roles.singular").toLowerCase()}`
-        }
+        title={title}
         isDirty={form.formState.isDirty}
         isSubmitting={isSubmitting}
         onSubmit={submit}
@@ -239,7 +309,7 @@ export function RolesClient({ roles, isAdmin }: { roles: RolRow[]; isAdmin: bool
             )}
           />
         </Form>
-      </FormDialog>
+      </FormSheet>
     </div>
   );
 }

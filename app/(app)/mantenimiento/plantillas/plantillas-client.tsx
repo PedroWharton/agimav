@@ -17,6 +17,7 @@ import {
 } from "@/components/ui/select";
 import { DataTable } from "@/components/app/data-table";
 import { PageHeader } from "@/components/app/page-header";
+import { Toolbar } from "@/components/app/toolbar";
 
 export type PlantillaRow = {
   id: number;
@@ -35,6 +36,13 @@ export type PlantillaRow = {
 
 const ALL = "__all__";
 
+function norm(s: unknown): string {
+  return String(s ?? "")
+    .normalize("NFD")
+    .replace(/\p{Diacritic}/gu, "")
+    .toLowerCase();
+}
+
 export function PlantillasClient({
   rows,
   isAdmin,
@@ -47,6 +55,7 @@ export function PlantillasClient({
   const router = useRouter();
 
   const [tipoFilter, setTipoFilter] = useState(ALL);
+  const [search, setSearch] = useState("");
 
   const tipoOptions = useMemo(() => {
     const seen = new Map<number, string>();
@@ -57,13 +66,21 @@ export function PlantillasClient({
   }, [rows]);
 
   const filtered = useMemo(() => {
-    return rows.filter((r) => {
-      if (tipoFilter !== ALL && String(r.tipoMaquinariaId) !== tipoFilter) {
-        return false;
-      }
-      return true;
-    });
-  }, [rows, tipoFilter]);
+    let out = rows;
+    if (tipoFilter !== ALL) {
+      out = out.filter((r) => String(r.tipoMaquinariaId) === tipoFilter);
+    }
+    const q = search.trim();
+    if (q) {
+      const qn = norm(q);
+      out = out.filter(
+        (r) =>
+          norm(r.nombre).includes(qn) ||
+          norm(r.tipoMaquinariaNombre).includes(qn),
+      );
+    }
+    return out;
+  }, [rows, tipoFilter, search]);
 
   const columns: ColumnDef<PlantillaRow>[] = [
     {
@@ -134,34 +151,35 @@ export function PlantillasClient({
         }
       />
 
+      <Toolbar>
+        <Toolbar.Search
+          value={search}
+          onValueChange={setSearch}
+          placeholder={tP("buscarPlaceholder")}
+        />
+        <Toolbar.Selects>
+          <Select value={tipoFilter} onValueChange={setTipoFilter}>
+            <SelectTrigger className="h-9 w-[220px]">
+              <SelectValue placeholder={tP("filtros.tipoMaquinaria")} />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value={ALL}>{tM("filtros.todos")}</SelectItem>
+              {tipoOptions.map((t) => (
+                <SelectItem key={t.id} value={String(t.id)}>
+                  {t.nombre}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </Toolbar.Selects>
+      </Toolbar>
+
       <DataTable<PlantillaRow>
         columns={columns}
         data={filtered}
-        searchableKeys={["nombre", "tipoMaquinariaNombre"]}
-        searchPlaceholder={tP("buscarPlaceholder")}
         initialSort={[{ id: "nombre", desc: false }]}
         onRowClick={(row) =>
           router.push(`/mantenimiento/plantillas/${row.id}`)
-        }
-        filterSlot={
-          <div className="flex flex-wrap items-center gap-3">
-            <Select value={tipoFilter} onValueChange={setTipoFilter}>
-              <SelectTrigger className="h-9 w-[220px]">
-                <SelectValue placeholder={tP("filtros.tipoMaquinaria")} />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value={ALL}>{tM("filtros.todos")}</SelectItem>
-                {tipoOptions.map((t) => (
-                  <SelectItem key={t.id} value={String(t.id)}>
-                    {t.nombre}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-            <span className="text-sm text-muted-foreground">
-              {tP("resultadosCount", { count: filtered.length })}
-            </span>
-          </div>
         }
         emptyState={tP("vacio")}
       />

@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
+import Script from "next/script";
 import { NextIntlClientProvider } from "next-intl";
 import { getLocale, getMessages } from "next-intl/server";
 
@@ -35,16 +36,10 @@ export default async function RootLayout({
       className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
     >
       <head>
-        {/*
-          FOUC-prevention: apply persisted theme/accent/density to <html>
-          before first paint. Must run synchronously, so a raw <script> tag
-          is the correct tool here (next/script defers even with
-          strategy="beforeInteractive" when used outside /app layouts).
-        */}
-        <script
-          dangerouslySetInnerHTML={{
-            __html: `try{var d=document.documentElement;var t=localStorage.getItem("agimav.theme");if(t==="dark")d.classList.add("dark");var a=localStorage.getItem("agimav.accent");if(a==="amber"||a==="violet"||a==="sky")d.dataset.accent=a;var n=localStorage.getItem("agimav.density");if(n==="compact"||n==="comfortable")d.dataset.density=n;}catch(e){}`,
-          }}
+        <Script
+          id="agimav-theme-init"
+          src="/agimav-theme-init.js"
+          strategy="beforeInteractive"
         />
       </head>
       <body className="min-h-full flex flex-col bg-background text-foreground">

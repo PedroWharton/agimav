@@ -4,7 +4,15 @@ import { useMemo, useState, useTransition } from "react";
 import { useTranslations } from "next-intl";
 import { format } from "date-fns";
 import { es } from "date-fns/locale";
-import { Plus, Copy, Link as LinkIcon } from "lucide-react";
+import {
+  Plus,
+  Copy,
+  Link as LinkIcon,
+  Users,
+  CheckCircle2,
+  PauseCircle,
+  UserX,
+} from "lucide-react";
 import { toast } from "sonner";
 import { useForm } from "react-hook-form";
 import { standardSchemaResolver } from "@hookform/resolvers/standard-schema";
@@ -47,6 +55,8 @@ import { FormSheet } from "@/components/app/form-sheet";
 import { ActionsMenu } from "@/components/app/actions-menu";
 import { ConfirmDialog } from "@/components/app/confirm-dialog";
 import { PageHeader } from "@/components/app/page-header";
+import { Toolbar } from "@/components/app/toolbar";
+import { KpiCard } from "@/components/stats/kpi-card";
 
 import {
   createUsuario,
@@ -68,6 +78,13 @@ export type UsuarioRow = {
 };
 
 export type RolOption = { id: number; nombre: string };
+
+export type UsuariosKpis = {
+  total: number;
+  activos: number;
+  inactivos: number;
+  sinRol: number;
+};
 
 const UNASSIGNED = "__none__";
 
@@ -96,21 +113,31 @@ function buildInviteUrl(token: string): string {
   return `${window.location.origin}/invitacion/${token}`;
 }
 
+function norm(s: unknown): string {
+  return String(s ?? "")
+    .normalize("NFD")
+    .replace(/\p{Diacritic}/gu, "")
+    .toLowerCase();
+}
+
 export function UsuariosClient({
   rows,
   roles,
   isAdmin,
   currentUserId,
+  kpis,
 }: {
   rows: UsuarioRow[];
   roles: RolOption[];
   isAdmin: boolean;
   currentUserId: number | null;
+  kpis: UsuariosKpis;
 }) {
   const t = useTranslations();
   const [open, setOpen] = useState(false);
   const [editing, setEditing] = useState<UsuarioRow | null>(null);
   const [estadoFilter, setEstadoFilter] = useState<EstadoFilter>("activos");
+  const [search, setSearch] = useState("");
   const [invite, setInvite] = useState<ShownInvite | null>(null);
 
   const form = useForm<FormValues>({
@@ -121,10 +148,26 @@ export function UsuariosClient({
   const [isSubmitting, startSubmit] = useTransition();
 
   const filtered = useMemo(() => {
-    if (estadoFilter === "todos") return rows;
-    const want = estadoFilter === "activos" ? "activo" : "inactivo";
-    return rows.filter((r) => r.estado === want);
-  }, [rows, estadoFilter]);
+    let out = rows;
+    if (estadoFilter !== "todos") {
+      const want = estadoFilter === "activos" ? "activo" : "inactivo";
+      out = out.filter((r) => r.estado === want);
+    }
+    const q = search.trim();
+    if (q) {
+      const qn = norm(q);
+      out = out.filter(
+        (r) =>
+          norm(r.nombre).includes(qn) ||
+          norm(r.email).includes(qn) ||
+          norm(r.rolNombre).includes(qn),
+      );
+    }
+    return out;
+  }, [rows, estadoFilter, search]);
+
+  const hasActiveFilters =
+    search.trim().length > 0 || estadoFilter !== "activos";
 
   function openCreate() {
     setEditing(null);
@@ -379,13 +422,44 @@ export function UsuariosClient({
         }
       />
 
-      <DataTable<UsuarioRow>
-        columns={columns}
-        data={filtered}
-        searchableKeys={["nombre", "email", "rolNombre"]}
-        initialSort={[{ id: "nombre", desc: false }]}
-        onRowClick={isAdmin ? openEdit : undefined}
-        filterSlot={
+      <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
+        <KpiCard
+          icon={Users}
+          tone="neutral"
+          label={t("listados.usuarios.kpi.total")}
+          value={kpis.total.toLocaleString("es-AR")}
+          caption={t("listados.usuarios.kpi.totalCaption")}
+        />
+        <KpiCard
+          icon={CheckCircle2}
+          tone="ok"
+          label={t("listados.usuarios.kpi.activos")}
+          value={kpis.activos.toLocaleString("es-AR")}
+          caption={t("listados.usuarios.kpi.activosCaption")}
+        />
+        <KpiCard
+          icon={PauseCircle}
+          tone={kpis.inactivos > 0 ? "warn" : "neutral"}
+          label={t("listados.usuarios.kpi.inactivos")}
+          value={kpis.inactivos.toLocaleString("es-AR")}
+          caption={t("listados.usuarios.kpi.inactivosCaption")}
+        />
+        <KpiCard
+          icon={UserX}
+          tone={kpis.sinRol > 0 ? "warn" : "neutral"}
+          label={t("listados.usuarios.kpi.sinRol")}
+          value={kpis.sinRol.toLocaleString("es-AR")}
+          caption={t("listados.usuarios.kpi.sinRolCaption")}
+        />
+      </div>
+
+      <Toolbar>
+        <Toolbar.Search
+          value={search}
+          onValueChange={setSearch}
+          placeholder={t("listados.usuarios.buscarPlaceholder")}
+        />
+        <Toolbar.Selects>
           <Select
             value={estadoFilter}
             onValueChange={(v) => setEstadoFilter(v as EstadoFilter)}
@@ -405,15 +479,24 @@ export function UsuariosClient({
               </SelectItem>
             </SelectContent>
           </Select>
-        }
+        </Toolbar.Selects>
+      </Toolbar>
+
+      <DataTable<UsuarioRow>
+        columns={columns}
+        data={filtered}
+        initialSort={[{ id: "nombre", desc: false }]}
+        onRowClick={isAdmin ? openEdit : undefined}
         emptyState={
-          isAdmin
-            ? t("listados.common.vacioAdmin", {
-                entidad: t("listados.usuarios.plural"),
-              })
-            : t("listados.common.vacio", {
-                entidad: t("listados.usuarios.plural"),
-              })
+          hasActiveFilters
+            ? t("listados.common.sinResultadosFiltrados")
+            : isAdmin
+              ? t("listados.common.vacioAdmin", {
+                  entidad: t("listados.usuarios.plural"),
+                })
+              : t("listados.common.vacio", {
+                  entidad: t("listados.usuarios.plural"),
+                })
         }
       />
 

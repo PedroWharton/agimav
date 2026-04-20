@@ -19,12 +19,12 @@ import {
 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
+import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Combobox } from "@/components/app/combobox";
-import { PageHeader } from "@/components/app/page-header";
 import { ConfirmDialog } from "@/components/app/confirm-dialog";
 import {
   Dialog,
@@ -35,13 +35,20 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { MantEstadoChip } from "@/components/mantenimiento/estado-chip";
 import { HistorialTimeline } from "@/components/mantenimiento/historial-timeline";
 import {
   InsumosEditor,
@@ -49,9 +56,18 @@ import {
   type InventarioOption,
 } from "@/components/mantenimiento/insumos-editor";
 import {
+  FilesGrid,
+  KVGrid,
+  MantenimientoStatusMeter,
+  OTHero,
+  PartesTable,
+  type KVPair,
+} from "@/components/mantenimiento/detail";
+import {
   MANT_PRIORIDADES,
   allowedTransitions,
   isTerminal,
+  type MantTransition,
 } from "@/lib/mantenimiento/estado";
 
 import {
@@ -121,6 +137,23 @@ type TareaDraft = {
   realizada: boolean;
 };
 
+type HeroPrioridad = "baja" | "media" | "alta";
+function heroPrioridad(p: string): HeroPrioridad {
+  const k = p.toLowerCase();
+  if (k === "alta") return "alta";
+  if (k === "baja") return "baja";
+  return "media";
+}
+
+function formatARS(n: number): string {
+  return n.toLocaleString("es-AR", {
+    style: "currency",
+    currency: "ARS",
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  });
+}
+
 export function MantenimientoDetailClient({
   data,
   isAdmin,
@@ -136,10 +169,18 @@ export function MantenimientoDetailClient({
 }) {
   const tM = useTranslations("mantenimiento");
   const tTipos = useTranslations("mantenimiento.tipos");
+  const tD = useTranslations("mantenimiento.detalle");
   const router = useRouter();
 
   const terminal = isTerminal(data.estado);
   const transitions = allowedTransitions(data.estado, { isAdmin });
+
+  const reparacionEn: "Chacra" | "Taller" | undefined =
+    data.estado === "En Reparación - Chacra"
+      ? "Chacra"
+      : data.estado === "En Reparación - Taller"
+        ? "Taller"
+        : undefined;
 
   // ─── Insumos draft ───────────────────────────────────────────────────
   const [insumos, setInsumos] = useState<InsumoLine[]>(
@@ -195,6 +236,7 @@ export function MantenimientoDetailClient({
     fechaProximaRevision: string;
     descripcionRevision: string;
   } | null>(null);
+  const [estadoMenuOpen, setEstadoMenuOpen] = useState(false);
 
   const upOptions = useMemo(
     () =>
@@ -209,6 +251,16 @@ export function MantenimientoDetailClient({
     () =>
       usuarios.map((u) => ({ value: String(u.id), label: u.nombre })),
     [usuarios],
+  );
+
+  // ─── Totales (costos) ────────────────────────────────────────────────
+  const totalRepuestos = useMemo(
+    () =>
+      insumos.reduce(
+        (acc, l) => acc + l.cantidadUtilizada * l.costoUnitario,
+        0,
+      ),
+    [insumos],
   );
 
   // ─── Actions ─────────────────────────────────────────────────────────
@@ -360,6 +412,124 @@ export function MantenimientoDetailClient({
   const busy =
     transitioning || savingInsumos || savingTareas || savingHeader;
 
+  // Map a transition token to a user-facing label + handler.
+  const handleTransition = (t: MantTransition) => {
+    setEstadoMenuOpen(false);
+    if (t === "iniciarChacra") {
+      runTransition("En Reparación - Chacra");
+    } else if (t === "iniciarTaller") {
+      openTallerDialog("iniciar");
+    } else if (t === "cambiarTaller") {
+      openTallerDialog("cambiar");
+    } else if (t === "finalizar") {
+      setFinalizarDialog({
+        programarRevision: false,
+        fechaProximaRevision: "",
+        descripcionRevision: "",
+      });
+    } else if (t === "cancelar") {
+      runTransition("Cancelado");
+    }
+  };
+
+  const transitionLabel = (t: MantTransition): string => {
+    switch (t) {
+      case "iniciarChacra":
+        return tM("acciones.iniciarChacra");
+      case "iniciarTaller":
+        return tM("acciones.iniciarTaller");
+      case "cambiarTaller":
+        return tM("acciones.cambiarTaller");
+      case "finalizar":
+        return tM("acciones.finalizar");
+      case "cancelar":
+        return tM("acciones.cancelar");
+    }
+  };
+
+  // ─── Datos generales (KV) ────────────────────────────────────────────
+  const kvItems: KVPair[] = [
+    {
+      label: tM("campos.maquina"),
+      value: (
+        <Link
+          href="/maquinaria"
+          className="text-foreground hover:underline"
+        >
+          {data.maquinaria.label}
+        </Link>
+      ),
+    },
+    {
+      label: tM("campos.tipo"),
+      value: tTipos(data.tipo as "correctivo" | "preventivo"),
+    },
+    {
+      label: tM("campos.prioridad"),
+      value: data.prioridad,
+    },
+    {
+      label: tM("campos.responsable"),
+      value: data.responsable.nombre,
+    },
+    {
+      label: tM("campos.unidadProductiva"),
+      value: data.unidadProductiva
+        ? data.unidadProductiva.localidad
+          ? `${data.unidadProductiva.nombre} (${data.unidadProductiva.localidad})`
+          : data.unidadProductiva.nombre
+        : null,
+    },
+    {
+      label: tM("campos.tallerAsignado"),
+      value: data.tallerAsignado
+        ? data.tallerAsignado.localidad
+          ? `${data.tallerAsignado.nombre} (${data.tallerAsignado.localidad})`
+          : data.tallerAsignado.nombre
+        : null,
+    },
+    {
+      label: tM("campos.fechaCreacion"),
+      value: format(new Date(data.fechaCreacion), "dd/MM/yyyy", {
+        locale: es,
+      }),
+    },
+    {
+      label: tM("campos.fechaProgramada"),
+      value: data.fechaProgramada
+        ? format(new Date(data.fechaProgramada), "dd/MM/yyyy", { locale: es })
+        : null,
+    },
+    {
+      label: tM("campos.fechaInicio"),
+      value: data.fechaInicio
+        ? format(new Date(data.fechaInicio), "dd/MM/yyyy HH:mm", {
+            locale: es,
+          })
+        : null,
+    },
+    {
+      label: tM("campos.fechaFinalizacion"),
+      value: data.fechaFinalizacion
+        ? format(new Date(data.fechaFinalizacion), "dd/MM/yyyy HH:mm", {
+            locale: es,
+          })
+        : null,
+    },
+  ];
+
+  const subtitle = `${tTipos(data.tipo as "correctivo" | "preventivo")} · ${tM(
+    "campos.creado",
+  )} ${format(new Date(data.fechaCreacion), "dd/MM/yyyy", {
+    locale: es,
+  })}${data.creadoPor ? ` · ${data.creadoPor}` : ""}`;
+
+  // Q15: plantilla is not surfaced to the detail data today and 0/129 legacy
+  // mantenimientos reference one, so the Checklist section is omitted
+  // entirely. Re-enable once page.tsx starts returning plantillaId + items.
+  const plantillaId: number | null = null;
+  const showChecklist = plantillaId !== null;
+
   return (
     <div className="flex flex-col gap-6 p-6">
       <div>
@@ -369,13 +539,26 @@ export function MantenimientoDetailClient({
             {tM("index.volver")}
           </Link>
         </Button>
-        <PageHeader
-          title={`#${data.id} · ${data.maquinaria.label}`}
-          description={`${tTipos(data.tipo as "correctivo" | "preventivo")} · ${tM("campos.creado")} ${format(new Date(data.fechaCreacion), "dd/MM/yyyy", { locale: es })}${data.creadoPor ? ` · ${data.creadoPor}` : ""}`}
-          actions={
-            <div className="flex flex-wrap items-center gap-2">
-              <MantEstadoChip estado={data.estado} />
-              {!terminal ? (
+
+        <div className="relative">
+          <OTHero
+            id={`OT-${String(data.id).padStart(4, "0")}`}
+            tipo={{
+              label: tTipos(data.tipo as "correctivo" | "preventivo"),
+              tone: data.tipo === "preventivo" ? "info" : "warn",
+            }}
+            prioridad={heroPrioridad(data.prioridad)}
+            estado={{
+              label: data.estado,
+              onChangeRequest:
+                !terminal && transitions.length > 0
+                  ? () => setEstadoMenuOpen(true)
+                  : undefined,
+            }}
+            title={data.maquinaria.label}
+            subtitle={subtitle}
+            actions={
+              !terminal ? (
                 <Button
                   variant="outline"
                   size="sm"
@@ -385,93 +568,118 @@ export function MantenimientoDetailClient({
                   <Pencil className="size-4" />
                   {tM("acciones.editar")}
                 </Button>
-              ) : null}
-              {transitions.includes("iniciarChacra") ? (
-                <Button
-                  size="sm"
-                  onClick={() => runTransition("En Reparación - Chacra")}
+              ) : null
+            }
+          />
+
+          {/* Invisible anchor positioned near the estado pill so the
+              controlled DropdownMenu below opens in the expected spot. */}
+          <DropdownMenu open={estadoMenuOpen} onOpenChange={setEstadoMenuOpen}>
+            <DropdownMenuTrigger
+              aria-hidden
+              tabIndex={-1}
+              className="pointer-events-none absolute right-5 top-12 size-0 opacity-0"
+            >
+              <span className="sr-only">{tD("cambiarEstado")}</span>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="min-w-48">
+              <DropdownMenuLabel>{tD("cambiarEstado")}</DropdownMenuLabel>
+              <DropdownMenuSeparator />
+              {transitions.map((t) => (
+                <DropdownMenuItem
+                  key={t}
+                  onSelect={() => handleTransition(t)}
                   disabled={busy}
                 >
-                  <Play className="size-4" />
-                  {tM("acciones.iniciarChacra")}
-                </Button>
-              ) : null}
-              {transitions.includes("iniciarTaller") ? (
-                <Button
-                  size="sm"
-                  onClick={() => openTallerDialog("iniciar")}
-                  disabled={busy}
-                >
-                  <Wrench className="size-4" />
-                  {tM("acciones.iniciarTaller")}
-                </Button>
-              ) : null}
-              {transitions.includes("cambiarTaller") ? (
-                <Button
-                  size="sm"
-                  variant="outline"
-                  onClick={() => openTallerDialog("cambiar")}
-                  disabled={busy}
-                >
-                  <Wrench className="size-4" />
-                  {tM("acciones.cambiarTaller")}
-                </Button>
-              ) : null}
-              {transitions.includes("finalizar") ? (
-                <Button
-                  size="sm"
-                  onClick={() =>
-                    setFinalizarDialog({
-                      programarRevision: false,
-                      fechaProximaRevision: "",
-                      descripcionRevision: "",
-                    })
-                  }
-                  disabled={busy}
-                >
-                  <CheckCircle2 className="size-4" />
-                  {tM("acciones.finalizar")}
-                </Button>
-              ) : null}
-              {transitions.includes("cancelar") ? (
-                <ConfirmDialog
-                  trigger={
-                    <Button variant="outline" size="sm" disabled={busy}>
-                      <X className="size-4" />
-                      {tM("acciones.cancelar")}
-                    </Button>
-                  }
-                  title={tM("avisos.cancelarTitulo")}
-                  description={tM("avisos.cancelarDescripcion")}
-                  confirmLabel={tM("acciones.cancelar")}
-                  destructive
-                  onConfirm={() => runTransition("Cancelado")}
-                />
-              ) : null}
-            </div>
-          }
-        />
+                  {t === "iniciarChacra" ? (
+                    <Play className="size-4" />
+                  ) : t === "iniciarTaller" || t === "cambiarTaller" ? (
+                    <Wrench className="size-4" />
+                  ) : t === "finalizar" ? (
+                    <CheckCircle2 className="size-4" />
+                  ) : (
+                    <X className="size-4" />
+                  )}
+                  {transitionLabel(t)}
+                </DropdownMenuItem>
+              ))}
+            </DropdownMenuContent>
+          </DropdownMenu>
+        </div>
+
+        <div className="mt-4">
+          <MantenimientoStatusMeter
+            estado={data.estado}
+            reparacionEn={reparacionEn}
+          />
+        </div>
       </div>
 
       <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_340px]">
-        <div className="flex flex-col gap-6">
+        {/* Main column */}
+        <div className="flex flex-col gap-5">
+          {/* Datos generales */}
+          <Card className="gap-3 p-5">
+            <h2 className="text-sm font-semibold">{tD("datosGenerales")}</h2>
+            <KVGrid items={kvItems} columns={4} />
+          </Card>
+
           {/* Descripción */}
-          <section className="rounded-md border border-border p-4">
-            <h2 className="mb-2 text-sm font-semibold">
-              {tM("campos.descripcion")}
+          <Card className="gap-3 p-5">
+            <h2 className="text-sm font-semibold">
+              {tD("descripcionTitulo")}
             </h2>
             {data.descripcion ? (
-              <p className="whitespace-pre-wrap text-sm">{data.descripcion}</p>
+              <p className="whitespace-pre-wrap text-sm leading-relaxed text-foreground">
+                {data.descripcion}
+              </p>
             ) : (
-              <p className="text-sm text-muted-foreground">
+              <p className="text-sm text-subtle-foreground">
                 {tM("avisos.sinDescripcion")}
               </p>
             )}
-          </section>
+          </Card>
 
-          {/* Tareas */}
-          <section className="rounded-md border border-border p-4">
-            <div className="mb-3 flex items-center justify-between">
+          {/* Checklist — hidden when no plantilla is applied (Q15) */}
+          {showChecklist ? null : null}
+
+          {/* Repuestos asignados (insumos editor) */}
+          <Card className="gap-3 p-5">
+            <div className="flex items-center justify-between gap-3">
+              <h2 className="text-sm font-semibold">{tD("repuestos")}</h2>
+              <div className="flex items-center gap-3">
+                <span className="text-xs text-subtle-foreground">
+                  {tD("repuestosTotal")}{" "}
+                  <span className="font-mono font-semibold text-foreground">
+                    {formatARS(totalRepuestos)}
+                  </span>
+                </span>
+                {!terminal ? (
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={handleSaveInsumos}
+                    disabled={busy}
+                  >
+                    {tM("insumos.guardar")}
+                  </Button>
+                ) : null}
+              </div>
+            </div>
+            <p className="text-xs text-subtle-foreground">
+              {tM("insumos.descripcionAyuda")}
+            </p>
+            <InsumosEditor
+              lines={insumos}
+              onChange={setInsumos}
+              inventario={inventario}
+              disabled={terminal}
+            />
+          </Card>
+
+          {/* Tareas (partes de trabajo) — keep editable tareas; render partes table below */}
+          <Card className="gap-3 p-5">
+            <div className="flex items-center justify-between gap-3">
               <h2 className="text-sm font-semibold">{tM("tareas.titulo")}</h2>
               {!terminal ? (
                 <Button
@@ -485,7 +693,7 @@ export function MantenimientoDetailClient({
               ) : null}
             </div>
             {tareas.length === 0 ? (
-              <p className="text-sm text-muted-foreground">
+              <p className="text-sm text-subtle-foreground">
                 {tM("tareas.sinTareas")}
               </p>
             ) : (
@@ -510,7 +718,13 @@ export function MantenimientoDetailClient({
                       htmlFor={`tarea-${idx}`}
                       className="flex-1 text-sm font-normal"
                     >
-                      <span className={t.realizada ? "line-through text-muted-foreground" : ""}>
+                      <span
+                        className={
+                          t.realizada
+                            ? "line-through text-subtle-foreground"
+                            : ""
+                        }
+                      >
                         {t.descripcion}
                       </span>
                     </Label>
@@ -535,7 +749,7 @@ export function MantenimientoDetailClient({
               </ul>
             )}
             {!terminal ? (
-              <div className="mt-3 flex gap-2">
+              <div className="mt-1 flex gap-2">
                 <Input
                   value={nuevaTarea}
                   onChange={(e) => setNuevaTarea(e.target.value)}
@@ -560,152 +774,182 @@ export function MantenimientoDetailClient({
                 </Button>
               </div>
             ) : null}
-          </section>
+          </Card>
 
-          {/* Insumos */}
-          <section className="rounded-md border border-border p-4">
-            <div className="mb-3 flex items-center justify-between">
-              <h2 className="text-sm font-semibold">{tM("insumos.titulo")}</h2>
-              {!terminal ? (
-                <Button
-                  size="sm"
-                  variant="outline"
-                  onClick={handleSaveInsumos}
-                  disabled={busy}
-                >
-                  {tM("insumos.guardar")}
-                </Button>
-              ) : null}
-            </div>
-            <p className="mb-3 text-xs text-muted-foreground">
-              {tM("insumos.descripcionAyuda")}
-            </p>
-            <InsumosEditor
-              lines={insumos}
-              onChange={setInsumos}
-              inventario={inventario}
-              disabled={terminal}
-            />
-          </section>
+          {/* Partes de trabajo (empty in v1 — model not yet wired) */}
+          <Card className="gap-3 p-5">
+            <h2 className="text-sm font-semibold">{tD("partes")}</h2>
+            <PartesTable rows={[]} />
+          </Card>
 
-          {/* Observaciones */}
-          <section className="rounded-md border border-border p-4">
-            <h2 className="mb-3 text-sm font-semibold">
-              {tM("observaciones.titulo")}
-            </h2>
-            <div className="flex flex-col gap-2">
-              <Textarea
-                value={observacionTexto}
-                onChange={(e) => setObservacionTexto(e.target.value)}
-                placeholder={tM("observaciones.placeholder")}
-                rows={2}
-                maxLength={2000}
-              />
-              <div className="flex justify-end">
-                <Button
-                  type="button"
-                  size="sm"
-                  onClick={handleAddObservacion}
-                  disabled={!observacionTexto.trim() || savingObservacion}
-                >
-                  {tM("observaciones.agregar")}
-                </Button>
-              </div>
-            </div>
-          </section>
+          {/* Bitácora (historial) */}
+          <Card className="gap-3 p-5">
+            <h2 className="text-sm font-semibold">{tM("historial.titulo")}</h2>
+            <HistorialTimeline rows={data.historial} />
+          </Card>
+
+          {/* Archivos adjuntos — always empty in v1 (Q13) */}
+          <Card className="gap-3 p-5">
+            <h2 className="text-sm font-semibold">{tD("archivos")}</h2>
+            <FilesGrid files={[]} />
+          </Card>
         </div>
 
+        {/* Sidebar */}
         <aside className="flex flex-col gap-4 lg:sticky lg:top-4 lg:self-start">
-          <div className="rounded-md border border-border p-4 text-sm">
-            <dl className="grid grid-cols-1 gap-3">
-              <MetaRow label={tM("campos.maquina")}>
-                <Link
-                  href={`/maquinaria`}
-                  className="text-sm hover:underline"
-                >
-                  {data.maquinaria.label}
-                </Link>
-              </MetaRow>
-              <MetaRow label={tM("campos.responsable")}>
-                {data.responsable.nombre}
-              </MetaRow>
-              <MetaRow label={tM("campos.unidadProductiva")}>
-                {data.unidadProductiva
-                  ? data.unidadProductiva.localidad
-                    ? `${data.unidadProductiva.nombre} (${data.unidadProductiva.localidad})`
-                    : data.unidadProductiva.nombre
-                  : "—"}
-              </MetaRow>
-              <MetaRow label={tM("campos.tallerAsignado")}>
-                {data.tallerAsignado
-                  ? data.tallerAsignado.localidad
-                    ? `${data.tallerAsignado.nombre} (${data.tallerAsignado.localidad})`
-                    : data.tallerAsignado.nombre
-                  : "—"}
-              </MetaRow>
-              <MetaRow label={tM("campos.prioridad")}>
-                {data.prioridad}
-              </MetaRow>
-            </dl>
-          </div>
-
-          <div className="rounded-md border border-border p-4 text-sm">
-            <dl className="grid grid-cols-1 gap-3">
-              <MetaRow label={tM("campos.fechaCreacion")}>
-                {format(new Date(data.fechaCreacion), "dd/MM/yyyy HH:mm", {
-                  locale: es,
-                })}
-              </MetaRow>
-              {data.fechaProgramada ? (
-                <MetaRow label={tM("campos.fechaProgramada")}>
-                  {format(new Date(data.fechaProgramada), "dd/MM/yyyy", {
-                    locale: es,
-                  })}
-                </MetaRow>
-              ) : null}
-              {data.fechaInicio ? (
-                <MetaRow label={tM("campos.fechaInicio")}>
-                  {format(new Date(data.fechaInicio), "dd/MM/yyyy HH:mm", {
-                    locale: es,
-                  })}
-                </MetaRow>
-              ) : null}
-              {data.fechaFinalizacion ? (
-                <MetaRow label={tM("campos.fechaFinalizacion")}>
-                  {format(
-                    new Date(data.fechaFinalizacion),
-                    "dd/MM/yyyy HH:mm",
-                    { locale: es },
-                  )}
-                </MetaRow>
-              ) : null}
-            </dl>
-          </div>
-
-          {data.programarRevision && data.fechaProximaRevision ? (
-            <div className="rounded-md border border-sky-200 bg-sky-50 p-4 text-sm dark:border-sky-900 dark:bg-sky-950/30">
-              <div className="text-xs font-semibold uppercase tracking-wide text-sky-900 dark:text-sky-200">
-                {tM("revision.titulo")}
+          {/* Acciones */}
+          {!terminal && transitions.length > 0 ? (
+            <Card className="gap-2 p-4">
+              <h3 className="text-xs font-semibold uppercase tracking-wide text-subtle-foreground">
+                {tD("acciones")}
+              </h3>
+              <div className="flex flex-col gap-2">
+                {transitions.includes("iniciarChacra") ? (
+                  <Button
+                    size="sm"
+                    onClick={() => runTransition("En Reparación - Chacra")}
+                    disabled={busy}
+                    className="justify-start"
+                  >
+                    <Play className="size-4" />
+                    {tM("acciones.iniciarChacra")}
+                  </Button>
+                ) : null}
+                {transitions.includes("iniciarTaller") ? (
+                  <Button
+                    size="sm"
+                    onClick={() => openTallerDialog("iniciar")}
+                    disabled={busy}
+                    className="justify-start"
+                  >
+                    <Wrench className="size-4" />
+                    {tM("acciones.iniciarTaller")}
+                  </Button>
+                ) : null}
+                {transitions.includes("cambiarTaller") ? (
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={() => openTallerDialog("cambiar")}
+                    disabled={busy}
+                    className="justify-start"
+                  >
+                    <Wrench className="size-4" />
+                    {tM("acciones.cambiarTaller")}
+                  </Button>
+                ) : null}
+                {transitions.includes("finalizar") ? (
+                  <Button
+                    size="sm"
+                    onClick={() =>
+                      setFinalizarDialog({
+                        programarRevision: false,
+                        fechaProximaRevision: "",
+                        descripcionRevision: "",
+                      })
+                    }
+                    disabled={busy}
+                    className="justify-start"
+                  >
+                    <CheckCircle2 className="size-4" />
+                    {tM("acciones.finalizar")}
+                  </Button>
+                ) : null}
+                {transitions.includes("cancelar") ? (
+                  <ConfirmDialog
+                    trigger={
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        disabled={busy}
+                        className="justify-start"
+                      >
+                        <X className="size-4" />
+                        {tM("acciones.cancelar")}
+                      </Button>
+                    }
+                    title={tM("avisos.cancelarTitulo")}
+                    description={tM("avisos.cancelarDescripcion")}
+                    confirmLabel={tM("acciones.cancelar")}
+                    destructive
+                    onConfirm={() => runTransition("Cancelado")}
+                  />
+                ) : null}
               </div>
-              <div className="mt-1 text-sm">
+            </Card>
+          ) : null}
+
+          {/* Costos */}
+          <Card className="gap-2 p-4">
+            <h3 className="text-xs font-semibold uppercase tracking-wide text-subtle-foreground">
+              {tD("costos")}
+            </h3>
+            <div className="flex items-baseline justify-between text-sm">
+              <span className="text-subtle-foreground">
+                {tD("costoRepuestos")}
+              </span>
+              <span className="font-mono font-medium">
+                {formatARS(totalRepuestos)}
+              </span>
+            </div>
+            <div className="flex items-baseline justify-between text-sm">
+              <span className="text-subtle-foreground">
+                {tD("costoManoObra")}
+              </span>
+              <span className="font-mono text-subtle-foreground">—</span>
+            </div>
+            <div className="mt-1 flex items-baseline justify-between border-t border-border pt-2">
+              <span className="text-sm font-semibold">
+                {tD("costoTotal")}
+              </span>
+              <span className="font-mono text-base font-semibold">
+                {formatARS(totalRepuestos)}
+              </span>
+            </div>
+          </Card>
+
+          {/* Bitácora rápida */}
+          <Card className="gap-2 p-4">
+            <h3 className="text-xs font-semibold uppercase tracking-wide text-subtle-foreground">
+              {tD("bitacoraRapida")}
+            </h3>
+            <Textarea
+              value={observacionTexto}
+              onChange={(e) => setObservacionTexto(e.target.value)}
+              placeholder={tM("observaciones.placeholder")}
+              rows={3}
+              maxLength={2000}
+            />
+            <div className="flex justify-end">
+              <Button
+                type="button"
+                size="sm"
+                onClick={handleAddObservacion}
+                disabled={!observacionTexto.trim() || savingObservacion}
+              >
+                {tM("observaciones.agregar")}
+              </Button>
+            </div>
+          </Card>
+
+          {/* Revisión programada (if any) */}
+          {data.programarRevision && data.fechaProximaRevision ? (
+            <Card className="gap-1 p-4">
+              <h3 className="text-xs font-semibold uppercase tracking-wide text-subtle-foreground">
+                {tM("revision.titulo")}
+              </h3>
+              <div className="text-sm font-medium">
                 {format(new Date(data.fechaProximaRevision), "dd/MM/yyyy", {
                   locale: es,
                 })}
               </div>
               {data.descripcionRevision ? (
-                <p className="mt-1 text-xs text-muted-foreground">
+                <p className="text-xs text-subtle-foreground">
                   {data.descripcionRevision}
                 </p>
               ) : null}
-            </div>
+            </Card>
           ) : null}
-
-          <div className="rounded-md border border-border p-4 text-sm">
-            <h3 className="mb-3 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-              {tM("historial.titulo")}
-            </h3>
-            <HistorialTimeline rows={data.historial} />
-          </div>
         </aside>
       </div>
 
@@ -851,9 +1095,7 @@ export function MantenimientoDetailClient({
                 ? tM("acciones.cambiarTaller")
                 : tM("acciones.iniciarTaller")}
             </DialogTitle>
-            <DialogDescription>
-              {tM("avisos.elegiTaller")}
-            </DialogDescription>
+            <DialogDescription>{tM("avisos.elegiTaller")}</DialogDescription>
           </DialogHeader>
           <div className="flex flex-col gap-1.5">
             <Label>{tM("campos.tallerAsignado")} *</Label>
@@ -983,23 +1225,6 @@ export function MantenimientoDetailClient({
           </DialogFooter>
         </DialogContent>
       </Dialog>
-    </div>
-  );
-}
-
-function MetaRow({
-  label,
-  children,
-}: {
-  label: string;
-  children: React.ReactNode;
-}) {
-  return (
-    <div>
-      <dt className="text-xs uppercase tracking-wide text-muted-foreground">
-        {label}
-      </dt>
-      <dd className="mt-0.5 text-sm">{children}</dd>
     </div>
   );
 }

@@ -6,63 +6,109 @@ export type StockBadgeProps = {
   stockMinimo?: number | null;
   unidad?: string | null;
   className?: string;
+  showBar?: boolean;
 };
 
-export function StockBadge({ stock, stockMinimo, unidad, className }: StockBadgeProps) {
+function stockClass(stock: number, min: number): "negative" | "low" | "zero" | "ok" {
+  if (stock < 0) return "negative";
+  if (min > 0 && stock < min) return "low";
+  if (stock === 0 && min === 0) return "zero";
+  return "ok";
+}
+
+function pct(stock: number, min: number): number {
+  if (min <= 0) return 60;
+  return Math.max(4, Math.min(100, (stock / (min * 2)) * 100));
+}
+
+export function StockBadge({
+  stock,
+  stockMinimo,
+  unidad,
+  className,
+  showBar = true,
+}: StockBadgeProps) {
   const min = stockMinimo ?? 0;
-  const negative = stock < 0;
-  const belowMin = min > 0 && stock < min;
+  const cls = stockClass(stock, min);
+  const unitLabel = unidad?.trim() || "";
 
-  const label = negative
-    ? `−${formatNumber(Math.abs(stock))}`
-    : belowMin
-      ? `${formatNumber(stock)}/${formatNumber(min)}`
-      : formatNumber(stock);
+  const barBase =
+    "relative inline-block h-1 w-[60px] shrink-0 self-center rounded-full bg-muted-2 overflow-hidden mr-1";
+  const barFillBase =
+    "absolute inset-y-0 left-0 rounded-full";
 
-  const unitSuffix = unidad ? ` ${unidad}` : "";
-
-  if (negative) {
+  if (cls === "negative") {
     return (
       <span
         className={cn(
-          "inline-flex items-center rounded-md bg-destructive/15 px-2 py-0.5 text-destructive font-semibold tabular-nums",
+          "inline-flex items-baseline justify-end gap-1.5 tabular-nums text-danger",
           className,
         )}
         title="Stock negativo — revisar"
       >
-        {label}
-        <span className="ml-1 text-xs opacity-75">{unitSuffix.trim()}</span>
+        <span className="rounded-md bg-danger-weak px-2 py-0.5 text-[11.5px] font-semibold leading-tight text-danger">
+          −{formatNumber(Math.abs(stock))}
+        </span>
+        {unitLabel ? (
+          <span className="text-[11px] lowercase text-muted-foreground">
+            {unitLabel}
+          </span>
+        ) : null}
       </span>
     );
   }
 
-  if (belowMin) {
+  if (cls === "zero") {
     return (
       <span
         className={cn(
-          "inline-flex items-center rounded-md border border-destructive/30 px-2 py-0.5 text-destructive tabular-nums",
+          "inline-flex items-baseline justify-end gap-1.5 tabular-nums text-muted-foreground",
           className,
         )}
-        title={`Bajo mínimo (${formatNumber(min)})`}
       >
-        {label}
-        <span className="ml-1 text-xs opacity-75">{unitSuffix.trim()}</span>
+        <span className="font-semibold">0</span>
+        {unitLabel ? (
+          <span className="text-[11px] lowercase text-muted-foreground">
+            {unitLabel}
+          </span>
+        ) : null}
       </span>
     );
   }
 
-  if (stock === 0 && min === 0) {
-    return (
-      <span className={cn("tabular-nums text-muted-foreground", className)}>
-        0<span className="ml-1 text-xs">{unitSuffix.trim()}</span>
-      </span>
-    );
-  }
+  const fillPct = pct(stock, min);
+  const fillColor = cls === "low" ? "bg-warn" : "bg-success";
 
   return (
-    <span className={cn("tabular-nums", className)}>
-      {label}
-      <span className="ml-1 text-xs text-muted-foreground">{unitSuffix.trim()}</span>
+    <span
+      className={cn(
+        "inline-flex items-baseline justify-end gap-1.5 tabular-nums",
+        cls === "low" && "text-warn",
+        className,
+      )}
+      title={cls === "low" ? `Bajo mínimo (${formatNumber(min)})` : undefined}
+    >
+      {showBar ? (
+        <span className={barBase} aria-hidden="true">
+          <span
+            className={cn(barFillBase, fillColor)}
+            style={{ width: `${fillPct}%` }}
+          />
+        </span>
+      ) : null}
+      <span className="font-semibold">
+        {formatNumber(stock)}
+        {cls === "low" ? (
+          <span className="font-normal text-muted-foreground">
+            /{formatNumber(min)}
+          </span>
+        ) : null}
+      </span>
+      {unitLabel ? (
+        <span className="text-[11px] lowercase text-muted-foreground">
+          {unitLabel}
+        </span>
+      ) : null}
     </span>
   );
 }
