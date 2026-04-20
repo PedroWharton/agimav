@@ -37,6 +37,9 @@ import { FormSheet } from "@/components/app/form-sheet";
 import { ActionsMenu } from "@/components/app/actions-menu";
 import { ConfirmDialog } from "@/components/app/confirm-dialog";
 import { PageHeader } from "@/components/app/page-header";
+import { Toolbar } from "@/components/app/toolbar";
+import { KpiCard } from "@/components/stats/kpi-card";
+import { Users, CheckCircle2, PauseCircle, UserPlus } from "lucide-react";
 
 import {
   createProveedor,
@@ -64,6 +67,14 @@ export type ProveedorRow = {
 };
 
 export type LocalidadOption = { id: number; nombre: string };
+
+export type ProveedoresKpis = {
+  total: number;
+  activos: number;
+  inactivos: number;
+  nuevos30d: number;
+  since30dIso: string;
+};
 
 const NONE = "__none__";
 const CUIT_REGEX = /^\d{2}-\d{8}-\d$/;
@@ -126,19 +137,29 @@ function rowToForm(row: ProveedorRow): FormValues {
   };
 }
 
+function norm(s: unknown): string {
+  return String(s ?? "")
+    .normalize("NFD")
+    .replace(/\p{Diacritic}/gu, "")
+    .toLowerCase();
+}
+
 export function ProveedoresClient({
   rows,
   localidades,
   isAdmin,
+  kpis,
 }: {
   rows: ProveedorRow[];
   localidades: LocalidadOption[];
   isAdmin: boolean;
+  kpis: ProveedoresKpis;
 }) {
   const t = useTranslations();
   const [open, setOpen] = useState(false);
   const [editing, setEditing] = useState<ProveedorRow | null>(null);
   const [estadoFilter, setEstadoFilter] = useState<EstadoFilter>("activos");
+  const [search, setSearch] = useState("");
 
   const form = useForm<FormValues>({
     resolver: standardSchemaResolver(formSchema),
@@ -148,10 +169,32 @@ export function ProveedoresClient({
   const [isSubmitting, startSubmit] = useTransition();
 
   const filtered = useMemo(() => {
-    if (estadoFilter === "todos") return rows;
-    const want = estadoFilter === "activos" ? "activo" : "inactivo";
-    return rows.filter((r) => r.estado === want);
-  }, [rows, estadoFilter]);
+    let out = rows;
+    if (estadoFilter !== "todos") {
+      const want = estadoFilter === "activos" ? "activo" : "inactivo";
+      out = out.filter((r) => r.estado === want);
+    }
+    const q = search.trim();
+    if (q) {
+      const qn = norm(q);
+      out = out.filter(
+        (r) =>
+          norm(r.nombre).includes(qn) ||
+          norm(r.cuit).includes(qn) ||
+          norm(r.email).includes(qn) ||
+          norm(r.localidadNombre).includes(qn),
+      );
+    }
+    return out;
+  }, [rows, estadoFilter, search]);
+
+  const since30dLabel = useMemo(() => {
+    const d = new Date(kpis.since30dIso);
+    return d.toLocaleDateString("es-AR", {
+      day: "2-digit",
+      month: "short",
+    });
+  }, [kpis.since30dIso]);
 
   function openCreate() {
     setEditing(null);
@@ -344,13 +387,46 @@ export function ProveedoresClient({
         }
       />
 
-      <DataTable<ProveedorRow>
-        columns={columns}
-        data={filtered}
-        searchableKeys={["nombre", "cuit", "email", "localidadNombre"]}
-        initialSort={[{ id: "nombre", desc: false }]}
-        onRowClick={isAdmin ? openEdit : undefined}
-        filterSlot={
+      <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
+        <KpiCard
+          icon={Users}
+          tone="neutral"
+          label={t("listados.proveedores.kpi.total")}
+          value={kpis.total.toLocaleString("es-AR")}
+          caption={t("listados.proveedores.kpi.totalCaption")}
+        />
+        <KpiCard
+          icon={CheckCircle2}
+          tone="ok"
+          label={t("listados.proveedores.kpi.activos")}
+          value={kpis.activos.toLocaleString("es-AR")}
+          caption={t("listados.proveedores.kpi.activosCaption")}
+        />
+        <KpiCard
+          icon={PauseCircle}
+          tone={kpis.inactivos > 0 ? "warn" : "neutral"}
+          label={t("listados.proveedores.kpi.inactivos")}
+          value={kpis.inactivos.toLocaleString("es-AR")}
+          caption={t("listados.proveedores.kpi.inactivosCaption")}
+        />
+        <KpiCard
+          icon={UserPlus}
+          tone="info"
+          label={t("listados.proveedores.kpi.nuevos")}
+          value={kpis.nuevos30d.toLocaleString("es-AR")}
+          caption={t("listados.proveedores.kpi.nuevosCaption", {
+            desde: since30dLabel,
+          })}
+        />
+      </div>
+
+      <Toolbar>
+        <Toolbar.Search
+          value={search}
+          onValueChange={setSearch}
+          placeholder={t("listados.proveedores.buscarPlaceholder")}
+        />
+        <Toolbar.Selects>
           <Select
             value={estadoFilter}
             onValueChange={(v) => setEstadoFilter(v as EstadoFilter)}
@@ -370,7 +446,14 @@ export function ProveedoresClient({
               </SelectItem>
             </SelectContent>
           </Select>
-        }
+        </Toolbar.Selects>
+      </Toolbar>
+
+      <DataTable<ProveedorRow>
+        columns={columns}
+        data={filtered}
+        initialSort={[{ id: "nombre", desc: false }]}
+        onRowClick={isAdmin ? openEdit : undefined}
         emptyState={
           isAdmin
             ? t("listados.common.vacioAdmin", {

@@ -6,37 +6,46 @@ import {
   ProveedoresClient,
   type ProveedorRow,
   type LocalidadOption,
+  type ProveedoresKpis,
 } from "./proveedores-client";
 
 export default async function ProveedoresPage() {
   const session = await auth();
   const admin = isAdmin(session);
 
-  const [proveedores, localidades] = await Promise.all([
-    prisma.proveedor.findMany({
-      select: {
-        id: true,
-        nombre: true,
-        cuit: true,
-        email: true,
-        telefono: true,
-        direccion: true,
-        direccionFiscal: true,
-        condicionIva: true,
-        nombreContacto: true,
-        contacto: true,
-        estado: true,
-        localidadId: true,
-        localidad: { select: { nombre: true } },
-        createdAt: true,
-      },
-      orderBy: { nombre: "asc" },
-    }),
-    prisma.localidad.findMany({
-      select: { id: true, nombre: true },
-      orderBy: { nombre: "asc" },
-    }),
-  ]);
+  const since30d = new Date();
+  since30d.setDate(since30d.getDate() - 30);
+
+  const [proveedores, localidades, totalCount, activosCount, inactivosCount, nuevos30dCount] =
+    await Promise.all([
+      prisma.proveedor.findMany({
+        select: {
+          id: true,
+          nombre: true,
+          cuit: true,
+          email: true,
+          telefono: true,
+          direccion: true,
+          direccionFiscal: true,
+          condicionIva: true,
+          nombreContacto: true,
+          contacto: true,
+          estado: true,
+          localidadId: true,
+          localidad: { select: { nombre: true } },
+          createdAt: true,
+        },
+        orderBy: { nombre: "asc" },
+      }),
+      prisma.localidad.findMany({
+        select: { id: true, nombre: true },
+        orderBy: { nombre: "asc" },
+      }),
+      prisma.proveedor.count(),
+      prisma.proveedor.count({ where: { estado: "activo" } }),
+      prisma.proveedor.count({ where: { estado: "inactivo" } }),
+      prisma.proveedor.count({ where: { createdAt: { gte: since30d } } }),
+    ]);
 
   const rows: ProveedorRow[] = proveedores.map((p) => ({
     id: p.id,
@@ -60,11 +69,20 @@ export default async function ProveedoresPage() {
     nombre: l.nombre,
   }));
 
+  const kpis: ProveedoresKpis = {
+    total: totalCount,
+    activos: activosCount,
+    inactivos: inactivosCount,
+    nuevos30d: nuevos30dCount,
+    since30dIso: since30d.toISOString(),
+  };
+
   return (
     <ProveedoresClient
       rows={rows}
       localidades={localidadOptions}
       isAdmin={admin}
+      kpis={kpis}
     />
   );
 }

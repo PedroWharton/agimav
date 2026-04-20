@@ -4,6 +4,31 @@ import type { LucideIcon } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
 
+type KpiTone = "neutral" | "warn" | "danger" | "ok" | "info";
+
+const TONE_STYLES: Record<KpiTone, { icon: string; value: string }> = {
+  neutral: {
+    icon: "bg-muted text-muted-foreground",
+    value: "text-foreground",
+  },
+  warn: {
+    icon: "bg-warn-weak text-warn",
+    value: "text-warn",
+  },
+  danger: {
+    icon: "bg-danger-weak text-danger",
+    value: "text-danger",
+  },
+  ok: {
+    icon: "bg-success-weak text-success",
+    value: "text-success",
+  },
+  info: {
+    icon: "bg-info-weak text-info",
+    value: "text-info",
+  },
+};
+
 export function KpiCard({
   label,
   value,
@@ -11,7 +36,7 @@ export function KpiCard({
   icon: Icon,
   href,
   children,
-  tone = "default",
+  tone = "neutral",
   className,
 }: {
   label: string;
@@ -20,9 +45,16 @@ export function KpiCard({
   icon?: LucideIcon;
   href?: string;
   children?: React.ReactNode;
-  tone?: "default" | "warn";
+  /**
+   * Visual tone. `"default"` is a deprecated alias of `"neutral"` and is kept
+   * only so existing call sites don't break.
+   */
+  tone?: KpiTone | "default";
   className?: string;
 }) {
+  const t: KpiTone = tone === "default" ? "neutral" : tone;
+  const styles = TONE_STYLES[t];
+
   const body = (
     <Card
       className={cn(
@@ -34,14 +66,7 @@ export function KpiCard({
     >
       <div className="flex items-start gap-3">
         {Icon ? (
-          <div
-            className={cn(
-              "rounded-md p-2",
-              tone === "warn"
-                ? "bg-amber-500/10 text-amber-700 dark:text-amber-400"
-                : "bg-muted text-muted-foreground",
-            )}
-          >
+          <div className={cn("rounded-md p-2", styles.icon)}>
             <Icon className="size-5" />
           </div>
         ) : null}
@@ -52,9 +77,7 @@ export function KpiCard({
           <span
             className={cn(
               "font-heading text-3xl font-semibold leading-none",
-              tone === "warn"
-                ? "text-amber-700 dark:text-amber-400"
-                : "text-foreground",
+              styles.value,
             )}
           >
             {value}

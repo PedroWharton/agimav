@@ -116,18 +116,18 @@ export function DataTable<T>({
         </div>
       </div>
 
-      <div className="rounded-lg border border-border">
+      <div className="rounded-lg border border-border bg-card overflow-hidden">
         <Table>
           <TableHeader>
             {table.getHeaderGroups().map((hg) => (
-              <TableRow key={hg.id}>
+              <TableRow key={hg.id} className="hover:bg-transparent border-b border-border">
                 {hg.headers.map((header) => {
                   const canSort = header.column.getCanSort();
                   const sort = header.column.getIsSorted();
                   return (
                     <TableHead
                       key={header.id}
-                      className="whitespace-nowrap"
+                      className="sticky top-0 z-[1] bg-muted-2 text-subtle-foreground font-medium text-xs uppercase tracking-wide whitespace-nowrap border-b border-border row-pad"
                       aria-sort={
                         !canSort
                           ? undefined
@@ -146,11 +146,11 @@ export function DataTable<T>({
                         >
                           {flexRender(header.column.columnDef.header, header.getContext())}
                           {sort === "asc" ? (
-                            <ArrowUp className="size-3" />
+                            <ArrowUp className="size-3 opacity-100" />
                           ) : sort === "desc" ? (
-                            <ArrowDown className="size-3" />
+                            <ArrowDown className="size-3 opacity-100" />
                           ) : (
-                            <ArrowUpDown className="size-3 opacity-50" />
+                            <ArrowUpDown className="size-3 opacity-40" />
                           )}
                         </button>
                       ) : (
@@ -164,8 +164,11 @@ export function DataTable<T>({
           </TableHeader>
           <TableBody>
             {table.getRowModel().rows.length === 0 ? (
-              <TableRow>
-                <TableCell colSpan={columns.length} className="h-32 text-center">
+              <TableRow className="border-b border-border last:border-0 hover:bg-transparent">
+                <TableCell
+                  colSpan={columns.length}
+                  className="h-32 text-center text-muted-foreground"
+                >
                   {hasQuery
                     ? t("sinResultados", { query })
                     : (emptyState ?? t("buscar"))}
@@ -176,10 +179,16 @@ export function DataTable<T>({
                 <TableRow
                   key={row.id}
                   onClick={onRowClick ? () => onRowClick(row.original) : undefined}
-                  className={onRowClick ? "cursor-pointer" : undefined}
+                  className={
+                    "border-b border-border last:border-0 hover:bg-muted-2/60 data-[state=selected]:bg-brand-weak" +
+                    (onRowClick ? " cursor-pointer" : "")
+                  }
                 >
                   {row.getVisibleCells().map((cell) => (
-                    <TableCell key={cell.id}>
+                    <TableCell
+                      key={cell.id}
+                      className="row-h row-pad align-middle"
+                    >
                       {flexRender(cell.column.columnDef.cell, cell.getContext())}
                     </TableCell>
                   ))}

@@ -37,18 +37,25 @@ export function Breadcrumbs() {
   }
 
   return (
-    <nav className="flex items-center gap-1.5 text-sm">
+    <nav className="flex items-center gap-2 text-[13px]">
       {parts.map((part, i) => {
         const last = i === parts.length - 1;
         return (
-          <div key={part.href} className="flex items-center gap-1.5">
-            {i > 0 ? <ChevronRight className="size-3.5 text-muted-foreground" /> : null}
+          <div key={part.href} className="flex items-center gap-2">
+            {i > 0 ? (
+              <ChevronRight
+                className="size-3.5 text-subtle-foreground/60"
+                aria-hidden="true"
+              />
+            ) : null}
             {last ? (
-              <span className="font-medium">{t(part.labelKey)}</span>
+              <span className="text-foreground font-medium">
+                {t(part.labelKey)}
+              </span>
             ) : (
               <Link
                 href={part.href}
-                className="text-muted-foreground hover:text-foreground transition-colors"
+                className="text-subtle-foreground hover:text-foreground transition-colors"
               >
                 {t(part.labelKey)}
               </Link>

@@ -1,4 +1,3 @@
-import Link from "next/link";
 import { getTranslations } from "next-intl/server";
 import {
   Shield,
@@ -12,62 +11,121 @@ import {
 } from "lucide-react";
 
 import { PageHeader } from "@/components/app/page-header";
-import { Card, CardDescription, CardTitle } from "@/components/ui/card";
+import { CatalogTile } from "@/components/listados/catalog-tile";
+import { prisma } from "@/lib/db";
 
-type Entry = {
+type TileEntry = {
   href: string;
   icon: LucideIcon;
-  titleKey: string;
-  descriptionKey: string;
+  labelKey: string;
+  count: number;
+  meta?: string;
 };
 
-const entries: Entry[] = [
-  {
-    href: "/listados/roles",
-    icon: Shield,
-    titleKey: "listados.roles.titulo",
-    descriptionKey: "listados.roles.descripcion",
-  },
-  {
-    href: "/listados/unidades-medida",
-    icon: Ruler,
-    titleKey: "listados.unidadesMedida.titulo",
-    descriptionKey: "listados.unidadesMedida.descripcion",
-  },
-  {
-    href: "/listados/tipos-unidad",
-    icon: Tag,
-    titleKey: "listados.tiposUnidad.titulo",
-    descriptionKey: "listados.tiposUnidad.descripcion",
-  },
-  {
-    href: "/listados/localidades",
-    icon: MapPin,
-    titleKey: "listados.localidades.titulo",
-    descriptionKey: "listados.localidades.descripcion",
-  },
-  {
-    href: "/listados/usuarios",
-    icon: Users,
-    titleKey: "listados.usuarios.titulo",
-    descriptionKey: "listados.usuarios.descripcion",
-  },
-  {
-    href: "/listados/proveedores",
-    icon: Building2,
-    titleKey: "listados.proveedores.titulo",
-    descriptionKey: "listados.proveedores.descripcion",
-  },
-  {
-    href: "/listados/unidades-productivas",
-    icon: Factory,
-    titleKey: "listados.unidadesProductivas.titulo",
-    descriptionKey: "listados.unidadesProductivas.descripcion",
-  },
-];
+type Section = {
+  id: string;
+  labelKey: string;
+  tiles: TileEntry[];
+};
 
 export default async function ListadosIndexPage() {
   const t = await getTranslations();
+
+  const [
+    usuariosTotal,
+    usuariosActivos,
+    rolesTotal,
+    proveedoresTotal,
+    proveedoresActivos,
+    localidadesTotal,
+    unidadesProductivasTotal,
+    tiposUnidadTotal,
+    unidadesMedidaTotal,
+  ] = await Promise.all([
+    prisma.usuario.count(),
+    prisma.usuario.count({ where: { estado: "activo" } }),
+    prisma.rol.count(),
+    prisma.proveedor.count(),
+    prisma.proveedor.count({ where: { estado: "activo" } }),
+    prisma.localidad.count(),
+    prisma.unidadProductiva.count(),
+    prisma.tipoUnidad.count(),
+    prisma.unidadMedida.count(),
+  ]);
+
+  const usuariosInactivos = usuariosTotal - usuariosActivos;
+  const proveedoresInactivos = proveedoresTotal - proveedoresActivos;
+
+  const sections: Section[] = [
+    {
+      id: "organizacion",
+      labelKey: "listados.tiles.grupos.organizacion",
+      tiles: [
+        {
+          href: "/listados/usuarios",
+          icon: Users,
+          labelKey: "listados.usuarios.titulo",
+          count: usuariosTotal,
+          meta: t("listados.tiles.meta.activosInactivos", {
+            activos: usuariosActivos,
+            inactivos: usuariosInactivos,
+          }),
+        },
+        {
+          href: "/listados/roles",
+          icon: Shield,
+          labelKey: "listados.roles.titulo",
+          count: rolesTotal,
+        },
+        {
+          href: "/listados/proveedores",
+          icon: Building2,
+          labelKey: "listados.proveedores.titulo",
+          count: proveedoresTotal,
+          meta: t("listados.tiles.meta.activosInactivos", {
+            activos: proveedoresActivos,
+            inactivos: proveedoresInactivos,
+          }),
+        },
+      ],
+    },
+    {
+      id: "estructura",
+      labelKey: "listados.tiles.grupos.estructura",
+      tiles: [
+        {
+          href: "/listados/localidades",
+          icon: MapPin,
+          labelKey: "listados.localidades.titulo",
+          count: localidadesTotal,
+        },
+        {
+          href: "/listados/unidades-productivas",
+          icon: Factory,
+          labelKey: "listados.unidadesProductivas.titulo",
+          count: unidadesProductivasTotal,
+        },
+        {
+          href: "/listados/tipos-unidad",
+          icon: Tag,
+          labelKey: "listados.tiposUnidad.titulo",
+          count: tiposUnidadTotal,
+        },
+      ],
+    },
+    {
+      id: "unidades",
+      labelKey: "listados.tiles.grupos.unidades",
+      tiles: [
+        {
+          href: "/listados/unidades-medida",
+          icon: Ruler,
+          labelKey: "listados.unidadesMedida.titulo",
+          count: unidadesMedidaTotal,
+        },
+      ],
+    },
+  ];
 
   return (
     <div className="flex flex-col gap-6 p-6">
@@ -76,29 +134,26 @@ export default async function ListadosIndexPage() {
         description={t("listados.index.descripcion")}
       />
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-        {entries.map((entry) => {
-          const Icon = entry.icon;
-          return (
-            <Link
-              key={entry.href}
-              href={entry.href}
-              className="rounded-lg transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-            >
-              <Card className="h-full p-5 gap-2 hover:bg-accent/40 transition-colors">
-                <div className="flex items-start gap-3">
-                  <div className="rounded-md bg-muted p-2">
-                    <Icon className="size-5" />
-                  </div>
-                  <div className="flex flex-col gap-1 min-w-0">
-                    <CardTitle className="text-base">{t(entry.titleKey)}</CardTitle>
-                    <CardDescription>{t(entry.descriptionKey)}</CardDescription>
-                  </div>
-                </div>
-              </Card>
-            </Link>
-          );
-        })}
+      <div className="space-y-6">
+        {sections.map((section) => (
+          <section key={section.id} className="space-y-3">
+            <h2 className="text-sm font-medium uppercase tracking-wide text-subtle-foreground">
+              {t(section.labelKey)}
+            </h2>
+            <div className="grid grid-cols-1 gap-3 md:grid-cols-2 lg:grid-cols-4">
+              {section.tiles.map((tile) => (
+                <CatalogTile
+                  key={tile.href}
+                  href={tile.href}
+                  icon={tile.icon}
+                  label={t(tile.labelKey)}
+                  count={tile.count}
+                  meta={tile.meta}
+                />
+              ))}
+            </div>
+          </section>
+        ))}
       </div>
     </div>
   );

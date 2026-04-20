@@ -1,12 +1,22 @@
 import { Sidebar, type SidebarBadges } from "@/components/app/sidebar";
 import { Topbar } from "@/components/app/topbar";
+import { comprasPendientesRecepcion } from "@/lib/compras/pending-badge";
 import { prisma } from "@/lib/db";
 
 async function loadSidebarBadges(): Promise<SidebarBadges> {
-  const bajoMinimo = await prisma.inventario.count({
-    where: { stockMinimo: { gt: 0 }, stock: { lt: prisma.inventario.fields.stockMinimo } },
-  });
-  return { "/inventario": bajoMinimo };
+  const [bajoMinimo, comprasPendientes] = await Promise.all([
+    prisma.inventario.count({
+      where: {
+        stockMinimo: { gt: 0 },
+        stock: { lt: prisma.inventario.fields.stockMinimo },
+      },
+    }),
+    comprasPendientesRecepcion(),
+  ]);
+  return {
+    "/inventario": bajoMinimo,
+    "/compras": comprasPendientes,
+  };
 }
 
 export default async function AppLayout({ children }: { children: React.ReactNode }) {

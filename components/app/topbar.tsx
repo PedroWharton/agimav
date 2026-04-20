@@ -11,6 +11,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Breadcrumbs } from "@/components/app/breadcrumbs";
+import { TopbarActions } from "@/components/app/topbar-actions";
 
 export async function Topbar() {
   const session = await auth();
@@ -27,50 +28,55 @@ export async function Topbar() {
     .toUpperCase();
 
   return (
-    <header className="h-14 shrink-0 flex items-center justify-between gap-3 border-b border-border bg-background px-4 md:px-6">
-      <Breadcrumbs />
-      <div className="flex items-center gap-3">
-      <DropdownMenu>
-        <DropdownMenuTrigger asChild>
-          <button
-            type="button"
-            className="flex items-center gap-2 rounded-md px-2 py-1 hover:bg-accent transition-colors"
-          >
-            <Avatar className="size-8">
-              <AvatarFallback>{iniciales || "?"}</AvatarFallback>
-            </Avatar>
-            <div className="hidden sm:flex flex-col items-start leading-tight">
-              <span className="text-sm font-medium">{nombre}</span>
-              <span className="text-xs text-muted-foreground">{email}</span>
-            </div>
-          </button>
-        </DropdownMenuTrigger>
-        <DropdownMenuContent align="end" className="w-56">
-          <DropdownMenuLabel>
-            <div className="flex flex-col">
-              <span>{nombre}</span>
-              {email && (
-                <span className="text-xs text-muted-foreground font-normal">
-                  {email}
-                </span>
-              )}
-            </div>
-          </DropdownMenuLabel>
-          <DropdownMenuSeparator />
-          <form
-            action={async () => {
-              "use server";
-              await signOut({ redirectTo: "/login" });
-            }}
-          >
-            <DropdownMenuItem asChild>
-              <button type="submit" className="w-full text-left">
-                {t("nav.cerrarSesion")}
-              </button>
-            </DropdownMenuItem>
-          </form>
-        </DropdownMenuContent>
-      </DropdownMenu>
+    <header className="h-14 shrink-0 flex items-center gap-3 border-b border-border bg-background px-4 md:px-6 sticky top-0 z-10">
+      <div className="shrink-0">
+        <Breadcrumbs />
+      </div>
+
+      <TopbarActions />
+
+      <div className="flex items-center gap-1 shrink-0">
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <button
+              type="button"
+              className="flex items-center gap-2 rounded-md px-2 py-1 hover:bg-muted transition-colors"
+            >
+              <Avatar className="size-8">
+                <AvatarFallback>{iniciales || "?"}</AvatarFallback>
+              </Avatar>
+              <div className="hidden sm:flex flex-col items-start leading-tight">
+                <span className="text-sm font-medium">{nombre}</span>
+                <span className="text-xs text-subtle-foreground">{email}</span>
+              </div>
+            </button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end" className="w-56">
+            <DropdownMenuLabel>
+              <div className="flex flex-col">
+                <span>{nombre}</span>
+                {email && (
+                  <span className="text-xs text-subtle-foreground font-normal">
+                    {email}
+                  </span>
+                )}
+              </div>
+            </DropdownMenuLabel>
+            <DropdownMenuSeparator />
+            <form
+              action={async () => {
+                "use server";
+                await signOut({ redirectTo: "/login" });
+              }}
+            >
+              <DropdownMenuItem asChild>
+                <button type="submit" className="w-full text-left">
+                  {t("nav.cerrarSesion")}
+                </button>
+              </DropdownMenuItem>
+            </form>
+          </DropdownMenuContent>
+        </DropdownMenu>
       </div>
     </header>
   );

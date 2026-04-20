@@ -26,15 +26,28 @@
   --color-ring: var(--ring);
   --color-input: var(--input);
   --color-border: var(--border);
+  --color-border-strong: var(--border-strong);
   --color-destructive: var(--destructive);
+  --color-danger: var(--danger);
+  --color-danger-weak: var(--danger-weak);
+  --color-warn: var(--warn);
+  --color-warn-weak: var(--warn-weak);
+  --color-success: var(--success);
+  --color-success-weak: var(--success-weak);
+  --color-info: var(--info);
+  --color-info-weak: var(--info-weak);
   --color-accent-foreground: var(--accent-foreground);
   --color-accent: var(--accent);
   --color-muted-foreground: var(--muted-foreground);
   --color-muted: var(--muted);
+  --color-muted-2: var(--muted-2);
+  --color-subtle-foreground: var(--subtle-foreground);
   --color-secondary-foreground: var(--secondary-foreground);
   --color-secondary: var(--secondary);
   --color-primary-foreground: var(--primary-foreground);
   --color-primary: var(--primary);
+  --color-brand: var(--brand);
+  --color-brand-weak: var(--brand-weak);
   --color-popover-foreground: var(--popover-foreground);
   --color-popover: var(--popover);
   --color-card-foreground: var(--card-foreground);
@@ -81,7 +94,42 @@
   --sidebar-accent-foreground: oklch(0.205 0 0);
   --sidebar-border: oklch(0.922 0 0);
   --sidebar-ring: oklch(0.708 0 0);
+
+  /* Brand accents (switchable via [data-accent]) */
+  --accent-sky:    oklch(0.62 0.14 240);
+  --accent-amber:  oklch(0.78 0.15 75);
+  --accent-violet: oklch(0.58 0.18 295);
+
+  /* Default accent → sky */
+  --brand:      var(--accent-sky);
+  --brand-weak: color-mix(in oklch, var(--brand) 14%, var(--card));
+
+  /* Status */
+  --success:      oklch(0.68 0.14 150);
+  --success-weak: color-mix(in oklch, var(--success) 14%, var(--card));
+  --warn:         oklch(0.78 0.15 75);
+  --warn-weak:    color-mix(in oklch, var(--warn) 14%, var(--card));
+  --danger:       oklch(0.62 0.20 25);
+  --danger-weak:  color-mix(in oklch, var(--danger) 14%, var(--card));
+  --info:         oklch(0.62 0.14 240);
+  --info-weak:    color-mix(in oklch, var(--info) 14%, var(--card));
+
+  /* Neutrals */
+  --muted-2:            oklch(0.97 0 0);
+  --subtle-foreground:  oklch(0.55 0.02 250);
+  --border-strong:      oklch(0.86 0.01 250);
+
+  /* Density (row height + paddings) */
+  --row-h: 44px;
+  --pad-x: 14px;
+  --pad-y: 10px;
 }
+
+[data-accent="amber"]  { --brand: var(--accent-amber); }
+[data-accent="violet"] { --brand: var(--accent-violet); }
+
+[data-density="compact"]      { --row-h: 36px; --pad-x: 10px; --pad-y: 6px; }
+[data-density="comfortable"]  { --row-h: 52px; --pad-x: 18px; --pad-y: 14px; }
 
 .dark {
   --background: oklch(0.145 0 0);
@@ -115,6 +163,11 @@
   --sidebar-accent-foreground: oklch(0.985 0 0);
   --sidebar-border: oklch(1 0 0 / 10%);
   --sidebar-ring: oklch(0.556 0 0);
+
+  /* Neutrals re-tuned for dark surface */
+  --muted-2:            oklch(0.235 0 0);
+  --subtle-foreground:  oklch(0.70 0.02 250);
+  --border-strong:      oklch(1 0 0 / 18%);
 }
 
 @layer base {
@@ -126,5 +179,79 @@
   }
   html {
     @apply font-sans;
+  }
+}
+
+@keyframes sk-shimmer {
+  0%   { transform: translateX(-100%); }
+  100% { transform: translateX(100%); }
+}
+
+/* ---- Sonner toast restyle (R1-03) ----
+   Matches Bundle 1 shared.css `.toast`: dark pill on foreground,
+   compact padding, 13px, leading success-colored icon.
+   Overrides sonner's default variant chrome (incl. richColors) so
+   all variants share the same dark pill — icon color varies. */
+[data-sonner-toaster] [data-sonner-toast].cn-toast {
+  background: var(--foreground) !important;
+  color: var(--background) !important;
+  border: 1px solid var(--foreground) !important;
+  border-radius: 10px !important;
+  padding: 10px 14px !important;
+  font-size: 13px !important;
+  line-height: 1.3 !important;
+  display: flex !important;
+  align-items: center !important;
+  gap: 8px !important;
+  box-shadow: 0 8px 24px rgb(0 0 0 / 20%) !important;
+}
+
+[data-sonner-toaster] [data-sonner-toast].cn-toast .cn-toast-title,
+[data-sonner-toaster] [data-sonner-toast].cn-toast .cn-toast-description {
+  color: var(--background) !important;
+  font-weight: 500;
+}
+
+[data-sonner-toaster] [data-sonner-toast].cn-toast .cn-toast-description {
+  font-weight: 400;
+  opacity: 0.85;
+}
+
+[data-sonner-toaster] [data-sonner-toast].cn-toast .cn-toast-icon {
+  margin-right: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+[data-sonner-toaster] [data-sonner-toast].cn-toast.cn-toast-success .cn-toast-icon {
+  color: var(--success);
+}
+[data-sonner-toaster] [data-sonner-toast].cn-toast.cn-toast-error .cn-toast-icon {
+  color: var(--danger, var(--destructive));
+}
+[data-sonner-toaster] [data-sonner-toast].cn-toast.cn-toast-warning .cn-toast-icon {
+  color: var(--warn);
+}
+[data-sonner-toaster] [data-sonner-toast].cn-toast.cn-toast-info .cn-toast-icon {
+  color: var(--info);
+}
+[data-sonner-toaster] [data-sonner-toast].cn-toast.cn-toast-loading .cn-toast-icon {
+  color: var(--background);
+  opacity: 0.8;
+}
+
+/* ---- DataTable density utilities (R3-03) ----
+   Cells use these to pick up density vars (--row-h, --pad-x, --pad-y).
+   Setting height on <td> also drives the row height since <tr> can't. */
+@layer utilities {
+  .row-pad {
+    padding-left: var(--pad-x);
+    padding-right: var(--pad-x);
+    padding-top: var(--pad-y);
+    padding-bottom: var(--pad-y);
+  }
+  .row-h {
+    height: var(--row-h);
   }
 }

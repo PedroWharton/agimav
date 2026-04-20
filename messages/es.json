@@ -13,6 +13,20 @@
     "listados": "Listados",
     "cerrarSesion": "Cerrar sesión"
   },
+  "topbar": {
+    "buscar": {
+      "placeholder": "Buscar máquinas, OC, OT…",
+      "dialogPlaceholder": "Buscar…",
+      "proximamente": "Próximamente"
+    },
+    "tweaks": {
+      "abrir": "Ajustes de apariencia"
+    },
+    "notificaciones": {
+      "etiqueta": "Notificaciones",
+      "proximamente": "Próximamente"
+    }
+  },
   "auth": {
     "login": {
       "titulo": "Iniciar sesión",
@@ -666,7 +680,31 @@
         "tieneRecepciones": "La OC tiene recepciones; no se puede cancelar.",
         "yaNoEsEmitida": "La OC ya no está en estado Emitida.",
         "cancelarTitulo": "¿Cancelar esta OC?",
-        "cancelarDescripcion": "Las líneas vuelven a estado Pendiente en su requisición."
+        "cancelarDescripcion": "Las líneas vuelven a estado Pendiente en su requisición.",
+        "cargandoDetalle": "Cargando detalle…",
+        "errorCargaDetalle": "No se pudo cargar el detalle.",
+        "sinRecepciones": "Todavía no hay recepciones para esta OC.",
+        "sinFacturas": "Todavía no hay facturas para esta OC."
+      },
+      "drawer": {
+        "tabs": {
+          "resumen": "Resumen",
+          "lineas": "Líneas",
+          "recepciones": "Recepciones",
+          "facturas": "Facturas"
+        },
+        "verPaginaCompleta": "Ver página completa",
+        "registrarRecepcion": "Registrar recepción",
+        "adjuntarFactura": "Adjuntar factura",
+        "proximamente": "Próximamente",
+        "columnas": {
+          "remito": "Remito",
+          "fecha": "Fecha",
+          "recibidoPor": "Recibido por",
+          "lineas": "Líneas",
+          "factura": "Factura",
+          "total": "Total"
+        }
       }
     },
     "recepciones": {
@@ -1127,6 +1165,16 @@
       "titulo": "Listados",
       "descripcion": "Datos maestros del sistema"
     },
+    "tiles": {
+      "grupos": {
+        "organizacion": "Organización",
+        "estructura": "Estructura operativa",
+        "unidades": "Unidades de medida"
+      },
+      "meta": {
+        "activosInactivos": "{activos} activos · {inactivos} inactivos"
+      }
+    },
     "common": {
       "buscar": "Buscar…",
       "crear": "Nuevo",
@@ -1249,7 +1297,18 @@
       "direccionFiscal": "Dirección fiscal",
       "contacto": "Contacto",
       "estado": "Estado",
-      "cuitInvalido": "El formato del CUIT debe ser 30-12345678-9."
+      "cuitInvalido": "El formato del CUIT debe ser 30-12345678-9.",
+      "buscarPlaceholder": "Buscar nombre, CUIT, email o localidad…",
+      "kpi": {
+        "total": "Total proveedores",
+        "totalCaption": "cargados en el sistema",
+        "activos": "Activos",
+        "activosCaption": "visibles en selectores de compras",
+        "inactivos": "Inactivos",
+        "inactivosCaption": "conservan historial, ocultos en altas",
+        "nuevos": "Altas últimos 30 días",
+        "nuevosCaption": "desde {desde}"
+      }
     },
     "unidadesProductivas": {
       "titulo": "Unidades productivas",
