@@ -44,7 +44,7 @@ export type OcDetailData = {
     condicionIva: string | null;
     direccionFiscal: string | null;
   };
-  requisicion: {
+  solicitud: {
     id: number;
     solicitante: string;
     unidadProductiva: string;
@@ -267,21 +267,21 @@ export function OcDetailClient({
         </div>
 
         <aside className="flex flex-col gap-3 rounded-md border border-border p-4 text-sm lg:sticky lg:top-4 lg:self-start">
-          {data.requisicion ? (
+          {data.solicitud ? (
             <div>
               <div className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-                {tOc("requisicionOrigen")}
+                {tOc("solicitudOrigen")}
               </div>
               <Link
-                href={`/compras/requisiciones/${data.requisicion.id}`}
+                href={`/compras/solicitudes/${data.solicitud.id}`}
                 className="mt-1 block rounded-md px-2 py-1 hover:bg-muted/60"
               >
                 <div className="font-mono text-xs">
-                  #{data.requisicion.id}
+                  #{data.solicitud.id}
                 </div>
                 <div className="text-xs text-muted-foreground">
-                  {data.requisicion.solicitante} ·{" "}
-                  {data.requisicion.unidadProductiva}
+                  {data.solicitud.solicitante} ·{" "}
+                  {data.solicitud.unidadProductiva}
                 </div>
               </Link>
             </div>

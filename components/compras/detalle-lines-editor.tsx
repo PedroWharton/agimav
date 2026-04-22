@@ -14,6 +14,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Combobox, type ComboboxOption } from "@/components/app/combobox";
+import { QtyStepper } from "@/components/compras/recepcion/qty-stepper";
 import { cn } from "@/lib/utils";
 
 export type InventarioOption = {
@@ -30,6 +31,10 @@ export type DetalleLine = {
   cantidad: number | null;
   prioridadItem: "Normal" | "Urgente";
   notasItem: string;
+  /** Approved quantity set during partial approval. Null = approved at full qty. */
+  cantidadAprobada?: number | null;
+  /** Per-line estado: "Pendiente" | "Vinculada OC" | "Rechazada". Only set on read. */
+  estadoLinea?: string;
 };
 
 export function emptyLine(): DetalleLine {
@@ -60,7 +65,7 @@ export function DetalleLinesEditor({
   inventarioOptions: InventarioOption[];
   readOnly?: boolean;
 }) {
-  const t = useTranslations("compras.requisiciones.lineas");
+  const t = useTranslations("compras.solicitudes.lineas");
   const tPrior = useTranslations("compras.common.prioridades");
 
   const comboOptions = useMemo<ComboboxOption[]>(
@@ -106,16 +111,32 @@ export function DetalleLinesEditor({
         ) : (
           lines.map((ln, idx) => {
             const item = ln.itemId ? itemById.get(ln.itemId) : null;
+            const rechazada = ln.estadoLinea === "Rechazada";
+            const parcial =
+              !rechazada &&
+              ln.cantidadAprobada != null &&
+              ln.cantidad != null &&
+              ln.cantidadAprobada !== ln.cantidad;
             return (
               <li
                 key={ln.key}
-                className="flex items-start gap-3 px-3 py-2 text-sm"
+                className={cn(
+                  "flex items-start gap-3 px-3 py-2 text-sm",
+                  rechazada ? "bg-muted/30" : "",
+                )}
               >
                 <span className="shrink-0 text-xs text-muted-foreground tabular-nums">
                   {idx + 1}
                 </span>
                 <div className="flex-1 min-w-0">
-                  <div className="font-medium truncate">
+                  <div
+                    className={cn(
+                      "font-medium truncate",
+                      rechazada
+                        ? "text-muted-foreground line-through"
+                        : "",
+                    )}
+                  >
                     {item
                       ? `${item.codigo || "—"} · ${item.descripcion}`
                       : "—"}
@@ -125,10 +146,30 @@ export function DetalleLinesEditor({
                       {ln.notasItem}
                     </div>
                   ) : null}
+                  {rechazada ? (
+                    <div className="mt-0.5">
+                      <span className="inline-flex items-center rounded-md border-transparent bg-destructive/10 px-1.5 py-0.5 text-[10px] font-medium uppercase tracking-wide text-destructive">
+                        {t("rechazadaBadge")}
+                      </span>
+                    </div>
+                  ) : null}
                 </div>
                 <div className="shrink-0 text-right">
                   <div className="tabular-nums">
-                    {ln.cantidad ?? 0}
+                    {parcial ? (
+                      <>
+                        <span className="text-xs text-muted-foreground line-through">
+                          {ln.cantidad ?? 0}
+                        </span>{" "}
+                        <span className="font-medium">
+                          {ln.cantidadAprobada}
+                        </span>
+                      </>
+                    ) : (
+                      <span className={rechazada ? "line-through" : ""}>
+                        {ln.cantidad ?? 0}
+                      </span>
+                    )}
                     {item?.unidadMedida ? (
                       <span className="ml-1 text-xs text-muted-foreground">
                         {item.unidadMedida}
@@ -136,7 +177,7 @@ export function DetalleLinesEditor({
                     ) : null}
                   </div>
                   <div className="text-xs text-muted-foreground">
-                    {ln.prioridadItem}
+                    {parcial ? t("aprobadaParcial") : ln.prioridadItem}
                   </div>
                 </div>
               </li>
@@ -149,13 +190,26 @@ export function DetalleLinesEditor({
 
   return (
     <div className="flex flex-col gap-2">
-      <div className="overflow-x-auto rounded-md border border-border">
-        <table className="w-full text-sm">
+      <div
+        className="overflow-x-auto rounded-md border border-border"
+        style={{
+          backgroundImage:
+            "linear-gradient(to right, var(--card), var(--card) 30%, transparent), linear-gradient(to right, transparent, var(--card) 70%, var(--card)), linear-gradient(to right, rgba(0,0,0,0.08), rgba(0,0,0,0)), linear-gradient(to right, rgba(0,0,0,0), rgba(0,0,0,0.08))",
+          backgroundPosition:
+            "left center, right center, left center, right center",
+          backgroundSize: "40px 100%, 40px 100%, 14px 100%, 14px 100%",
+          backgroundRepeat: "no-repeat",
+          backgroundAttachment: "local, local, scroll, scroll",
+        }}
+      >
+        <table className="w-full min-w-[760px] text-sm">
           <thead className="bg-muted/40 text-xs uppercase tracking-wide text-muted-foreground">
             <tr>
               <th className="px-2 py-2 text-left font-medium w-10">#</th>
-              <th className="px-2 py-2 text-left font-medium">{t("item")}</th>
-              <th className="px-2 py-2 text-right font-medium w-28">
+              <th className="px-2 py-2 text-left font-medium min-w-[220px]">
+                {t("item")}
+              </th>
+              <th className="px-2 py-2 text-left font-medium w-36">
                 {t("cantidad")}
               </th>
               <th className="px-2 py-2 text-left font-medium w-16">
@@ -164,7 +218,9 @@ export function DetalleLinesEditor({
               <th className="px-2 py-2 text-left font-medium w-28">
                 {t("prioridad")}
               </th>
-              <th className="px-2 py-2 text-left font-medium">{t("notas")}</th>
+              <th className="px-2 py-2 text-left font-medium min-w-[180px]">
+                {t("notas")}
+              </th>
               <th className="w-10 px-2 py-2" />
             </tr>
           </thead>
@@ -184,6 +240,11 @@ export function DetalleLinesEditor({
                 const duplicate =
                   ln.itemId != null &&
                   lines.filter((l) => l.itemId === ln.itemId).length > 1;
+                const invalidQty =
+                  ln.itemId != null &&
+                  (typeof ln.cantidad !== "number" ||
+                    !Number.isFinite(ln.cantidad) ||
+                    ln.cantidad <= 0);
                 return (
                   <tr key={ln.key} className="border-t border-border">
                     <td className="px-2 py-2 align-top text-xs text-muted-foreground tabular-nums">
@@ -215,21 +276,35 @@ export function DetalleLinesEditor({
                         </p>
                       ) : null}
                     </td>
-                    <td className="px-2 py-2 align-top text-right">
-                      <Input
-                        type="number"
-                        inputMode="decimal"
-                        step="0.01"
-                        min={0}
-                        className="h-9 tabular-nums text-right"
-                        value={ln.cantidad ?? ""}
-                        onChange={(e) => {
-                          const raw = e.target.value;
-                          updateLine(ln.key, {
-                            cantidad: raw === "" ? null : Number(raw),
-                          });
-                        }}
-                      />
+                    <td className="px-2 py-2 align-top">
+                      <div
+                        className={cn(
+                          "inline-flex rounded-md",
+                          invalidQty
+                            ? "ring-2 ring-destructive/30 ring-offset-0"
+                            : "",
+                        )}
+                      >
+                        <QtyStepper
+                          value={
+                            typeof ln.cantidad === "number" && Number.isFinite(ln.cantidad)
+                              ? ln.cantidad
+                              : 0
+                          }
+                          onChange={(v) =>
+                            updateLine(ln.key, {
+                              cantidad: v === 0 ? null : v,
+                            })
+                          }
+                          min={0}
+                          size="md"
+                        />
+                      </div>
+                      {invalidQty ? (
+                        <p className="mt-1 text-xs text-destructive">
+                          {t("cantidadMayorACero")}
+                        </p>
+                      ) : null}
                     </td>
                     <td className="px-2 py-2 align-top text-xs text-muted-foreground">
                       {item?.unidadMedida ?? "—"}

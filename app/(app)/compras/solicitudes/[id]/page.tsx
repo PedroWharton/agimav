@@ -4,10 +4,10 @@ import { prisma } from "@/lib/db";
 import { auth } from "@/lib/auth";
 import { isAdmin, userNameFromSession } from "@/lib/rbac";
 
-import { RequisicionForm } from "../requisicion-form";
+import { SolicitudForm } from "../solicitud-form";
 import type { DetalleLine } from "@/components/compras/detalle-lines-editor";
 
-export default async function RequisicionDetailPage({
+export default async function SolicitudDetailPage({
   params,
 }: {
   params: Promise<{ id: string }>;
@@ -19,7 +19,7 @@ export default async function RequisicionDetailPage({
   const id = Number.parseInt(idParam, 10);
   if (!Number.isFinite(id)) notFound();
 
-  const [requisicion, inventario, unidades, localidades, usuarios] =
+  const [solicitud, inventario, unidades, localidades, usuarios] =
     await Promise.all([
       prisma.requisicion.findUnique({
         where: { id },
@@ -67,23 +67,23 @@ export default async function RequisicionDetailPage({
       }),
     ]);
 
-  if (!requisicion) notFound();
+  if (!solicitud) notFound();
 
   const currentUserName = userNameFromSession(session);
   const admin = isAdmin(session);
   const isOwner =
     !!currentUserName &&
-    !!requisicion.creadoPor &&
-    currentUserName === requisicion.creadoPor;
+    !!solicitud.creadoPor &&
+    currentUserName === solicitud.creadoPor;
   const canMutate =
-    requisicion.estado === "Borrador" && (admin || isOwner);
-  const canApprove = admin && requisicion.estado === "En Revisión";
+    solicitud.estado === "Borrador" && (admin || isOwner);
+  const canApprove = admin && solicitud.estado === "En Revisión";
 
   const ocMap = new Map<
     number,
     { id: number; numeroOc: string | null; proveedor: string; estado: string }
   >();
-  for (const d of requisicion.detalle) {
+  for (const d of solicitud.detalle) {
     for (const od of d.ocDetalle) {
       if (!ocMap.has(od.oc.id)) {
         ocMap.set(od.oc.id, {
@@ -99,36 +99,38 @@ export default async function RequisicionDetailPage({
     (a, b) => a.id - b.id,
   );
 
-  const detalle: DetalleLine[] = requisicion.detalle.map((d) => ({
+  const detalle: DetalleLine[] = solicitud.detalle.map((d) => ({
     key: `line-${d.id}`,
     id: d.id,
     itemId: d.itemId,
     cantidad: d.cantidad,
     prioridadItem: d.prioridadItem === "Urgente" ? "Urgente" : "Normal",
     notasItem: d.notasItem ?? "",
+    cantidadAprobada: d.cantidadAprobada,
+    estadoLinea: d.estado,
   }));
 
   return (
-    <RequisicionForm
+    <SolicitudForm
       mode="edit"
       initial={{
-        id: requisicion.id,
-        fechaCreacion: requisicion.fechaCreacion.toISOString(),
-        solicitante: requisicion.solicitante,
-        unidadProductiva: requisicion.unidadProductiva,
-        localidad: requisicion.localidad,
-        prioridad: requisicion.prioridad,
-        estado: requisicion.estado,
-        fechaTentativa: requisicion.fechaTentativa?.toISOString() ?? null,
-        fechaLimite: requisicion.fechaLimite?.toISOString() ?? null,
-        notas: requisicion.notas,
-        creadoPor: requisicion.creadoPor,
-        fechaAprobacion: requisicion.fechaAprobacion?.toISOString() ?? null,
-        aprobadoPor: requisicion.aprobadoPor,
+        id: solicitud.id,
+        fechaCreacion: solicitud.fechaCreacion.toISOString(),
+        solicitante: solicitud.solicitante,
+        unidadProductiva: solicitud.unidadProductiva,
+        localidad: solicitud.localidad,
+        prioridad: solicitud.prioridad,
+        estado: solicitud.estado,
+        fechaTentativa: solicitud.fechaTentativa?.toISOString() ?? null,
+        fechaLimite: solicitud.fechaLimite?.toISOString() ?? null,
+        notas: solicitud.notas,
+        creadoPor: solicitud.creadoPor,
+        fechaAprobacion: solicitud.fechaAprobacion?.toISOString() ?? null,
+        aprobadoPor: solicitud.aprobadoPor,
         fechaCancelacion:
-          requisicion.fechaCancelacion?.toISOString() ?? null,
-        canceladoPor: requisicion.canceladoPor,
-        motivoRechazo: requisicion.motivoRechazo,
+          solicitud.fechaCancelacion?.toISOString() ?? null,
+        canceladoPor: solicitud.canceladoPor,
+        motivoRechazo: solicitud.motivoRechazo,
         detalle,
         ocsVinculadas,
       }}

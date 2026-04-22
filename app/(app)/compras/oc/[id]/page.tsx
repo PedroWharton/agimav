@@ -57,7 +57,7 @@ export default async function OcDetailPage({
   });
   if (!oc) notFound();
 
-  const requisicionOrigen = oc.detalle[0]?.requisicionDetalle.requisicion ?? null;
+  const solicitudOrigen = oc.detalle[0]?.requisicionDetalle.requisicion ?? null;
 
   const data: OcDetailData = {
     id: oc.id,
@@ -75,7 +75,7 @@ export default async function OcDetailPage({
       condicionIva: oc.proveedor.condicionIva,
       direccionFiscal: oc.proveedor.direccionFiscal,
     },
-    requisicion: requisicionOrigen,
+    solicitud: solicitudOrigen,
     detalle: oc.detalle.map((d) => ({
       id: d.id,
       itemCodigo: d.requisicionDetalle.item.codigo ?? "",

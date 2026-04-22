@@ -33,7 +33,7 @@ export type OcPdfData = {
     condicionIva: string | null;
     direccionFiscal: string | null;
   };
-  requisicion: {
+  solicitud: {
     numero: string;
     solicitante: string;
     unidadProductiva: string;
@@ -192,16 +192,16 @@ export function OcPdf({ data }: { data: OcPdfData }) {
           <View style={styles.metaCell}>
             <Text style={styles.muted}>Comprador</Text>
             <Text>{data.comprador ?? "—"}</Text>
-            {data.requisicion ? (
+            {data.solicitud ? (
               <>
                 <Text style={[styles.muted, { marginTop: 4 }]}>
-                  Req origen
+                  Solicitud origen
                 </Text>
                 <Text>
-                  #{data.requisicion.numero} · {data.requisicion.solicitante}
+                  #{data.solicitud.numero} · {data.solicitud.solicitante}
                 </Text>
                 <Text style={styles.muted}>
-                  {data.requisicion.unidadProductiva}
+                  {data.solicitud.unidadProductiva}
                 </Text>
               </>
             ) : null}

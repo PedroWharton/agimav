@@ -3,12 +3,12 @@ import { auth } from "@/lib/auth";
 import { isAdmin, userNameFromSession } from "@/lib/rbac";
 
 import {
-  RequisicionesClient,
-  type RequisicionRow,
-  type RequisicionesKpis,
-} from "./requisiciones-client";
+  SolicitudesClient,
+  type SolicitudRow,
+  type SolicitudesKpis,
+} from "./solicitudes-client";
 
-export default async function RequisicionesPage() {
+export default async function SolicitudesPage() {
   const session = await auth();
   const admin = isAdmin(session);
   const currentUser = userNameFromSession(session);
@@ -34,7 +34,7 @@ export default async function RequisicionesPage() {
     }),
   ]);
 
-  const rows: RequisicionRow[] = reqs.map((r) => ({
+  const rows: SolicitudRow[] = reqs.map((r) => ({
     id: r.id,
     fechaCreacion: r.fechaCreacion.toISOString(),
     solicitante: r.solicitante,
@@ -55,7 +55,7 @@ export default async function RequisicionesPage() {
 
   const now = new Date();
   const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
-  const kpis: RequisicionesKpis = {
+  const kpis: SolicitudesKpis = {
     total: reqs.length,
     pendientes: reqs.filter((r) => r.estado === "En Revisión").length,
     aprobadasSinOc: reqs.filter(
@@ -68,7 +68,7 @@ export default async function RequisicionesPage() {
   };
 
   return (
-    <RequisicionesClient
+    <SolicitudesClient
       rows={rows}
       unidadesProductivas={upOptions}
       isAdmin={admin}

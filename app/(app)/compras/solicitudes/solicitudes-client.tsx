@@ -15,6 +15,7 @@ import { format } from "date-fns";
 import { es } from "date-fns/locale";
 import type { ColumnDef } from "@tanstack/react-table";
 
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -25,6 +26,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 import { DataTable } from "@/components/app/data-table";
 import { PageHeader } from "@/components/app/page-header";
@@ -33,7 +35,7 @@ import { Toolbar } from "@/components/app/toolbar";
 import { KpiCard } from "@/components/stats/kpi-card";
 import { EstadoChip } from "@/components/compras/estado-chip";
 
-export type RequisicionRow = {
+export type SolicitudRow = {
   id: number;
   fechaCreacion: string;
   solicitante: string;
@@ -45,7 +47,7 @@ export type RequisicionRow = {
   lineasCount: number;
 };
 
-export type RequisicionesKpis = {
+export type SolicitudesKpis = {
   total: number;
   pendientes: number;
   aprobadasSinOc: number;
@@ -56,13 +58,14 @@ export type RequisicionesKpis = {
 const ESTADO_ALL = "__all__";
 const UP_ALL = "__all__";
 
-const ESTADO_FILTER_OPTIONS = [
-  "Borrador",
-  "En Revisión",
+const ESTADO_ACTIVAS = ["Borrador", "En Revisión"] as const;
+const ESTADO_HISTORICO = [
   "Aprobada",
   "Asignado a Proveedor",
   "OC Emitida",
 ] as const;
+
+type TabValue = "activas" | "historico";
 
 function norm(s: unknown): string {
   return String(s ?? "")
@@ -71,33 +74,51 @@ function norm(s: unknown): string {
     .toLowerCase();
 }
 
-export function RequisicionesClient({
+export function SolicitudesClient({
   rows,
   unidadesProductivas,
   currentUserName,
   kpis,
 }: {
-  rows: RequisicionRow[];
+  rows: SolicitudRow[];
   unidadesProductivas: string[];
   isAdmin: boolean;
   currentUserName: string | null;
-  kpis: RequisicionesKpis;
+  kpis: SolicitudesKpis;
 }) {
   const t = useTranslations();
-  const tReq = useTranslations("compras.requisiciones");
+  const tReq = useTranslations("compras.solicitudes");
   const tEstados = useTranslations("compras.common.estados");
   const router = useRouter();
 
+  const [tab, setTab] = useState<TabValue>("activas");
   const [search, setSearch] = useState("");
   const [estadoFilter, setEstadoFilter] = useState<string>(ESTADO_ALL);
   const [upFilter, setUpFilter] = useState<string>(UP_ALL);
   const [includeRechazadas, setIncludeRechazadas] = useState(false);
 
+  const activasCount = useMemo(
+    () =>
+      rows.filter((r) =>
+        (ESTADO_ACTIVAS as readonly string[]).includes(r.estado),
+      ).length,
+    [rows],
+  );
+
+  const estadoOptions =
+    tab === "activas" ? ESTADO_ACTIVAS : ESTADO_HISTORICO;
+
   const filtered = useMemo(() => {
     const q = search.trim();
     const qn = q ? norm(q) : "";
+    const activasSet = new Set<string>(ESTADO_ACTIVAS);
     return rows.filter((r) => {
-      if (!includeRechazadas && r.estado === "Rechazada") return false;
+      if (tab === "activas") {
+        if (!activasSet.has(r.estado)) return false;
+      } else {
+        if (activasSet.has(r.estado)) return false;
+        if (!includeRechazadas && r.estado === "Rechazada") return false;
+      }
       if (estadoFilter !== ESTADO_ALL && r.estado !== estadoFilter)
         return false;
       if (upFilter !== UP_ALL && r.unidadProductiva !== upFilter) return false;
@@ -111,7 +132,12 @@ export function RequisicionesClient({
       }
       return true;
     });
-  }, [rows, estadoFilter, upFilter, includeRechazadas, search]);
+  }, [rows, tab, estadoFilter, upFilter, includeRechazadas, search]);
+
+  function handleTabChange(next: string) {
+    setTab((next as TabValue) || "activas");
+    setEstadoFilter(ESTADO_ALL);
+  }
 
   const mesLabel = useMemo(() => {
     const d = new Date(kpis.monthStartIso);
@@ -121,7 +147,7 @@ export function RequisicionesClient({
     });
   }, [kpis.monthStartIso]);
 
-  const columns: ColumnDef<RequisicionRow>[] = [
+  const columns: ColumnDef<SolicitudRow>[] = [
     {
       accessorKey: "id",
       header: tReq("campos.numero"),
@@ -179,7 +205,7 @@ export function RequisicionesClient({
         description={tReq("descripcion")}
         actions={
           <Button asChild>
-            <Link href="/compras/requisiciones/nueva">
+            <Link href="/compras/solicitudes/nueva">
               <Plus className="size-4" />
               {tReq("nueva")}
             </Link>
@@ -218,75 +244,100 @@ export function RequisicionesClient({
         />
       </div>
 
-      <Toolbar>
-        <Toolbar.Search
-          value={search}
-          onValueChange={setSearch}
-          placeholder={tReq("buscarPlaceholder")}
-        />
-        <Toolbar.Selects>
-          <Select
-            value={estadoFilter}
-            onValueChange={(v) => setEstadoFilter(v || ESTADO_ALL)}
-          >
-            <SelectTrigger className="h-9 w-[200px]">
-              <SelectValue placeholder={tReq("filtros.estado")} />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value={ESTADO_ALL}>{tReq("filtros.todos")}</SelectItem>
-              {ESTADO_FILTER_OPTIONS.map((e) => (
-                <SelectItem key={e} value={e}>
-                  {tEstados(estadoKeyFor(e))}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+      <Tabs value={tab} onValueChange={handleTabChange} className="flex flex-col gap-4">
+        <TabsList className="w-fit">
+          <TabsTrigger value="activas" className="gap-2">
+            {tReq("tabs.activas")}
+            {activasCount > 0 ? (
+              <Badge
+                variant="secondary"
+                className="border-transparent bg-amber-100 text-amber-900 dark:bg-amber-950/40 dark:text-amber-200"
+              >
+                {activasCount}
+              </Badge>
+            ) : null}
+          </TabsTrigger>
+          <TabsTrigger value="historico">
+            {tReq("tabs.historico")}
+          </TabsTrigger>
+        </TabsList>
 
-          <Combobox
-            value={upFilter === UP_ALL ? "" : upFilter}
-            onChange={(v) => setUpFilter(v || UP_ALL)}
-            options={[
-              { value: "", label: tReq("filtros.todos") },
-              ...unidadesProductivas.map((u) => ({ value: u, label: u })),
-            ]}
-            placeholder={tReq("filtros.unidadProductiva")}
-            allowCreate={false}
-            className="h-9 w-[200px]"
-          />
-        </Toolbar.Selects>
-        <Toolbar.Pills>
-          <label className="inline-flex items-center gap-2 text-sm">
-            <Checkbox
-              id="incluir-rechazadas"
-              checked={includeRechazadas}
-              onCheckedChange={(v) => setIncludeRechazadas(v === true)}
+        <TabsContent value={tab} className="mt-0 flex flex-col gap-4">
+          <Toolbar>
+            <Toolbar.Search
+              value={search}
+              onValueChange={setSearch}
+              placeholder={tReq("buscarPlaceholder")}
             />
-            <Label
-              htmlFor="incluir-rechazadas"
-              className="text-sm font-normal"
-            >
-              {tReq("filtros.incluirRechazadas")}
-            </Label>
-          </label>
-          {currentUserName ? null : (
-            <span className="text-xs text-destructive">
-              {t("listados.common.errorForbidden")}
-            </span>
-          )}
-        </Toolbar.Pills>
-      </Toolbar>
+            <Toolbar.Selects>
+              <Select
+                value={estadoFilter}
+                onValueChange={(v) => setEstadoFilter(v || ESTADO_ALL)}
+              >
+                <SelectTrigger className="h-9 w-[200px]">
+                  <SelectValue placeholder={tReq("filtros.estado")} />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value={ESTADO_ALL}>
+                    {tReq("filtros.todos")}
+                  </SelectItem>
+                  {estadoOptions.map((e) => (
+                    <SelectItem key={e} value={e}>
+                      {tEstados(estadoKeyFor(e))}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
 
-      <DataTable<RequisicionRow>
-        columns={columns}
-        data={filtered}
-        initialSort={[{ id: "id", desc: true }]}
-        onRowClick={(row) => router.push(`/compras/requisiciones/${row.id}`)}
-        emptyState={
-          rows.length === 0
-            ? tReq("avisos.vacio")
-            : tReq("avisos.vacioFiltrado")
-        }
-      />
+              <Combobox
+                value={upFilter === UP_ALL ? "" : upFilter}
+                onChange={(v) => setUpFilter(v || UP_ALL)}
+                options={[
+                  { value: "", label: tReq("filtros.todos") },
+                  ...unidadesProductivas.map((u) => ({ value: u, label: u })),
+                ]}
+                placeholder={tReq("filtros.unidadProductiva")}
+                allowCreate={false}
+                className="h-9 w-[200px]"
+              />
+            </Toolbar.Selects>
+            {tab === "historico" ? (
+              <Toolbar.Pills>
+                <label className="inline-flex items-center gap-2 text-sm">
+                  <Checkbox
+                    id="incluir-rechazadas"
+                    checked={includeRechazadas}
+                    onCheckedChange={(v) => setIncludeRechazadas(v === true)}
+                  />
+                  <Label
+                    htmlFor="incluir-rechazadas"
+                    className="text-sm font-normal"
+                  >
+                    {tReq("filtros.incluirRechazadas")}
+                  </Label>
+                </label>
+                {currentUserName ? null : (
+                  <span className="text-xs text-destructive">
+                    {t("listados.common.errorForbidden")}
+                  </span>
+                )}
+              </Toolbar.Pills>
+            ) : null}
+          </Toolbar>
+
+          <DataTable<SolicitudRow>
+            columns={columns}
+            data={filtered}
+            initialSort={[{ id: "id", desc: true }]}
+            onRowClick={(row) => router.push(`/compras/solicitudes/${row.id}`)}
+            emptyState={
+              rows.length === 0
+                ? tReq("avisos.vacio")
+                : tReq("avisos.vacioFiltrado")
+            }
+          />
+        </TabsContent>
+      </Tabs>
     </div>
   );
 }

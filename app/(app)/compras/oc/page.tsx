@@ -33,6 +33,7 @@ export default async function OcListPage() {
         id: true,
         itemId: true,
         cantidad: true,
+        cantidadAprobada: true,
         prioridadItem: true,
         proveedorAsignadoId: true,
         requisicionId: true,
@@ -73,8 +74,8 @@ export default async function OcListPage() {
     unidadMedida: string | null;
     cantidadTotal: number;
     urgente: boolean;
-    requisiciones: Set<number>;
-    oldestRequisicionAt: number;
+    solicitudes: Set<number>;
+    oldestSolicitudAt: number;
     detalleIds: number[];
     proveedorSugeridoId: number | null;
   };
@@ -90,18 +91,18 @@ export default async function OcListPage() {
         unidadMedida: d.item.unidadMedida,
         cantidadTotal: 0,
         urgente: false,
-        requisiciones: new Set<number>(),
-        oldestRequisicionAt: d.requisicion.fechaCreacion.getTime(),
+        solicitudes: new Set<number>(),
+        oldestSolicitudAt: d.requisicion.fechaCreacion.getTime(),
         detalleIds: [],
         proveedorSugeridoId: null,
       };
       byItem.set(d.itemId, acc);
     }
-    acc.cantidadTotal += d.cantidad;
-    acc.requisiciones.add(d.requisicionId);
+    acc.cantidadTotal += d.cantidadAprobada ?? d.cantidad;
+    acc.solicitudes.add(d.requisicionId);
     acc.detalleIds.push(d.id);
-    acc.oldestRequisicionAt = Math.min(
-      acc.oldestRequisicionAt,
+    acc.oldestSolicitudAt = Math.min(
+      acc.oldestSolicitudAt,
       d.requisicion.fechaCreacion.getTime(),
     );
     const lineUrgente =
@@ -120,16 +121,16 @@ export default async function OcListPage() {
       unidadMedida: acc.unidadMedida,
       cantidadTotal: acc.cantidadTotal,
       urgente: acc.urgente,
-      requisicionesCount: acc.requisiciones.size,
-      requisicionIds: Array.from(acc.requisiciones).sort((a, b) => a - b),
-      oldestRequisicionAt: new Date(acc.oldestRequisicionAt).toISOString(),
+      solicitudesCount: acc.solicitudes.size,
+      solicitudIds: Array.from(acc.solicitudes).sort((a, b) => a - b),
+      oldestSolicitudAt: new Date(acc.oldestSolicitudAt).toISOString(),
       proveedorSugeridoId: acc.proveedorSugeridoId,
     }),
   );
 
   aggregated.sort((a, b) => {
     if (a.urgente !== b.urgente) return a.urgente ? -1 : 1;
-    return a.oldestRequisicionAt.localeCompare(b.oldestRequisicionAt);
+    return a.oldestSolicitudAt.localeCompare(b.oldestSolicitudAt);
   });
 
   const proveedorOptions: ProveedorOption[] = proveedores.map((p) => ({

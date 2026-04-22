@@ -32,10 +32,10 @@ export type AggregatedItemRow = {
   unidadMedida: string | null;
   cantidadTotal: number;
   urgente: boolean;
-  requisicionesCount: number;
-  requisicionIds: number[];
+  solicitudesCount: number;
+  solicitudIds: number[];
   /** ISO — used to sort oldest-first. */
-  oldestRequisicionAt: string;
+  oldestSolicitudAt: string;
   proveedorSugeridoId: number | null;
 };
 
@@ -334,7 +334,7 @@ export function OcPendientesClient({
                 {tOc("pendientes.columnas.urgencia")}
               </th>
               <th className="px-2 py-2 text-left font-medium w-40">
-                {tOc("pendientes.columnas.requisiciones")}
+                {tOc("pendientes.columnas.solicitudes")}
               </th>
               <th className="px-2 py-2 text-left font-medium w-[260px]">
                 {tOc("pendientes.columnas.proveedor")}
@@ -394,23 +394,23 @@ export function OcPendientesClient({
                   </td>
                   <td className="px-2 py-2">
                     <span className="text-xs text-muted-foreground">
-                      {tOc("pendientes.columnas.requisicionesCount", {
-                        count: r.requisicionesCount,
+                      {tOc("pendientes.columnas.solicitudesCount", {
+                        count: r.solicitudesCount,
                       })}
                     </span>
                     <div className="mt-0.5 flex flex-wrap gap-1">
-                      {r.requisicionIds.slice(0, 3).map((rid) => (
+                      {r.solicitudIds.slice(0, 3).map((rid) => (
                         <Link
                           key={rid}
-                          href={`/compras/requisiciones/${rid}`}
+                          href={`/compras/solicitudes/${rid}`}
                           className="font-mono text-[11px] text-sky-700 underline-offset-2 hover:underline dark:text-sky-300"
                         >
                           #{rid}
                         </Link>
                       ))}
-                      {r.requisicionIds.length > 3 ? (
+                      {r.solicitudIds.length > 3 ? (
                         <span className="text-[11px] text-muted-foreground">
-                          +{r.requisicionIds.length - 3}
+                          +{r.solicitudIds.length - 3}
                         </span>
                       ) : null}
                     </div>

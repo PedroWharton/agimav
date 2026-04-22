@@ -487,7 +487,7 @@
     "descripcionModulo": {
       "maquinaria": "Catálogo de máquinas, estructura jerárquica por tipo y horómetros.",
       "inventario": "Stock de repuestos e insumos, movimientos y alertas.",
-      "compras": "Requisiciones, aprobaciones, órdenes de compra, recepciones y facturación.",
+      "compras": "Solicitudes, aprobaciones, órdenes de compra, recepciones y facturación.",
       "mantenimiento": "Mantenimientos correctivos y preventivos, plantillas e historial.",
       "ordenesTrabajo": "Órdenes de trabajo con insumos y trazabilidad.",
       "estadisticas": "Dashboards, análisis ABC, evolución de precios USD y métricas de maquinaria.",
@@ -740,8 +740,8 @@
   },
   "compras": {
     "common": {
-      "singular": "requisición",
-      "plural": "requisiciones",
+      "singular": "solicitud",
+      "plural": "solicitudes",
       "estados": {
         "Borrador": "Borrador",
         "EnRevision": "En Revisión",
@@ -761,15 +761,23 @@
         "Urgente": "Urgente"
       }
     },
-    "requisiciones": {
-      "titulo": "Requisiciones",
+    "solicitudes": {
+      "titulo": "Solicitudes",
       "descripcion": "Pedidos de compra desde creación hasta emisión de OC.",
-      "nueva": "Nueva requisición",
-      "editar": "Editar requisición",
-      "ver": "Ver requisición",
-      "volver": "Volver a requisiciones",
+      "nuevaDescripcion": "Cargá los datos y las líneas de ítems a comprar. Se guarda como borrador; después podés enviarla a revisión.",
+      "tabs": {
+        "activas": "Activas",
+        "historico": "Histórico"
+      },
+      "datosGeneralesTitulo": "Datos generales",
+      "itemsTitulo": "Ítems solicitados",
+      "itemsAyuda": "Agregá una fila por ítem con la cantidad que necesitás.",
+      "nueva": "Nueva solicitud",
+      "editar": "Editar solicitud",
+      "ver": "Ver solicitud",
+      "volver": "Volver a solicitudes",
       "buscarPlaceholder": "Buscar por solicitante, UP o notas…",
-      "resultadosCount": "{count, plural, one {# requisición} other {# requisiciones}}",
+      "resultadosCount": "{count, plural, one {# solicitud} other {# solicitudes}}",
       "campos": {
         "numero": "Nº",
         "fecha": "Fecha",
@@ -780,10 +788,13 @@
         "prioridad": "Prioridad",
         "estado": "Estado",
         "fechaTentativa": "Fecha tentativa",
+        "fechaTentativaHelper": "Fecha ideal de entrega",
         "fechaLimite": "Fecha límite",
+        "fechaLimiteHelper": "Fecha máxima aceptable",
         "notas": "Notas",
         "lineas": "Líneas",
-        "lineasCount": "{count, plural, one {# línea} other {# líneas}}"
+        "lineasCount": "{count, plural, one {# línea} other {# líneas}}",
+        "lineasResumen": "{aprobadas, plural, one {# aprobada} other {# aprobadas}} · {rechazadas, plural, one {# rechazada} other {# rechazadas}}"
       },
       "lineas": {
         "titulo": "Líneas",
@@ -796,7 +807,11 @@
         "eliminar": "Eliminar línea",
         "itemPlaceholder": "Buscar por código o descripción…",
         "sinLineas": "Sin líneas todavía. Agregá al menos una para enviar a revisión.",
-        "duplicada": "Este ítem ya está en otra línea."
+        "duplicada": "Este ítem ya está en otra línea.",
+        "cantidadInvalida": "Hay líneas con ítem seleccionado pero cantidad 0. Corregí la cantidad o eliminá la línea.",
+        "cantidadMayorACero": "Debe ser mayor a 0.",
+        "rechazadaBadge": "Rechazada",
+        "aprobadaParcial": "Aprobada parcialmente"
       },
       "filtros": {
         "estado": "Estado",
@@ -805,7 +820,7 @@
         "todos": "Todos"
       },
       "kpi": {
-        "total": "Total requisiciones",
+        "total": "Total solicitudes",
         "totalCaption": "cargadas en el sistema",
         "pendientes": "Pendientes de revisión",
         "pendientesCaption": "{count, plural, =0 {Nada pendiente} one {# esperando aprobación} other {# esperando aprobación}}",
@@ -816,7 +831,8 @@
       },
       "acciones": {
         "enviarRevision": "Enviar a revisión",
-        "crear": "Crear requisición",
+        "crear": "Crear solicitud",
+        "crearYEnviar": "Crear y enviar a revisión",
         "guardar": "Guardar",
         "verEnOc": "Ver en Órdenes de compra"
       },
@@ -831,41 +847,63 @@
         "ocsVinculadas": "OCs vinculadas"
       },
       "avisos": {
-        "vacio": "Todavía no hay requisiciones.",
-        "vacioFiltrado": "No hay requisiciones que coincidan con los filtros.",
-        "eliminarPregunta": "¿Eliminar la requisición #{id}?",
-        "eliminarAviso": "Solo se pueden eliminar requisiciones en borrador.",
-        "enviarConfirmacion": "¿Enviar la requisición #{id} a revisión?",
+        "vacio": "Todavía no hay solicitudes.",
+        "vacioFiltrado": "No hay solicitudes que coincidan con los filtros.",
+        "eliminarPregunta": "¿Eliminar la solicitud #{id}?",
+        "eliminarAviso": "Solo se pueden eliminar solicitudes en borrador.",
+        "enviarConfirmacion": "¿Enviar la solicitud #{id} a revisión?",
         "enviarAviso": "Después de enviar no vas a poder editar las líneas.",
         "sinLineas": "Agregá al menos una línea antes de enviar a revisión.",
-        "soloBorrador": "Esta requisición ya no está en borrador.",
-        "creadaExitoso": "Requisición #{id} creada.",
-        "actualizadaExitoso": "Requisición #{id} actualizada.",
-        "enviadaExitoso": "Requisición #{id} enviada a revisión.",
-        "eliminadaExitoso": "Requisición #{id} eliminada."
+        "soloBorrador": "Esta solicitud ya no está en borrador.",
+        "creadaExitoso": "Solicitud #{id} creada.",
+        "creadaSinEnviar": "Se creó pero no se pudo enviar a revisión. Probá de nuevo desde el detalle.",
+        "actualizadaExitoso": "Solicitud #{id} actualizada.",
+        "enviadaExitoso": "Solicitud #{id} enviada a revisión.",
+        "eliminadaExitoso": "Solicitud #{id} eliminada."
       },
       "aprobaciones": {
         "acciones": {
           "aprobar": "Aprobar",
           "rechazar": "Rechazar"
         },
-        "aprobarTitulo": "Aprobar requisición #{id}",
-        "aprobarDescripcion": "Al aprobar, la requisición pasa a estado Aprobada y sus líneas quedan disponibles en Órdenes de compra para asignar proveedor.",
-        "rechazarTitulo": "Rechazar requisición #{id}",
-        "rechazarDescripcion": "El rechazo es definitivo. La requisición queda solo lectura.",
+        "aprobarTitulo": "Aprobar solicitud #{id}",
+        "aprobarDescripcion": "Al aprobar, la solicitud pasa a estado Aprobada y sus líneas quedan disponibles en Órdenes de compra para asignar proveedor.",
+        "aprobarDescripcionParcial": "Marcá las líneas a aprobar y ajustá las cantidades si corresponde. Las desmarcadas quedan rechazadas.",
+        "rechazarTitulo": "Rechazar solicitud #{id}",
+        "rechazarDescripcion": "El rechazo es definitivo. La solicitud queda solo lectura.",
         "comentarioOpcional": "Comentario (opcional)",
         "motivoRequeridoLabel": "Motivo del rechazo",
         "motivoRequerido": "Indicá el motivo del rechazo.",
         "motivoRechazo": "Motivo del rechazo",
+        "aprobar": {
+          "columnas": {
+            "codigo": "Código",
+            "descripcion": "Descripción",
+            "pedida": "Pedida",
+            "aprobada": "Aprobada"
+          },
+          "lineasCount": "{count, plural, one {# línea} other {# líneas}}",
+          "seleccionarTodas": "Seleccionar todas",
+          "deseleccionarTodas": "Deseleccionar todas",
+          "ajustada": "Ajustada",
+          "rechazadaBadge": "Rechazada",
+          "pedidaInline": "Pedida: {cantidad} {unidad}",
+          "comentarioPlaceholder": "Nota opcional que se agrega a las notas de la solicitud…",
+          "resumen": "{aprobadas} de {total} líneas aprobadas",
+          "accion": "Aprobar {aprobadas} de {total}",
+          "usarRechazar": "Sin líneas aprobadas · usá Rechazar"
+        },
         "avisos": {
-          "aprobadaExitoso": "Requisición #{id} aprobada.",
-          "rechazadaExitoso": "Requisición #{id} rechazada.",
-          "yaNoEsEnRevision": "La requisición ya no está en revisión."
+          "aprobadaExitoso": "Solicitud #{id} aprobada.",
+          "rechazadaExitoso": "Solicitud #{id} rechazada.",
+          "yaNoEsEnRevision": "La solicitud ya no está en revisión.",
+          "aprobarSinLineas": "Tenés que aprobar al menos una línea. Para rechazo total usá Rechazar.",
+          "cantidadAprobadaInvalida": "Las cantidades aprobadas deben estar entre 1 y la cantidad pedida."
         }
       }
     },
     "subnav": {
-      "requisiciones": "Requisiciones",
+      "solicitudes": "Solicitudes",
       "oc": "Órdenes de compra",
       "recepciones": "Recepciones",
       "facturas": "Facturas"
@@ -895,8 +933,8 @@
           "cantidad": "Cant. total",
           "unidad": "Unidad",
           "urgencia": "Urgencia",
-          "requisiciones": "Requisiciones",
-          "requisicionesCount": "{count, plural, one {# requisición} other {# requisiciones}}",
+          "solicitudes": "Solicitudes",
+          "solicitudesCount": "{count, plural, one {# solicitud} other {# solicitudes}}",
           "proveedor": "Proveedor"
         },
         "bulk": {
@@ -917,13 +955,13 @@
         },
         "vacio": {
           "titulo": "Sin líneas pendientes de asignar",
-          "descripcion": "Cuando haya requisiciones aprobadas sin OC emitida, van a aparecer acá agrupadas por material."
+          "descripcion": "Cuando haya solicitudes aprobadas sin OC emitida, van a aparecer acá agrupadas por material."
         }
       },
       "buscarPlaceholder": "Buscar por Nº, proveedor o comprador…",
       "resultadosCount": "{count, plural, one {# orden} other {# órdenes}}",
       "subtotalEstimado": "Subtotal estimado",
-      "requisicionOrigen": "Requisición origen",
+      "solicitudOrigen": "Solicitud origen",
       "canceladaPor": "Cancelada por {nombre} · {fecha}",
       "campos": {
         "numero": "Nº",
@@ -959,7 +997,7 @@
         "tieneRecepciones": "La OC tiene recepciones; no se puede cancelar.",
         "yaNoEsEmitida": "La OC ya no está en estado Emitida.",
         "cancelarTitulo": "¿Cancelar esta OC?",
-        "cancelarDescripcion": "Las líneas vuelven a estado Pendiente en su requisición.",
+        "cancelarDescripcion": "Las líneas vuelven a estado Pendiente en su solicitud.",
         "cargandoDetalle": "Cargando detalle…",
         "errorCargaDetalle": "No se pudo cargar el detalle.",
         "sinRecepciones": "Todavía no hay recepciones para esta OC.",

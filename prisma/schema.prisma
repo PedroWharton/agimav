@@ -482,6 +482,7 @@ model RequisicionDetalle {
   itemId               Int     @map("item_id")
   item                 Inventario @relation(fields: [itemId], references: [id])
   cantidad             Float
+  cantidadAprobada     Float?  @map("cantidad_aprobada")
   prioridadItem        String  @default("Normal") @map("prioridad_item")
   notasItem            String? @map("notas_item")
   estado               String  @default("Pendiente")

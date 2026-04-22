@@ -4,9 +4,9 @@ import { prisma } from "@/lib/db";
 import { auth } from "@/lib/auth";
 import { userNameFromSession } from "@/lib/rbac";
 
-import { RequisicionForm } from "../requisicion-form";
+import { SolicitudForm } from "../solicitud-form";
 
-export default async function NuevaRequisicionPage() {
+export default async function NuevaSolicitudPage() {
   const session = await auth();
   if (!session?.user) redirect("/login");
   const currentUserName = userNameFromSession(session);
@@ -37,7 +37,7 @@ export default async function NuevaRequisicionPage() {
   ]);
 
   return (
-    <RequisicionForm
+    <SolicitudForm
       mode="create"
       initial={null}
       inventarioOptions={inventario.map((i) => ({

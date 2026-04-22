@@ -12,7 +12,7 @@ import {
   userNameFromSession,
 } from "@/lib/rbac";
 
-import type { RequisicionActionResult } from "./types";
+import type { SolicitudActionResult } from "./types";
 
 const PRIORIDADES = ["Normal", "Urgente"] as const;
 
@@ -74,18 +74,18 @@ function fieldErrorsFromZod(err: z.ZodError): Record<string, string> {
 
 function canMutate(
   session: Session | null,
-  requisicion: { creadoPor: string | null; estado: string },
+  solicitud: { creadoPor: string | null; estado: string },
 ): boolean {
   if (!session?.user) return false;
-  if (requisicion.estado !== "Borrador") return false;
+  if (solicitud.estado !== "Borrador") return false;
   if (isAdmin(session)) return true;
   const name = userNameFromSession(session);
-  return !!name && !!requisicion.creadoPor && name === requisicion.creadoPor;
+  return !!name && !!solicitud.creadoPor && name === solicitud.creadoPor;
 }
 
-export async function createRequisicion(
+export async function createSolicitud(
   raw: unknown,
-): Promise<RequisicionActionResult> {
+): Promise<SolicitudActionResult> {
   const session = await auth();
   try {
     requireAuthenticated(session);
@@ -133,17 +133,17 @@ export async function createRequisicion(
       }
       return req.id;
     });
-    revalidatePath("/compras/requisiciones");
+    revalidatePath("/compras/solicitudes");
     return { ok: true, id };
   } catch {
     return { ok: false, error: "unknown" };
   }
 }
 
-export async function updateRequisicion(
+export async function updateSolicitud(
   id: number,
   raw: unknown,
-): Promise<RequisicionActionResult> {
+): Promise<SolicitudActionResult> {
   const session = await auth();
   try {
     requireAuthenticated(session);
@@ -230,17 +230,17 @@ export async function updateRequisicion(
         }
       }
     });
-    revalidatePath("/compras/requisiciones");
-    revalidatePath(`/compras/requisiciones/${id}`);
+    revalidatePath("/compras/solicitudes");
+    revalidatePath(`/compras/solicitudes/${id}`);
     return { ok: true, id };
   } catch {
     return { ok: false, error: "unknown" };
   }
 }
 
-export async function deleteRequisicion(
+export async function deleteSolicitud(
   id: number,
-): Promise<RequisicionActionResult> {
+): Promise<SolicitudActionResult> {
   const session = await auth();
   try {
     requireAuthenticated(session);
@@ -261,16 +261,16 @@ export async function deleteRequisicion(
 
   try {
     await prisma.requisicion.delete({ where: { id } });
-    revalidatePath("/compras/requisiciones");
+    revalidatePath("/compras/solicitudes");
     return { ok: true, id };
   } catch {
     return { ok: false, error: "unknown" };
   }
 }
 
-export async function submitRequisicion(
+export async function submitSolicitud(
   id: number,
-): Promise<RequisicionActionResult> {
+): Promise<SolicitudActionResult> {
   const session = await auth();
   try {
     requireAuthenticated(session);
@@ -302,8 +302,8 @@ export async function submitRequisicion(
       where: { id },
       data: { estado: "En Revisión" },
     });
-    revalidatePath("/compras/requisiciones");
-    revalidatePath(`/compras/requisiciones/${id}`);
+    revalidatePath("/compras/solicitudes");
+    revalidatePath(`/compras/solicitudes/${id}`);
     return { ok: true, id };
   } catch {
     return { ok: false, error: "unknown" };
@@ -317,16 +317,25 @@ const approveSchema = z.object({
     .max(1000)
     .optional()
     .transform((v) => (v === "" ? null : (v ?? null))),
+  lineas: z
+    .array(
+      z.object({
+        detalleId: z.coerce.number().int().positive(),
+        aprobada: z.boolean(),
+        cantidadAprobada: z.coerce.number().positive().optional(),
+      }),
+    )
+    .min(1),
 });
 
 const rejectSchema = z.object({
   motivo: z.string().trim().min(1, "Obligatorio").max(1000),
 });
 
-export async function approveRequisicion(
+export async function approveSolicitud(
   id: number,
   raw: unknown,
-): Promise<RequisicionActionResult> {
+): Promise<SolicitudActionResult> {
   const session = await auth();
   try {
     requireAuthenticated(session);
@@ -337,7 +346,12 @@ export async function approveRequisicion(
 
   const existing = await prisma.requisicion.findUnique({
     where: { id },
-    select: { id: true, estado: true, notas: true },
+    select: {
+      id: true,
+      estado: true,
+      notas: true,
+      detalle: { select: { id: true, cantidad: true } },
+    },
   });
   if (!existing) return { ok: false, error: "not_found" };
   if (existing.estado !== "En Revisión")
@@ -352,6 +366,19 @@ export async function approveRequisicion(
     };
   }
 
+  const knownDetalle = new Map(existing.detalle.map((d) => [d.id, d.cantidad]));
+  for (const ln of parsed.data.lineas) {
+    if (!knownDetalle.has(ln.detalleId))
+      return { ok: false, error: "invalid", message: "unknown_detalle" };
+    if (ln.aprobada) {
+      const qty = ln.cantidadAprobada ?? knownDetalle.get(ln.detalleId)!;
+      if (qty <= 0 || qty > (knownDetalle.get(ln.detalleId) ?? 0))
+        return { ok: false, error: "invalid", message: "qty_out_of_range" };
+    }
+  }
+  const anyApproved = parsed.data.lineas.some((ln) => ln.aprobada);
+  if (!anyApproved) return { ok: false, error: "empty_detalle" };
+
   const aprobadoPor = userNameFromSession(session);
   const now = new Date();
   const comentario = parsed.data.comentario;
@@ -360,27 +387,50 @@ export async function approveRequisicion(
     : existing.notas;
 
   try {
-    await prisma.requisicion.update({
-      where: { id },
-      data: {
-        estado: "Aprobada",
-        fechaAprobacion: now,
-        aprobadoPor,
-        notas: mergedNotas,
-      },
+    await prisma.$transaction(async (tx) => {
+      for (const ln of parsed.data.lineas) {
+        if (ln.aprobada) {
+          const fullQty = knownDetalle.get(ln.detalleId)!;
+          const approvedQty = ln.cantidadAprobada ?? fullQty;
+          await tx.requisicionDetalle.update({
+            where: { id: ln.detalleId },
+            data: {
+              estado: "Pendiente",
+              cantidadAprobada:
+                approvedQty < fullQty ? approvedQty : null,
+            },
+          });
+        } else {
+          await tx.requisicionDetalle.update({
+            where: { id: ln.detalleId },
+            data: { estado: "Rechazada", cantidadAprobada: null },
+          });
+        }
+      }
+      await tx.requisicion.update({
+        where: { id },
+        data: {
+          estado: "Aprobada",
+          fechaAprobacion: now,
+          aprobadoPor,
+          notas: mergedNotas,
+        },
+      });
     });
-    revalidatePath("/compras/requisiciones");
-    revalidatePath(`/compras/requisiciones/${id}`);
+    revalidatePath("/compras/solicitudes");
+    revalidatePath(`/compras/solicitudes/${id}`);
+    revalidatePath("/compras/oc");
     return { ok: true, id };
-  } catch {
+  } catch (e) {
+    console.error("[approveSolicitud] failed", { id, error: e });
     return { ok: false, error: "unknown" };
   }
 }
 
-export async function rejectRequisicion(
+export async function rejectSolicitud(
   id: number,
   raw: unknown,
-): Promise<RequisicionActionResult> {
+): Promise<SolicitudActionResult> {
   const session = await auth();
   try {
     requireAuthenticated(session);
@@ -417,8 +467,8 @@ export async function rejectRequisicion(
         motivoRechazo: parsed.data.motivo,
       },
     });
-    revalidatePath("/compras/requisiciones");
-    revalidatePath(`/compras/requisiciones/${id}`);
+    revalidatePath("/compras/solicitudes");
+    revalidatePath(`/compras/solicitudes/${id}`);
     return { ok: true, id };
   } catch {
     return { ok: false, error: "unknown" };

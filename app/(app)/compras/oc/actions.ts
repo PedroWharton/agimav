@@ -87,7 +87,7 @@ export async function cancelarOC(id: number): Promise<OcActionResult> {
     });
     revalidatePath("/compras/oc");
     revalidatePath(`/compras/oc/${id}`);
-    revalidatePath("/compras/requisiciones");
+    revalidatePath("/compras/solicitudes");
     return { ok: true, id };
   } catch (e) {
     const msg = e instanceof Error ? e.message : "unknown";
@@ -143,6 +143,7 @@ export async function emitirOcsAgrupadas(
           id: true,
           itemId: true,
           cantidad: true,
+          cantidadAprobada: true,
           requisicionId: true,
         },
       });
@@ -156,7 +157,10 @@ export async function emitirOcsAgrupadas(
         const pid = byItem.get(d.itemId);
         if (pid == null) continue;
         const arr = byProveedor.get(pid) ?? [];
-        arr.push({ detalleId: d.id, cantidad: d.cantidad });
+        arr.push({
+          detalleId: d.id,
+          cantidad: d.cantidadAprobada ?? d.cantidad,
+        });
         byProveedor.set(pid, arr);
       }
 
@@ -231,7 +235,7 @@ export async function emitirOcsAgrupadas(
     });
 
     revalidatePath("/compras/oc");
-    revalidatePath("/compras/requisiciones");
+    revalidatePath("/compras/solicitudes");
     return { ok: true, ocIds };
   } catch (e) {
     const msg = e instanceof Error ? e.message : "unknown";

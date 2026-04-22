@@ -624,3 +624,64 @@ Stakeholder feedback after walkthroughs of Slices C–E: the procurement flow sh
 - Manual QA: (a) approve a req → aparece en tab Pendientes de OC · (b) asignar 2 items a un mismo proveedor desde selección múltiple → 1 OC emitida con 2 líneas · (c) recibir parcialmente desde modal → OC queda Parcialmente Recibida, reaparece en pendientes · (d) abrir pendiente de facturar desde tab default → lleva al form con líneas precargadas.
 - Legacy requisiciones ya en `Asignado a Proveedor` no rompen — siguen alcanzables desde requisiciones list.
 
+
+## 13. Partial approval (2026-04-22)
+
+Stakeholder requirement: the approver can accept a subset of a solicitud — both at the line level (reject some, approve others) and at the quantity level (approve fewer units than requested). Example: solicitud asks for 10 u, approver accepts 5 u → OC generates for 5 u; solicitud has 3 lines, approver accepts 2 → OC only aggregates those 2.
+
+### 13.1 Schema
+
+Additive-only, no migration risk:
+
+- **`RequisicionDetalle.cantidadAprobada Float?`** — new nullable column (`cantidad_aprobada`). Semantics:
+  - `null` = "approved at full `cantidad`" (legacy rows stay null; no backfill needed).
+  - Number < `cantidad` = partial approval; OC generation uses this value.
+- **`RequisicionDetalle.estado`** — vocabulary expanded to include `"Rechazada"`. Existing values (`Pendiente`, `Vinculada OC`) unchanged. Rejected lines never surface in the `/compras/oc` aggregated table (filter stays `estado='Pendiente'`).
+
+Migration file: `20260422000000_requisicion_cantidad_aprobada/migration.sql` — single `ALTER TABLE ... ADD COLUMN`. Idempotent.
+
+### 13.2 Approval UX
+
+The per-solicitud "Aprobar" button now opens a line-review dialog instead of a confirmation dialog:
+
+- Pre-filled: every line checked, `cantidadAprobada = cantidad` (default = full approval, one confirm click to keep the fast path).
+- Per line: checkbox to include/exclude + numeric input for approved quantity (max = `cantidad`, min = 0 exclusive).
+- Summary row: `N de M líneas aprobadas`. Disables the confirm button when zero approved.
+- If approver un-ticks everything, the button is disabled with hint `"Sin líneas aprobadas · usá Rechazar"`. Rationale: total rejection requires `motivoRechazo`, which lives in the separate "Rechazar" dialog. Don't merge paths.
+- Comentario (optional) still captured and appended to the solicitud notes.
+
+### 13.3 Server action `approveSolicitud`
+
+Payload: `{ comentario?, lineas: [{ detalleId, aprobada, cantidadAprobada? }] }`.
+
+Transaction:
+1. Validate: at least one `aprobada=true`; every `detalleId` exists on this solicitud; when approved, `cantidadAprobada ∈ (0, cantidad]`.
+2. For each line:
+   - `aprobada=true`: set `estado='Pendiente'`, `cantidadAprobada = null` if full, else the partial number.
+   - `aprobada=false`: set `estado='Rechazada'`, `cantidadAprobada = null` (rejected lines don't carry approved qty).
+3. Update `Requisicion` estado to `Aprobada`, stamp `fechaAprobacion`, `aprobadoPor`. Append comentario to `notas` if present.
+
+Rejected full-solicitud still goes through the existing `rejectSolicitud` flow with its `motivoRechazo` field. No new estado on `Requisicion` — a solicitud with some approved and some rejected lines is still globally `Aprobada`.
+
+### 13.4 Downstream effects
+
+- **`/compras/oc` aggregation** uses `cantidadAprobada ?? cantidad` when summing by item. Rejected lines (`estado='Rechazada'`) are excluded by the `estado='Pendiente'` filter that was already there.
+- **`emitirOcsAgrupadas`** reads `cantidadAprobada ?? cantidad` when creating `OrdenCompraDetalle.cantidadSolicitada`. Downstream (recepción, factura, weighted-avg cost) operates on that value unchanged — recepciones still measure against the OC-level `cantidadSolicitada`, which already reflects the approval.
+- **OC PDF**: unchanged. PDF shows what was ordered (the approved qty) with no annotation about the original request. Matches stakeholder call ("el PDF muestra lo que se compra, punto").
+- **Solicitud detail (readonly)**: lines show `pedida → aprobada` when partial, strike-through with "Rechazada" badge when the line was rejected. Header counter switches from `N líneas` to `N aprobadas · M rechazadas` when at least one line was rejected.
+
+### 13.5 Not changed
+
+- One-click full-approval flow remains: open dialog → confirm.
+- `rejectSolicitud` unchanged.
+- Once approved, decisions are terminal — no re-approval to bump a 5 up to a 7 in v1. Workaround: cancel the OC (existing path) and create a new solicitud.
+
+### 13.6 Acceptance
+
+- `npm run typecheck` + `npm run lint` clean.
+- Manual QA:
+  - (a) Open "Aprobar" → full defaults → confirm → solicitud = Aprobada, all lines Pendiente. Same as old fast path.
+  - (b) Approve 2 of 3 lines → 3rd line has `estado='Rechazada'`; OC pendientes only shows the 2 approved.
+  - (c) Approve a line with `cantidad=10` at qty=5 → aggregated row shows 5; OC emitida has `cantidadSolicitada=5`.
+  - (d) Un-tick every line → button disabled with hint to use Rechazar.
+  - (e) Legacy solicitudes (cantidadAprobada=null across all lines) still behave as before in OC aggregation.

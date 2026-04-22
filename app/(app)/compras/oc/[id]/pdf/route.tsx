@@ -63,7 +63,7 @@ export async function GET(
     return new Response("Not found", { status: 404 });
   }
 
-  const requisicionOrigen = oc.detalle[0]?.requisicionDetalle.requisicion ?? null;
+  const solicitudOrigen = oc.detalle[0]?.requisicionDetalle.requisicion ?? null;
   const numeroOc = oc.numeroOc ?? formatOCNumber(oc.id);
   const subtotal = oc.detalle.reduce((s, d) => s + d.total, 0);
 
@@ -80,11 +80,11 @@ export async function GET(
       condicionIva: oc.proveedor.condicionIva,
       direccionFiscal: oc.proveedor.direccionFiscal,
     },
-    requisicion: requisicionOrigen
+    solicitud: solicitudOrigen
       ? {
-          numero: `#${requisicionOrigen.id}`,
-          solicitante: requisicionOrigen.solicitante,
-          unidadProductiva: requisicionOrigen.unidadProductiva,
+          numero: `#${solicitudOrigen.id}`,
+          solicitante: solicitudOrigen.solicitante,
+          unidadProductiva: solicitudOrigen.unidadProductiva,
         }
       : null,
     lineas: oc.detalle.map((d, idx) => ({

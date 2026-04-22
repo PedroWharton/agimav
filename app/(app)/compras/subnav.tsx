@@ -7,7 +7,7 @@ import { useTranslations } from "next-intl";
 import { cn } from "@/lib/utils";
 
 const TABS = [
-  { href: "/compras/requisiciones", key: "requisiciones" },
+  { href: "/compras/solicitudes", key: "solicitudes" },
   { href: "/compras/oc", key: "oc" },
   { href: "/compras/recepciones", key: "recepciones" },
   { href: "/compras/facturas", key: "facturas" },

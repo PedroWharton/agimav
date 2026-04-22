@@ -67,7 +67,7 @@ export function QtyStepper({
         disabled={disabled || atMin}
         className={cn(
           btnSize,
-          "grid place-items-center rounded bg-muted-2 text-muted-foreground transition-colors hover:bg-muted hover:text-foreground disabled:cursor-not-allowed disabled:opacity-40",
+          "grid cursor-pointer place-items-center rounded bg-muted-2 text-muted-foreground transition-colors hover:bg-muted hover:text-foreground disabled:cursor-not-allowed disabled:opacity-40",
         )}
         aria-label="Disminuir"
       >
@@ -94,7 +94,7 @@ export function QtyStepper({
         disabled={disabled || atMax}
         className={cn(
           btnSize,
-          "grid place-items-center rounded bg-muted-2 text-muted-foreground transition-colors hover:bg-muted hover:text-foreground disabled:cursor-not-allowed disabled:opacity-40",
+          "grid cursor-pointer place-items-center rounded bg-muted-2 text-muted-foreground transition-colors hover:bg-muted hover:text-foreground disabled:cursor-not-allowed disabled:opacity-40",
         )}
         aria-label="Aumentar"
       >

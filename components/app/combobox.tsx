@@ -32,6 +32,7 @@ export type ComboboxProps = {
   allowCreate?: boolean;
   disabled?: boolean;
   className?: string;
+  autoFocus?: boolean;
 };
 
 export function Combobox({
@@ -44,6 +45,7 @@ export function Combobox({
   allowCreate = true,
   disabled,
   className,
+  autoFocus,
 }: ComboboxProps) {
   const [open, setOpen] = useState(false);
   const [query, setQuery] = useState("");
@@ -71,6 +73,7 @@ export function Combobox({
           variant="outline"
           role="combobox"
           disabled={disabled}
+          autoFocus={autoFocus}
           className={cn(
             "w-full justify-between font-normal",
             !pickLabel && "text-muted-foreground",
