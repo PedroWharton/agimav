@@ -26,7 +26,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
       <Sidebar badges={badges} />
       <div className="flex flex-1 flex-col min-w-0">
         <Topbar />
-        <main className="flex-1 overflow-y-auto">{children}</main>
+        <main className="flex-1 overflow-y-auto [scrollbar-gutter:stable]">{children}</main>
       </div>
     </div>
   );

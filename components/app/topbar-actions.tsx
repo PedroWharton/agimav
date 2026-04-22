@@ -42,7 +42,7 @@ export function TopbarActions() {
           type="button"
           onClick={() => setSearchOpen(true)}
           aria-label={t("buscar.placeholder")}
-          className="h-9 rounded-full border border-border bg-muted-2 hover:bg-muted text-sm text-subtle-foreground px-4 inline-flex items-center gap-2 max-w-[420px] w-full transition-colors"
+          className="h-9 rounded-full border border-border bg-muted-2 hover:bg-muted text-sm text-subtle-foreground px-4 inline-flex items-center gap-2 max-w-[420px] w-full cursor-pointer transition-colors"
         >
           <Search className="size-4 shrink-0" aria-hidden="true" />
           <span className="truncate text-left flex-1">

@@ -208,9 +208,7 @@ export function Donut({
       <desc>{summary}</desc>
       {paths.map((p) => (
         <path key={p.key} d={p.d} fill={p.fill}>
-          <title>
-            {p.label}: {(p.portion * 100).toFixed(1)}%
-          </title>
+          <title>{`${p.label}: ${(p.portion * 100).toFixed(1)}%`}</title>
         </path>
       ))}
       {renderCenter(centerContent)}

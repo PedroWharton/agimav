@@ -5,16 +5,15 @@ import {
   BarChart3,
   Building2,
   ChevronRight,
-  ClipboardList,
   Download,
-  DollarSign,
   FileText,
   LineChart,
+  SlidersHorizontal,
   Tractor,
-  Wrench,
 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
+import { StatsFilterBar } from "@/components/stats/stats-filter-bar";
 import { auth } from "@/lib/auth";
 import { isAdmin } from "@/lib/rbac";
 import {
@@ -40,7 +39,6 @@ import {
   type HorizontalBarTone,
 } from "@/components/stats/horizontal-bars";
 import { KpiCard } from "@/components/stats/kpi-card";
-import { SparkLine } from "@/components/stats/spark-line";
 import { StackedBars } from "@/components/stats/stacked-bars";
 
 export const dynamic = "force-dynamic";
@@ -577,7 +575,7 @@ function GastoRubroCard({
           <div className="flex flex-wrap gap-3">
             {data.order.map((key, i) => (
               <LegendSwatch
-                key={key}
+                key={`${key}-${i}`}
                 color={palette[i] ?? "var(--muted-foreground)"}
                 label={key}
               />
@@ -692,16 +690,32 @@ export default async function EstadisticasPage() {
     year: "numeric",
   });
 
-  const serieValues = kpis.facturacionMesSerie.map((p) => p.total);
-  const serieLabels = kpis.facturacionMesSerie.map((p) =>
-    formatMonthYear(p.mes),
-  );
+  const hoy = new Date();
+  const lookbackDias = 90;
+  const desde = new Date(hoy.getTime() - lookbackDias * 24 * 60 * 60 * 1000);
+  const fmtDia = (d: Date) =>
+    d.toLocaleDateString("es-AR", { day: "numeric", month: "short" });
+  const fmtDiaAnio = (d: Date) =>
+    d.toLocaleDateString("es-AR", {
+      day: "numeric",
+      month: "short",
+      year: "numeric",
+    });
+  const rangeLabel = `${fmtDia(desde)} — ${fmtDiaAnio(hoy)} · ${lookbackDias}d`;
 
   return (
     <div className="flex flex-col gap-6 p-6">
       <PageHeader
         title={t("titulo")}
-        description={t("dashboard.subtitulo")}
+        description={
+          <>
+            {t("dashboard.subtitulo")} ·{" "}
+            <span className="font-medium text-foreground">
+              {t("dashboard.subtituloPeriodo")}
+            </span>{" "}
+            · {t("actualizadoHace", { mins: 12 })}
+          </>
+        }
         actions={
           <>
             <Button variant="outline" size="sm" disabled title="Próximamente">
@@ -712,14 +726,25 @@ export default async function EstadisticasPage() {
               <FileText className="size-4" aria-hidden />
               {t("reportePdf")}
             </Button>
+            <Button
+              variant="default"
+              size="sm"
+              disabled
+              title="Próximamente"
+            >
+              <SlidersHorizontal className="size-4" aria-hidden />
+              {t("configurarKpis")}
+            </Button>
           </>
         }
       />
 
+      <StatsFilterBar rangeLabel={rangeLabel} granularity="mes" />
+
       {/* KPI strip — 4 cards */}
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
         <KpiCard
-          icon={Tractor}
+          size="lg"
           tone={kpis.disponibilidadPct >= 85 ? "ok" : "warn"}
           label={t("dashboard.kpi.disponibilidad")}
           value={`${kpis.disponibilidadPct.toFixed(1)}%`}
@@ -730,7 +755,7 @@ export default async function EstadisticasPage() {
           href="/maquinaria"
         />
         <KpiCard
-          icon={Wrench}
+          size="lg"
           tone={kpis.mantPendientes > 10 ? "warn" : "neutral"}
           label={t("dashboard.kpi.mantPendientes")}
           value={kpis.mantPendientes.toLocaleString("es-AR")}
@@ -738,7 +763,7 @@ export default async function EstadisticasPage() {
           href="/mantenimiento"
         />
         <KpiCard
-          icon={ClipboardList}
+          size="lg"
           tone="info"
           label={t("dashboard.kpi.otEnCurso")}
           value={kpis.otEnCurso.toLocaleString("es-AR")}
@@ -746,7 +771,7 @@ export default async function EstadisticasPage() {
           href="/ordenes-trabajo"
         />
         <KpiCard
-          icon={DollarSign}
+          size="lg"
           label={t("dashboard.kpi.facturacionMes")}
           value={formatCurrencyARS(kpis.facturacionMesTotal)}
           caption={t("dashboard.kpi.facturacionMesCaption", {
@@ -754,15 +779,7 @@ export default async function EstadisticasPage() {
             mes: mesActual,
           })}
           href="/compras/facturas"
-        >
-          <SparkLine
-            values={serieValues}
-            labels={serieLabels}
-            width={280}
-            height={36}
-            className="w-full"
-          />
-        </KpiCard>
+        />
       </div>
 
       {/* 12-col chart grid */}

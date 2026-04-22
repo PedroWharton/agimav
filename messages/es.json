@@ -15,7 +15,7 @@
   },
   "topbar": {
     "buscar": {
-      "placeholder": "Buscar máquinas, OC, OT…",
+      "placeholder": "Buscar en todo Agimav…",
       "dialogPlaceholder": "Buscar…",
       "proximamente": "Próximamente"
     },
@@ -109,7 +109,7 @@
     "nuevoItem": "Nuevo item",
     "editarItem": "Editar item",
     "buscarPlaceholder": "Buscar código o descripción…",
-    "resultadosCount": "{total, plural, one {# item} other {# items}}{bajo, plural, =0 {} other { · # bajo mínimo}}",
+    "resultadosCount": "{total, plural, one {# item} other {# items}}",
     "filtros": {
       "categoria": "Categoría",
       "localidad": "Localidad",
@@ -501,7 +501,24 @@
     "exportar": "Exportar",
     "exportarCsv": "Exportar CSV",
     "reportePdf": "Reporte PDF",
+    "configurarKpis": "Configurar KPIs",
     "exportarError": "No se pudo exportar. Probá de nuevo.",
+    "actualizadoHace": "actualizado hace {mins} min",
+    "filtros": {
+      "proximamente": "Próximamente",
+      "rangoSufijo": "{dias}d",
+      "compararCon": "Comparar con",
+      "compararValor": "90 días previos",
+      "obra": "Obra",
+      "obraValor": "Todas",
+      "categoria": "Categoría",
+      "categoriaValor": "Todas",
+      "granularidad": {
+        "dia": "Día",
+        "semana": "Semana",
+        "mes": "Mes"
+      }
+    },
     "rangos": {
       "7d": "Últimos 7 días",
       "30d": "Últimos 30 días",
@@ -535,7 +552,8 @@
       "proveedoresDesc": "Ranking de proveedores por facturación."
     },
     "dashboard": {
-      "subtitulo": "Indicadores operativos de flota, taller y abastecimiento · últimos 90 días",
+      "subtitulo": "Indicadores operativos de flota, taller y abastecimiento",
+      "subtituloPeriodo": "últimos 90 días",
       "kpi": {
         "disponibilidad": "Disponibilidad flota",
         "disponibilidadCaption": "{activas} activas de {total}",

@@ -82,6 +82,23 @@ Each item has a **When** field: `immediately` (first 30 days), `next quarter`, o
 **Shape:** currently the batch generator that turns active plantillas into pending mantenimientos is not wired. Decide: Vercel Cron (hobby plan has limits) vs manual admin button.
 **Why deferred:** Cervi uses plantillas so rarely in legacy (~6 rows ever) that this isn't urgent.
 
+## Phase 7 (Estadísticas) — UI scaffolded, not wired
+
+### Filter bar on `/estadisticas` (date range / comparar / obra / categoría / granularidad)
+**When:** next quarter — or earlier if Cervi asks to slice the dashboard by obra or wants a week/day view.
+**Shape:** `components/stats/stats-filter-bar.tsx` ships today as a **visual shell** — all controls are `aria-disabled` with "Próximamente" tooltips. To wire:
+- **Date range picker:** replace the pill with a calendar popover; push the selected range as search params (`?desde=YYYY-MM-DD&hasta=YYYY-MM-DD`) and thread through every `loadKpis` / `loadMezclaOt` / … function in `lib/stats/dashboard.ts` (they currently take no args — all hardcoded to 90d).
+- **Comparar con:** same — add an optional `compareRange` that returns a secondary set of KPIs; KPI cards render trend delta from the comparison.
+- **Obra filter:** scope every query to a specific `Obra.id`. Requires adding `obraId` joins across `Mantenimiento`, `OrdenTrabajo`, `OrdenCompra`, `Factura`. Cervi uses obras as the primary business axis, so this unlocks real drilldown.
+- **Categoría filter:** scope to `Inventario.categoria` for spend/backlog charts.
+- **Granularidad (Día/Semana/Mes):** currently hardcoded to monthly buckets in `loadTallerTrend` and `loadGastoPorRubro`. Switching to week/day means rewriting the SQL date_trunc expressions per query.
+**Why deferred:** the dashboard ships with a fixed 90-day window that covers the cutover QA need. Wiring filters is a multi-function refactor that isn't a launch blocker. Typography + layout match the design today; the interactions can land iteratively post-cutover.
+
+### "Configurar KPIs" button on `/estadisticas`
+**When:** when triggered — once a second KPI-set emerges, or a Cervi user asks to hide cards they don't use.
+**Shape:** admin-only dialog to toggle which KPI cards render in the strip (and, later, which rows in the 12-col grid). Persist per-user in a new `user_preferences` table or reuse `tabla_config`.
+**Why deferred:** only 4 KPIs exist today and all are universally relevant; no demand signal yet.
+
 ## Phase 6 (Órdenes de Trabajo) — scope to revisit
 
 ### OT "Movimiento Diario" + dedicated historial view

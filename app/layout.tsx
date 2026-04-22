@@ -35,14 +35,12 @@ export default async function RootLayout({
       lang={locale}
       className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
     >
-      <head>
+      <body className="min-h-full flex flex-col bg-background text-foreground">
         <Script
           id="agimav-theme-init"
           src="/agimav-theme-init.js"
           strategy="beforeInteractive"
         />
-      </head>
-      <body className="min-h-full flex flex-col bg-background text-foreground">
         <NextIntlClientProvider locale={locale} messages={messages}>
           <TooltipProvider delayDuration={200}>
             {children}

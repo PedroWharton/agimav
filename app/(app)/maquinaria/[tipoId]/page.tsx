@@ -1,12 +1,8 @@
-import Link from "next/link";
 import { notFound } from "next/navigation";
-import { getTranslations } from "next-intl/server";
-import { ArrowLeft } from "lucide-react";
 
 import { prisma } from "@/lib/db";
 import { auth } from "@/lib/auth";
 import { isAdmin } from "@/lib/rbac";
-import { Button } from "@/components/ui/button";
 
 import {
   MaquinariaClient,
@@ -30,8 +26,6 @@ export default async function MaquinariaTipoPage({
   const { tipoId: tipoIdParam } = await params;
   const tipoId = Number.parseInt(tipoIdParam, 10);
   if (!Number.isFinite(tipoId)) notFound();
-
-  const t = await getTranslations("maquinaria.maquinas");
 
   const [tipo, tiposActivos] = await Promise.all([
     prisma.maquinariaTipo.findUnique({
@@ -197,15 +191,6 @@ export default async function MaquinariaTipoPage({
 
   return (
     <div className="flex flex-col gap-6 p-6">
-      <div className="flex items-center gap-2">
-        <Button asChild variant="ghost" size="sm" className="-ml-2">
-          <Link href="/maquinaria">
-            <ArrowLeft className="size-4" />
-            {t("volver")}
-          </Link>
-        </Button>
-      </div>
-
       <MaquinariaClient
         admin={admin}
         tipo={{

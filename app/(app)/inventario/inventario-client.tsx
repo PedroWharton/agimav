@@ -63,6 +63,7 @@ import {
 import { ImportDrawer } from "@/components/inventario/import-drawer";
 
 import { formatARS, formatNumber } from "@/lib/format";
+import { cn } from "@/lib/utils";
 import { downloadBase64 } from "@/lib/download";
 
 import {
@@ -267,13 +268,6 @@ export function InventarioClient({
       return true;
     });
   }, [rows, search, categoriaFilter, localidadFilter, estadoPill]);
-
-  const bajoMinimoCount = useMemo(
-    () =>
-      filtered.filter((r) => r.stockMinimo > 0 && r.stock < r.stockMinimo && r.stock >= 0)
-        .length,
-    [filtered],
-  );
 
   function openCreate() {
     setEditing(null);
@@ -703,11 +697,8 @@ export function InventarioClient({
             onClick={setEstadoPill}
           />
         </Toolbar.Pills>
-        <span className="ml-auto text-xs text-muted-foreground">
-          {t("inventario.resultadosCount", {
-            total: filtered.length,
-            bajo: bajoMinimoCount,
-          })}
+        <span className="ml-auto text-xs tabular-nums text-muted-foreground">
+          {t("inventario.resultadosCount", { total: filtered.length })}
         </span>
       </Toolbar>
 
@@ -1079,27 +1070,30 @@ function EstadoToggle({
   onClick: (next: EstadoPill) => void;
 }) {
   const active = current === value;
-  const toneActive: Record<ChipTone, string> = {
-    neutral: "bg-muted text-foreground border-border",
-    ok: "bg-success-weak text-success border-success/30",
-    warn: "bg-warn-weak text-warn border-warn/30",
-    danger: "bg-danger-weak text-danger border-danger/30",
-    info: "bg-info-weak text-info border-info/30",
+  const countTone: Record<ChipTone, string> = {
+    neutral: "text-muted-foreground",
+    ok: "text-success",
+    warn: "text-warn",
+    danger: "text-danger",
+    info: "text-info",
   };
   const base =
-    "inline-flex h-7 items-center gap-1.5 rounded-full border px-3 text-xs font-medium transition-colors";
-  const idle =
-    "border-transparent bg-muted text-muted-foreground hover:bg-muted-2";
+    "inline-flex h-7 items-center gap-1.5 rounded-full border px-3 text-xs font-medium cursor-pointer transition-colors bg-muted hover:bg-muted-2";
+  const stateStyles = active
+    ? "border-foreground/25 ring-1 ring-foreground/15 text-foreground"
+    : "border-transparent text-muted-foreground";
   return (
     <button
       type="button"
       onClick={() => onClick(active ? "todos" : value)}
-      className={`${base} ${active ? toneActive[tone] : idle}`}
+      className={cn(base, stateStyles)}
       aria-pressed={active}
     >
       {label}
       {typeof count === "number" && count > 0 ? (
-        <span className="font-mono text-[11px] opacity-80">{count}</span>
+        <span className={cn("font-mono text-[11px]", countTone[tone])}>
+          {count}
+        </span>
       ) : null}
     </button>
   );

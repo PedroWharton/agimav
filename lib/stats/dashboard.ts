@@ -422,7 +422,8 @@ export async function loadGastoPorRubro(
   const rankedAll = [...catTotals.entries()].sort((a, b) => b[1] - a[1]);
   const topKeys = rankedAll.slice(0, topCategorias).map(([k]) => k);
   const hasOverflow = rankedAll.length > topCategorias;
-  const order = [...topKeys, ...(hasOverflow ? ["Otros"] : [])];
+  const needsOtrosBucket = hasOverflow && !topKeys.includes("Otros");
+  const order = [...topKeys, ...(needsOtrosBucket ? ["Otros"] : [])];
 
   // Pivot into per-month groups, collapsing tail into "Otros".
   const byMes = new Map<string, Map<string, number>>();

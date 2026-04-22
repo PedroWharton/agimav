@@ -40,15 +40,12 @@ export async function Topbar() {
           <DropdownMenuTrigger asChild>
             <button
               type="button"
-              className="flex items-center gap-2 rounded-md px-2 py-1 hover:bg-muted transition-colors"
+              aria-label={nombre}
+              className="flex items-center rounded-full transition-colors hover:opacity-90"
             >
               <Avatar className="size-8">
                 <AvatarFallback>{iniciales || "?"}</AvatarFallback>
               </Avatar>
-              <div className="hidden sm:flex flex-col items-start leading-tight">
-                <span className="text-sm font-medium">{nombre}</span>
-                <span className="text-xs text-subtle-foreground">{email}</span>
-              </div>
             </button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end" className="w-56">

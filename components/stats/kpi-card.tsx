@@ -71,6 +71,7 @@ export function KpiCard({
   children,
   tone = "neutral",
   trend,
+  size = "md",
   className,
 }: {
   label: string;
@@ -85,25 +86,44 @@ export function KpiCard({
    */
   tone?: KpiTone | "default";
   trend?: KpiTrend;
+  /**
+   * `"md"` (default) keeps the compact ficha/list card. `"lg"` is the
+   * dashboard-hero variant: bigger value, taller min-height, and value
+   * stays in foreground (tint lives on the background only).
+   */
+  size?: "md" | "lg";
   className?: string;
 }) {
   const t: KpiTone = tone === "default" ? "neutral" : tone;
   const styles = TONE_STYLES[t];
+  const isLarge = size === "lg";
 
   const body = (
     <Card
       className={cn(
-        "relative flex h-full min-h-[88px] flex-col gap-1.5 overflow-hidden p-4",
+        "relative flex h-full flex-col overflow-hidden",
+        isLarge ? "min-h-[96px] gap-1.5 p-4" : "min-h-[88px] gap-1.5 p-4",
         styles.tint,
         href &&
           "transition-[border-color,box-shadow] hover:border-border-strong hover:shadow-sm cursor-pointer",
         className,
       )}
     >
-      <div className="flex items-center gap-1.5 text-[11.5px] font-medium uppercase tracking-[0.04em] text-muted-foreground">
+      <div
+        className={cn(
+          "flex items-center gap-1.5 font-medium uppercase text-muted-foreground",
+          isLarge
+            ? "text-[11px] tracking-[0.08em]"
+            : "text-[11.5px] tracking-[0.04em]",
+        )}
+      >
         {Icon ? (
           <Icon
-            className={cn("size-[13px] shrink-0", styles.iconWrap)}
+            className={cn(
+              "shrink-0",
+              isLarge ? "size-[14px]" : "size-[13px]",
+              styles.iconWrap,
+            )}
             strokeWidth={1.75}
             aria-hidden
           />
@@ -112,14 +132,21 @@ export function KpiCard({
       </div>
       <div
         className={cn(
-          "font-heading text-2xl font-semibold leading-[1.15] tracking-tight tabular-nums",
-          styles.value,
+          "font-heading font-semibold leading-[1.1] tracking-tight tabular-nums",
+          isLarge
+            ? "text-[26px] text-foreground"
+            : cn("text-2xl", styles.value),
         )}
       >
         {value}
       </div>
       {trend ? (
-        <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
+        <div
+          className={cn(
+            "flex items-center gap-1.5 text-muted-foreground",
+            isLarge ? "text-[12.5px]" : "text-xs",
+          )}
+        >
           <span
             className={cn(
               "flex items-center gap-0.5 font-medium",
@@ -131,7 +158,14 @@ export function KpiCard({
           </span>
         </div>
       ) : caption ? (
-        <div className="text-xs text-muted-foreground">{caption}</div>
+        <div
+          className={cn(
+            "text-muted-foreground",
+            isLarge ? "text-[12.5px]" : "text-xs",
+          )}
+        >
+          {caption}
+        </div>
       ) : null}
       {children ? <div className="mt-auto pt-1">{children}</div> : null}
     </Card>
