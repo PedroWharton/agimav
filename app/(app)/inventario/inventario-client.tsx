@@ -403,21 +403,18 @@ export function InventarioClient({
 
   const columns: ColumnDef<InventarioRow>[] = [
     {
-      accessorKey: "codigo",
-      header: t("inventario.campos.codigo"),
-      enableSorting: true,
-      cell: ({ row }) => (
-        <span className="font-mono text-xs">
-          {row.original.codigo || "—"}
-        </span>
-      ),
-    },
-    {
       accessorKey: "descripcion",
-      header: t("inventario.campos.descripcion"),
+      header: t("inventario.campos.item"),
       enableSorting: true,
       cell: ({ row }) => (
-        <span className="font-medium">{row.original.descripcion || "—"}</span>
+        <div className="flex flex-col">
+          <span className="font-mono text-[11px] text-muted-foreground">
+            {row.original.codigo || "—"}
+          </span>
+          <span className="text-sm font-medium">
+            {row.original.descripcion || "—"}
+          </span>
+        </div>
       ),
     },
     {
@@ -442,10 +439,11 @@ export function InventarioClient({
       accessorKey: "localidad",
       header: t("inventario.campos.localidad"),
       enableSorting: true,
-      cell: ({ row }) =>
-        row.original.localidad ?? (
-          <span className="text-muted-foreground">—</span>
-        ),
+      cell: ({ row }) => (
+        <span className="text-xs text-muted-foreground">
+          {row.original.localidad ?? "—"}
+        </span>
+      ),
     },
     {
       accessorKey: "stock",

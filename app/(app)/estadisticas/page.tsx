@@ -5,17 +5,12 @@ import {
   BarChart3,
   Building2,
   ChevronRight,
-  Download,
-  FileText,
   LineChart,
-  SlidersHorizontal,
   Tractor,
 } from "lucide-react";
 
-import { Button } from "@/components/ui/button";
 import { StatsFilterBar } from "@/components/stats/stats-filter-bar";
 import { auth } from "@/lib/auth";
-import { isAdmin } from "@/lib/rbac";
 import {
   loadBacklogPorMaquina,
   loadGastoPorRubro,
@@ -661,7 +656,6 @@ export default async function EstadisticasPage() {
   const t = await getTranslations("estadisticas");
   const tRoot = (key: string, values?: Record<string, string | number>) =>
     t(key, values);
-  const admin = isAdmin(session);
 
   const [
     kpis,
@@ -712,29 +706,7 @@ export default async function EstadisticasPage() {
             {t("dashboard.subtitulo")} ·{" "}
             <span className="font-medium text-foreground">
               {t("dashboard.subtituloPeriodo")}
-            </span>{" "}
-            · {t("actualizadoHace", { mins: 12 })}
-          </>
-        }
-        actions={
-          <>
-            <Button variant="outline" size="sm" disabled title="Próximamente">
-              <Download className="size-4" aria-hidden />
-              {t("exportarCsv")}
-            </Button>
-            <Button variant="outline" size="sm" disabled title="Próximamente">
-              <FileText className="size-4" aria-hidden />
-              {t("reportePdf")}
-            </Button>
-            <Button
-              variant="default"
-              size="sm"
-              disabled
-              title="Próximamente"
-            >
-              <SlidersHorizontal className="size-4" aria-hidden />
-              {t("configurarKpis")}
-            </Button>
+            </span>
           </>
         }
       />
@@ -858,7 +830,6 @@ export default async function EstadisticasPage() {
         </div>
       </div>
 
-      {admin ? null : null}
     </div>
   );
 }

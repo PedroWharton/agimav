@@ -153,41 +153,39 @@ export function SolicitudesClient({
       header: tReq("campos.numero"),
       enableSorting: true,
       cell: ({ row }) => (
-        <span className="font-mono text-xs">#{row.original.id}</span>
-      ),
-    },
-    {
-      accessorKey: "fechaCreacion",
-      header: tReq("campos.fecha"),
-      enableSorting: true,
-      cell: ({ row }) => (
-        <span className="text-xs tabular-nums text-muted-foreground">
-          {format(new Date(row.original.fechaCreacion), "dd/MM/yyyy", {
-            locale: es,
-          })}
-        </span>
+        <div className="flex flex-col">
+          <span className="font-mono text-xs font-medium">
+            #{row.original.id}
+          </span>
+          <span className="text-[11px] tabular-nums text-muted-foreground">
+            {format(new Date(row.original.fechaCreacion), "dd/MM/yyyy", {
+              locale: es,
+            })}
+          </span>
+        </div>
       ),
     },
     {
       accessorKey: "solicitante",
       header: tReq("campos.solicitante"),
       enableSorting: true,
-    },
-    {
-      accessorKey: "unidadProductiva",
-      header: tReq("campos.unidadProductiva"),
-      enableSorting: true,
-      cell: ({ row }) =>
-        row.original.unidadProductiva || (
-          <span className="text-muted-foreground">—</span>
-        ),
+      cell: ({ row }) => (
+        <div className="flex flex-col">
+          <span className="text-sm">{row.original.solicitante}</span>
+          <span className="truncate text-[11px] text-muted-foreground">
+            {row.original.unidadProductiva || "—"}
+          </span>
+        </div>
+      ),
     },
     {
       accessorKey: "lineasCount",
       header: tReq("campos.lineas"),
       enableSorting: true,
       cell: ({ row }) => (
-        <span className="tabular-nums">{row.original.lineasCount}</span>
+        <span className="tabular-nums text-sm">
+          {row.original.lineasCount}
+        </span>
       ),
     },
     {

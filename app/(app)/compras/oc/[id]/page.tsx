@@ -52,6 +52,15 @@ export default async function OcDetailPage({
           },
         },
       },
+      recepciones: {
+        select: {
+          id: true,
+          numeroRemito: true,
+          fechaRecepcion: true,
+          cerradaSinFactura: true,
+        },
+        orderBy: { id: "desc" },
+      },
       _count: { select: { recepciones: true } },
     },
   });
@@ -76,6 +85,12 @@ export default async function OcDetailPage({
       direccionFiscal: oc.proveedor.direccionFiscal,
     },
     solicitud: solicitudOrigen,
+    recepciones: oc.recepciones.map((r) => ({
+      id: r.id,
+      numeroRemito: r.numeroRemito,
+      fechaRecepcion: r.fechaRecepcion.toISOString(),
+      cerradaSinFactura: r.cerradaSinFactura,
+    })),
     detalle: oc.detalle.map((d) => ({
       id: d.id,
       itemCodigo: d.requisicionDetalle.item.codigo ?? "",

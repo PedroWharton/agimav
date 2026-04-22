@@ -41,13 +41,6 @@ import {
   FormLabel,
   FormMessage,
 } from "@/components/ui/form";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 
 import { cn } from "@/lib/utils";
 import { Combobox } from "@/components/app/combobox";
@@ -620,6 +613,17 @@ export function SolicitudForm({
         />
       </div>
 
+      {!isCreate && initial && estado !== "Borrador" ? (
+        <SolicitudStatusBanner
+          estado={estado}
+          initial={initial}
+          lines={lines}
+          tAud={tAud}
+          tApr={tApr}
+          tReq={tReq}
+        />
+      ) : null}
+
       <Form {...form}>
         <div
           className={cn(
@@ -873,80 +877,74 @@ export function SolicitudForm({
           </div>
 
           {initial ? (
-            <aside className="flex flex-col gap-2 rounded-md border border-border p-4 text-sm lg:sticky lg:top-4 lg:self-start">
-              <h2 className="text-sm font-medium">{tAud("titulo")}</h2>
-              <div className="flex flex-col gap-1 text-xs text-muted-foreground">
-                <div>
-                  {initial.creadoPor
-                    ? tAud("creadaPor", {
-                        nombre: initial.creadoPor,
-                        fecha: formatDateTime(initial.fechaCreacion),
-                      })
-                    : tAud("sinDatos")}
-                </div>
-                {initial.aprobadoPor && initial.fechaAprobacion ? (
-                  <div>
-                    {tAud("aprobadaPor", {
-                      nombre: initial.aprobadoPor,
-                      fecha: formatDateTime(initial.fechaAprobacion),
-                    })}
-                  </div>
-                ) : initial.estado === "En Revisión" ? (
-                  <div>{tAud("aprobacionPendiente")}</div>
-                ) : null}
-                {initial.estado === "Rechazada" &&
-                initial.canceladoPor &&
-                initial.fechaCancelacion ? (
-                  <div>
-                    {tAud("rechazadaPor", {
-                      nombre: initial.canceladoPor,
-                      fecha: formatDateTime(initial.fechaCancelacion),
-                    })}
-                  </div>
-                ) : initial.canceladoPor && initial.fechaCancelacion ? (
-                  <div>
-                    {tAud("canceladaPor", {
-                      nombre: initial.canceladoPor,
-                      fecha: formatDateTime(initial.fechaCancelacion),
-                    })}
-                  </div>
-                ) : null}
-                {initial.motivoRechazo ? (
-                  <div className="mt-2 rounded-md border border-destructive/30 bg-destructive/5 p-2 text-destructive">
-                    <div className="text-[11px] font-semibold uppercase tracking-wide">
-                      {tApr("motivoRechazo")}
-                    </div>
-                    <div className="mt-1 whitespace-pre-wrap text-sm">
-                      {initial.motivoRechazo}
-                    </div>
-                  </div>
-                ) : null}
-              </div>
-
+            <aside className="flex flex-col gap-4 text-sm lg:sticky lg:top-4 lg:self-start">
               {initial.ocsVinculadas.length > 0 ? (
-                <div className="mt-3 flex flex-col gap-1 border-t border-border pt-3 text-sm">
-                  <div className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-                    {tAud("ocsVinculadas")}
+                <div className="flex flex-col gap-2 rounded-lg border border-border bg-card p-4">
+                  <div className="flex items-center justify-between">
+                    <h2 className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                      {tAud("ocsVinculadas")}
+                    </h2>
+                    <span className="text-xs text-muted-foreground tabular-nums">
+                      {initial.ocsVinculadas.length}
+                    </span>
                   </div>
-                  {initial.ocsVinculadas.map((oc) => (
-                    <Link
-                      key={oc.id}
-                      href={`/compras/oc/${oc.id}`}
-                      className="group flex items-center justify-between gap-2 rounded-md px-2 py-1 hover:bg-muted/60"
-                    >
-                      <span className="flex-1 truncate">
-                        <span className="font-mono text-xs">
-                          {oc.numeroOc ?? `#${oc.id}`}
-                        </span>
-                        <span className="ml-2 text-xs text-muted-foreground">
-                          {oc.proveedor}
-                        </span>
-                      </span>
-                      <ArrowUpRight className="size-3.5 text-muted-foreground group-hover:text-foreground" />
-                    </Link>
-                  ))}
+                  <ul className="-mx-1 flex flex-col">
+                    {initial.ocsVinculadas.map((oc) => (
+                      <li key={oc.id}>
+                        <Link
+                          href={`/compras/oc/${oc.id}`}
+                          className="group flex items-center gap-2 rounded-md px-2 py-1.5 hover:bg-muted/60"
+                        >
+                          <div className="flex min-w-0 flex-1 flex-col">
+                            <span className="font-mono text-xs">
+                              {oc.numeroOc ?? `#${oc.id}`}
+                            </span>
+                            <span className="truncate text-xs text-muted-foreground">
+                              {oc.proveedor}
+                            </span>
+                          </div>
+                          <EstadoChip estado={oc.estado} className="text-[10px]" />
+                          <ArrowUpRight className="size-3.5 text-muted-foreground group-hover:text-foreground" />
+                        </Link>
+                      </li>
+                    ))}
+                  </ul>
                 </div>
               ) : null}
+
+              <div className="flex flex-col gap-1 rounded-lg border border-border bg-card p-4">
+                <h2 className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                  {tAud("titulo")}
+                </h2>
+                <div className="mt-1 flex flex-col gap-1.5 text-xs text-muted-foreground">
+                  <div>
+                    {initial.creadoPor
+                      ? tAud("creadaPor", {
+                          nombre: initial.creadoPor,
+                          fecha: formatDateTime(initial.fechaCreacion),
+                        })
+                      : tAud("sinDatos")}
+                  </div>
+                  {initial.aprobadoPor && initial.fechaAprobacion ? (
+                    <div>
+                      {tAud("aprobadaPor", {
+                        nombre: initial.aprobadoPor,
+                        fecha: formatDateTime(initial.fechaAprobacion),
+                      })}
+                    </div>
+                  ) : null}
+                  {initial.estado !== "Rechazada" &&
+                  initial.canceladoPor &&
+                  initial.fechaCancelacion ? (
+                    <div>
+                      {tAud("canceladaPor", {
+                        nombre: initial.canceladoPor,
+                        fecha: formatDateTime(initial.fechaCancelacion),
+                      })}
+                    </div>
+                  ) : null}
+                </div>
+              </div>
             </aside>
           ) : null}
         </div>
@@ -1309,6 +1307,152 @@ export function SolicitudForm({
           </Dialog>
         </>
       ) : null}
+    </div>
+  );
+}
+
+function SolicitudStatusBanner({
+  estado,
+  initial,
+  lines,
+  tAud,
+  tApr,
+  tReq,
+}: {
+  estado: string;
+  initial: SolicitudDetail;
+  lines: DetalleLine[];
+  tAud: ReturnType<typeof useTranslations>;
+  tApr: ReturnType<typeof useTranslations>;
+  tReq: ReturnType<typeof useTranslations>;
+}) {
+  const tone =
+    estado === "Rechazada"
+      ? "destructive"
+      : estado === "En Revisión"
+        ? "amber"
+        : estado === "OC Emitida" || estado === "Asignado a Proveedor"
+          ? "sky"
+          : estado === "Aprobada"
+            ? "emerald"
+            : "muted";
+
+  const toneClasses: Record<string, string> = {
+    destructive:
+      "border-destructive/30 bg-destructive/5 text-destructive",
+    amber:
+      "border-amber-300/60 bg-amber-50/70 text-amber-950 dark:border-amber-800/60 dark:bg-amber-950/30 dark:text-amber-100",
+    sky: "border-sky-300/60 bg-sky-50/70 text-sky-950 dark:border-sky-800/60 dark:bg-sky-950/30 dark:text-sky-100",
+    emerald:
+      "border-emerald-300/60 bg-emerald-50/70 text-emerald-950 dark:border-emerald-800/60 dark:bg-emerald-950/30 dark:text-emerald-100",
+    muted: "border-border bg-muted/40 text-foreground",
+  };
+
+  const iconTone: Record<string, string> = {
+    destructive:
+      "bg-destructive/15 text-destructive",
+    amber:
+      "bg-amber-200/70 text-amber-900 dark:bg-amber-900/60 dark:text-amber-100",
+    sky: "bg-sky-200/70 text-sky-900 dark:bg-sky-900/60 dark:text-sky-100",
+    emerald:
+      "bg-emerald-200/70 text-emerald-900 dark:bg-emerald-900/60 dark:text-emerald-100",
+    muted: "bg-muted text-foreground",
+  };
+
+  const Icon =
+    estado === "Rechazada"
+      ? X
+      : estado === "En Revisión"
+        ? Send
+        : estado === "Aprobada" ||
+            estado === "Asignado a Proveedor" ||
+            estado === "OC Emitida"
+          ? Check
+          : Send;
+
+  const aprobadas = lines.filter(
+    (l) => l.estadoLinea && l.estadoLinea !== "Rechazada",
+  ).length;
+  const rechazadas = lines.filter(
+    (l) => l.estadoLinea === "Rechazada",
+  ).length;
+
+  function primaryLine(): string {
+    if (
+      estado === "Rechazada" &&
+      initial.canceladoPor &&
+      initial.fechaCancelacion
+    ) {
+      return tAud("rechazadaPor", {
+        nombre: initial.canceladoPor,
+        fecha: formatDateTime(initial.fechaCancelacion),
+      });
+    }
+    if (estado === "En Revisión") {
+      return tAud("aprobacionPendiente");
+    }
+    if (
+      (estado === "Aprobada" ||
+        estado === "Asignado a Proveedor" ||
+        estado === "OC Emitida") &&
+      initial.aprobadoPor &&
+      initial.fechaAprobacion
+    ) {
+      return tAud("aprobadaPor", {
+        nombre: initial.aprobadoPor,
+        fecha: formatDateTime(initial.fechaAprobacion),
+      });
+    }
+    return initial.creadoPor
+      ? tAud("creadaPor", {
+          nombre: initial.creadoPor,
+          fecha: formatDateTime(initial.fechaCreacion),
+        })
+      : tAud("sinDatos");
+  }
+
+  const showLineasSummary =
+    (estado === "Aprobada" ||
+      estado === "Asignado a Proveedor" ||
+      estado === "OC Emitida") &&
+    rechazadas > 0;
+
+  return (
+    <div
+      className={cn(
+        "flex flex-col gap-3 rounded-lg border p-4 sm:flex-row sm:items-start",
+        toneClasses[tone],
+      )}
+    >
+      <div
+        className={cn(
+          "flex size-10 shrink-0 items-center justify-center rounded-full",
+          iconTone[tone],
+        )}
+      >
+        <Icon className="size-5" />
+      </div>
+      <div className="flex min-w-0 flex-1 flex-col gap-1">
+        <div className="flex flex-wrap items-center gap-2">
+          <EstadoChip estado={estado} />
+          {showLineasSummary ? (
+            <span className="text-xs text-muted-foreground">
+              {tReq("campos.lineasResumen", { aprobadas, rechazadas })}
+            </span>
+          ) : null}
+        </div>
+        <p className="text-sm font-medium">{primaryLine()}</p>
+        {estado === "Rechazada" && initial.motivoRechazo ? (
+          <div className="mt-1 rounded-md border border-destructive/30 bg-background/60 p-3 text-sm">
+            <div className="text-[11px] font-semibold uppercase tracking-wide text-destructive">
+              {tApr("motivoRechazo")}
+            </div>
+            <div className="mt-1 whitespace-pre-wrap text-foreground">
+              {initial.motivoRechazo}
+            </div>
+          </div>
+        ) : null}
+      </div>
     </div>
   );
 }

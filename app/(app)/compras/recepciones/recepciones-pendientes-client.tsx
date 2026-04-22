@@ -1,15 +1,15 @@
 "use client";
 
-import { useEffect, useMemo, useState, useTransition } from "react";
+import { useMemo, useState, useTransition } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { format } from "date-fns";
 import { es } from "date-fns/locale";
-import { PackageOpen, Settings2 } from "lucide-react";
+import { Maximize2, PackageOpen } from "lucide-react";
 import { toast } from "sonner";
 
-import { Badge } from "@/components/ui/badge";
+import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -26,6 +26,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Combobox } from "@/components/app/combobox";
 import { EmptyState } from "@/components/app/states";
 import { Toolbar } from "@/components/app/toolbar";
+import { EstadoChip } from "@/components/compras/estado-chip";
 
 import { createRecepcion } from "./actions";
 
@@ -131,25 +132,22 @@ export function RecepcionesPendientesClient({
       </Toolbar>
 
       <div className="overflow-x-auto rounded-md border border-border">
-        <table className="w-full text-sm">
+        <table className="w-full min-w-[720px] text-sm">
           <thead className="bg-muted/40 text-xs uppercase tracking-wide text-muted-foreground">
             <tr>
-              <th className="px-2 py-2 text-left font-medium w-28">
+              <th className="px-3 py-2.5 text-left font-medium w-32">
                 {tRec("campos.oc")}
               </th>
-              <th className="px-2 py-2 text-left font-medium w-28">
-                {tRec("campos.fecha")}
-              </th>
-              <th className="px-2 py-2 text-left font-medium">
+              <th className="px-3 py-2.5 text-left font-medium">
                 {tRec("campos.proveedor")}
               </th>
-              <th className="px-2 py-2 text-left font-medium w-36">
+              <th className="px-3 py-2.5 text-left font-medium w-40">
                 {tRec("campos.estado")}
               </th>
-              <th className="px-2 py-2 text-right font-medium w-28">
+              <th className="px-3 py-2.5 text-left font-medium w-44">
                 {tRec("pendientes.columnas.pendientes")}
               </th>
-              <th className="px-2 py-2 text-right font-medium w-[260px]">
+              <th className="px-3 py-2.5 text-right font-medium w-[200px]">
                 <span className="sr-only">{tRec("pendientes.acciones.recibir")}</span>
               </th>
             </tr>
@@ -158,83 +156,124 @@ export function RecepcionesPendientesClient({
             {filtered.length === 0 ? (
               <tr>
                 <td
-                  colSpan={6}
+                  colSpan={5}
                   className="px-3 py-6 text-center text-sm text-muted-foreground"
                 >
                   {tRec("avisos.vacioFiltrado")}
                 </td>
               </tr>
             ) : null}
-            {filtered.map((oc) => (
-              <tr key={oc.id} className="border-t border-border">
-                <td className="px-2 py-2 font-mono text-xs">
-                  <Link
-                    href={`/compras/oc/${oc.id}`}
-                    className="underline-offset-2 hover:underline"
-                  >
-                    {oc.numeroOc}
-                  </Link>
-                </td>
-                <td className="px-2 py-2 text-xs tabular-nums text-muted-foreground">
-                  {format(new Date(oc.fechaEmision), "dd/MM/yyyy", {
-                    locale: es,
-                  })}
-                </td>
-                <td className="px-2 py-2">{oc.proveedor}</td>
-                <td className="px-2 py-2">
-                  <Badge
-                    variant="secondary"
-                    className={
-                      oc.estado === "Parcialmente Recibida"
-                        ? "border-transparent bg-sky-100 text-sky-900 dark:bg-sky-950/40 dark:text-sky-200"
-                        : "border-transparent bg-muted text-muted-foreground"
-                    }
-                  >
-                    {oc.estado}
-                  </Badge>
-                </td>
-                <td className="px-2 py-2 text-right tabular-nums">
-                  {oc.pendientesLineas} / {oc.totalLineas}
-                </td>
-                <td className="px-2 py-2 text-right">
-                  <div className="flex items-center justify-end gap-2">
-                    <Button asChild variant="ghost" size="sm">
-                      <Link
-                        href={`/compras/recepciones/nueva?oc=${oc.id}`}
-                        title={tRec("pendientes.acciones.vistaCompleta")}
-                      >
-                        <Settings2 className="size-4" />
-                      </Link>
-                    </Button>
-                    <Button
-                      type="button"
-                      size="sm"
-                      onClick={() => setActiveOcId(oc.id)}
+            {filtered.map((oc) => {
+              const pct =
+                oc.totalLineas > 0
+                  ? ((oc.totalLineas - oc.pendientesLineas) /
+                      oc.totalLineas) *
+                    100
+                  : 0;
+              return (
+                <tr
+                  key={oc.id}
+                  className="border-t border-border transition-colors hover:bg-muted/20"
+                >
+                  <td className="px-3 py-2.5">
+                    <Link
+                      href={`/compras/oc/${oc.id}`}
+                      className="flex flex-col underline-offset-2 hover:underline"
                     >
-                      <PackageOpen className="size-4" />
-                      {tRec("pendientes.acciones.recibir")}
-                    </Button>
-                  </div>
-                </td>
-              </tr>
-            ))}
+                      <span className="font-mono text-xs font-medium">
+                        {oc.numeroOc}
+                      </span>
+                      <span className="text-[11px] tabular-nums text-muted-foreground">
+                        {format(new Date(oc.fechaEmision), "dd/MM/yyyy", {
+                          locale: es,
+                        })}
+                      </span>
+                    </Link>
+                  </td>
+                  <td className="px-3 py-2.5 text-sm">{oc.proveedor}</td>
+                  <td className="px-3 py-2.5">
+                    <EstadoChip estado={oc.estado} />
+                  </td>
+                  <td className="px-3 py-2.5">
+                    <div className="flex flex-col gap-1">
+                      <div className="flex items-baseline justify-between gap-2">
+                        <span className="text-xs tabular-nums">
+                          {oc.pendientesLineas} pend. / {oc.totalLineas}
+                        </span>
+                        <span className="text-[10px] font-medium tabular-nums text-muted-foreground">
+                          {pct.toFixed(0)}%
+                        </span>
+                      </div>
+                      <div className="h-1 overflow-hidden rounded-full bg-muted">
+                        <div
+                          className={cn(
+                            "h-full rounded-full transition-all",
+                            pct >= 99.99
+                              ? "bg-emerald-500"
+                              : pct > 0
+                                ? "bg-sky-500"
+                                : "bg-muted",
+                          )}
+                          style={{
+                            width: `${Math.min(100, Math.max(0, pct))}%`,
+                          }}
+                        />
+                      </div>
+                    </div>
+                  </td>
+                  <td className="px-3 py-2.5 text-right">
+                    <div className="flex items-center justify-end gap-1.5">
+                      <Button asChild variant="ghost" size="sm">
+                        <Link
+                          href={`/compras/recepciones/nueva?oc=${oc.id}`}
+                          title={tRec("pendientes.acciones.vistaCompleta")}
+                          aria-label={tRec("pendientes.acciones.vistaCompleta")}
+                        >
+                          <Maximize2 className="size-4" />
+                        </Link>
+                      </Button>
+                      <Button
+                        type="button"
+                        size="sm"
+                        onClick={() => setActiveOcId(oc.id)}
+                      >
+                        <PackageOpen className="size-4" />
+                        {tRec("pendientes.acciones.recibir")}
+                      </Button>
+                    </div>
+                  </td>
+                </tr>
+              );
+            })}
           </tbody>
         </table>
       </div>
 
-      <RecibirModal
-        oc={activeOc}
-        onClose={() => setActiveOcId(null)}
-      />
+      <Dialog
+        open={activeOc != null}
+        onOpenChange={(next) => {
+          if (!next) setActiveOcId(null);
+        }}
+      >
+        <DialogContent className="max-w-3xl">
+          {activeOc ? (
+            <RecibirModalContent
+              key={activeOc.id}
+              oc={activeOc}
+              onClose={() => setActiveOcId(null)}
+            />
+          ) : null}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
 
-function RecibirModal({
+function RecibirModalContent({
   oc,
   onClose,
 }: {
-  oc: RecepcionPendienteOc | null;
+  oc: RecepcionPendienteOc;
   onClose: () => void;
 }) {
   const tRec = useTranslations("compras.recepciones");
@@ -243,26 +282,18 @@ function RecibirModal({
   const [isSaving, startSave] = useTransition();
 
   const [numeroRemito, setNumeroRemito] = useState("");
-  const [fecha, setFecha] = useState<string>(todayISODate());
+  const [fecha, setFecha] = useState<string>(todayISODate);
   const [recibidoPor, setRecibidoPor] = useState("");
   const [notas, setNotas] = useState("");
-  const [qtyById, setQtyById] = useState<Record<number, number>>({});
-
-  // Reset state every time a different OC opens.
-  useEffect(() => {
-    if (!oc) return;
-    setNumeroRemito("");
-    setFecha(todayISODate());
-    setRecibidoPor("");
-    setNotas("");
+  const [qtyById, setQtyById] = useState<Record<number, number>>(() => {
     const next: Record<number, number> = {};
     for (const l of oc.lineas) next[l.ocDetalleId] = l.pendiente;
-    setQtyById(next);
-  }, [oc]);
+    return next;
+  });
 
   const pendientesById = useMemo(() => {
     const m = new Map<number, number>();
-    if (oc) for (const l of oc.lineas) m.set(l.ocDetalleId, l.pendiente);
+    for (const l of oc.lineas) m.set(l.ocDetalleId, l.pendiente);
     return m;
   }, [oc]);
 
@@ -280,7 +311,6 @@ function RecibirModal({
 
   const canSave =
     !isSaving &&
-    oc != null &&
     numeroRemito.trim().length > 0 &&
     recibidoPor.trim().length > 0 &&
     totalRecibir > 0 &&
@@ -293,14 +323,12 @@ function RecibirModal({
   };
 
   const recibirTodo = () => {
-    if (!oc) return;
     const next: Record<number, number> = {};
     for (const l of oc.lineas) next[l.ocDetalleId] = l.pendiente;
     setQtyById(next);
   };
 
   const handleSave = () => {
-    if (!oc) return;
     startSave(async () => {
       const payload = {
         ocId: oc.id,
@@ -337,25 +365,17 @@ function RecibirModal({
   };
 
   return (
-    <Dialog
-      open={oc != null}
-      onOpenChange={(next) => {
-        if (!next) onClose();
-      }}
-    >
-      <DialogContent className="max-w-3xl">
-        {oc ? (
-          <>
-            <DialogHeader>
-              <DialogTitle>
-                {tRec("pendientes.modal.titulo", {
-                  numero: oc.numeroOc,
-                  proveedor: oc.proveedor,
-                })}
-              </DialogTitle>
-              <DialogDescription>
-                {tRec("pendientes.modal.descripcion")}
-              </DialogDescription>
+    <>
+      <DialogHeader>
+        <DialogTitle>
+          {tRec("pendientes.modal.titulo", {
+            numero: oc.numeroOc,
+            proveedor: oc.proveedor,
+          })}
+        </DialogTitle>
+        <DialogDescription>
+          {tRec("pendientes.modal.descripcion")}
+        </DialogDescription>
             </DialogHeader>
             <div className="grid grid-cols-1 gap-3 md:grid-cols-3">
               <div className="flex flex-col gap-1">
@@ -510,9 +530,6 @@ function RecibirModal({
                 </Button>
               </div>
             </DialogFooter>
-          </>
-        ) : null}
-      </DialogContent>
-    </Dialog>
+    </>
   );
 }

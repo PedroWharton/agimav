@@ -840,21 +840,30 @@ export function MaquinariaClient({
       </div>
 
       {tipos.length > 1 ? (
-        <div className="flex flex-wrap items-center gap-2">
-          <span className="text-xs uppercase tracking-wide text-muted-foreground">
-            {t("maquinaria.maquinas.otrosTipos")}
-          </span>
-          {tipos.map((tt) => (
-            <Button
-              key={tt.id}
-              asChild
-              variant={tt.id === tipo.id ? "default" : "outline"}
-              size="sm"
-              className={cn(tt.id === tipo.id && "pointer-events-none")}
-            >
-              <Link href={`/maquinaria/${tt.id}`}>{tt.nombre}</Link>
-            </Button>
-          ))}
+        <div
+          className="-mx-1 flex gap-1 overflow-x-auto border-b border-border"
+          role="tablist"
+          aria-label={t("maquinaria.maquinas.otrosTipos")}
+        >
+          {tipos.map((tt) => {
+            const active = tt.id === tipo.id;
+            return (
+              <Link
+                key={tt.id}
+                href={`/maquinaria/${tt.id}`}
+                role="tab"
+                aria-selected={active}
+                className={cn(
+                  "inline-flex shrink-0 items-center gap-1.5 border-b-2 px-3 py-2 text-sm font-medium -mb-px transition-colors",
+                  active
+                    ? "border-primary text-foreground"
+                    : "border-transparent text-muted-foreground hover:text-foreground",
+                )}
+              >
+                {tt.nombre}
+              </Link>
+            );
+          })}
         </div>
       ) : null}
 

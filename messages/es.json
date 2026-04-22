@@ -147,6 +147,7 @@
     "campos": {
       "codigo": "Código",
       "descripcion": "Descripción",
+      "item": "Ítem",
       "categoria": "Categoría",
       "localidad": "Localidad",
       "unidadProductiva": "Unidad productiva",
@@ -930,7 +931,9 @@
           "seleccionarTodos": "Seleccionar todos",
           "codigo": "Código",
           "descripcion": "Descripción",
+          "item": "Ítem",
           "cantidad": "Cant. total",
+          "cantidadTotal": "Cantidad total",
           "unidad": "Unidad",
           "urgencia": "Urgencia",
           "solicitudes": "Solicitudes",
@@ -975,10 +978,19 @@
       "columnas": {
         "codigo": "Código",
         "descripcion": "Descripción",
+        "item": "Ítem",
         "cantidad": "Cantidad",
         "precio": "P. unit.",
         "total": "Subtotal",
         "recibido": "Recibido"
+      },
+      "secciones": {
+        "proveedor": "Proveedor",
+        "lineas": "Líneas",
+        "resumen": "Resumen",
+        "avanceRecepcion": "Avance de recepción",
+        "recepciones": "Recepciones",
+        "cerradaSinFactura": "Cerrada sin factura"
       },
       "filtros": {
         "estado": "Estado",
@@ -1169,6 +1181,7 @@
           "pendientes": "Pend. / Total",
           "ultimaRecepcion": "Última recepción"
         },
+        "ultimaRecepcionInline": "Última rec. {fecha}",
         "acciones": {
           "crear": "Crear factura"
         },
