@@ -9,3 +9,16 @@ export type OcActionResult =
         | "has_recepciones"
         | "unknown";
     };
+
+export type EmitirOcsResult =
+  | { ok: true; ocIds: number[] }
+  | {
+      ok: false;
+      error:
+        | "forbidden"
+        | "invalid"
+        | "nothing_selected"
+        | "item_drained"
+        | "unknown";
+      message?: string;
+    };

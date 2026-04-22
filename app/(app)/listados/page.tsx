@@ -7,15 +7,12 @@ import {
   Users,
   Building2,
   Factory,
-  Download,
-  Upload,
   Info,
   type LucideIcon,
 } from "lucide-react";
 
 import { PageHeader } from "@/components/app/page-header";
 import { CatalogTile } from "@/components/listados/catalog-tile";
-import { Button } from "@/components/ui/button";
 import { prisma } from "@/lib/db";
 
 type TileEntry = {
@@ -194,18 +191,6 @@ export default async function ListadosIndexPage() {
       <PageHeader
         title={t("listados.index.titulo")}
         description={t("listados.index.descripcion")}
-        actions={
-          <>
-            <Button variant="outline" size="sm" disabled title="Próximamente">
-              <Download className="size-4" aria-hidden="true" />
-              {t("listados.index.exportar")}
-            </Button>
-            <Button variant="outline" size="sm" disabled title="Próximamente">
-              <Upload className="size-4" aria-hidden="true" />
-              {t("listados.index.importar")}
-            </Button>
-          </>
-        }
       />
 
       <div

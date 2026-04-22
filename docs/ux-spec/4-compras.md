@@ -549,3 +549,78 @@ Each slice ships with:
 7. i18n review — no raw Spanish strings outside `messages/es.json`.
 8. For Slice C: manual QA of the PDF against a real supplier layout (Cervi provides one from the legacy app for visual diff).
 
+## 12. Post-cutover UX redesign (2026-04-22)
+
+Stakeholder feedback after walkthroughs of Slices C–E: the procurement flow should be reorganized around *pending work* rather than per-document screens. No schema or data-flow changes — same state machine, same transactions. This section documents the UX-only redesign shipped in one PR.
+
+### 12.1 Requisiciones — approval only
+
+- The per-requisición supplier assignment screen (`/compras/requisiciones/[id]/asignar`) is **removed**.
+- `saveAsignacion` and `generarOCs` server actions in `requisiciones/[id]/asignar/actions.ts` are **deleted** — their responsibilities move into OC.
+- On requisición detail, the "Asignar proveedores" CTA is replaced by a secondary "Ver en Órdenes de compra" link that navigates to `/compras/oc`.
+- **Unchanged:** Borrador → En Revisión → Aprobada / Rechazada flow, approval audit, line editor.
+- Legacy requisiciones already in `Asignado a Proveedor` (old flow, supplier picked but OC not emitted) are left alone — they don't surface in the new aggregated table because it only shows lines with `RequisicionDetalle.estado = 'Pendiente'`. They stay reachable from the requisiciones list and finish through the new OC tab once an admin re-picks providers there.
+
+### 12.2 Órdenes de compra — two tabs, aggregated assignment
+
+`/compras/oc` splits into two tabs (Tabs primitive, `defaultValue="pendientes"`):
+
+**Tab "Pendientes de asignar"** (new, default) — the load-bearing change.
+
+- Server fetches every `RequisicionDetalle` where `estado='Pendiente'` and parent requisición estado ∈ `{Aprobada, Asignado a Proveedor}`, aggregates **by `itemId`**.
+- One row per material. Columns: checkbox · código · descripción · **cantidad total** (sum across all source requisiciones) · unidad · **urgencia** (badge when any source line or parent requisición has `prioridad='Urgente'`) · **requisiciones origen** (count + first 3 req ids as links, `+N` overflow) · proveedor (Combobox over active proveedores).
+- Filter: urgencia (todas / solo urgentes). No other filters in v1 — aggregation already compresses the dataset enough.
+- Aggregation rules decided with stakeholder on 2026-04-22:
+  - Group key is **`itemId` only**, regardless of origin requisición's urgency or obra. Ex: req A (10u urgente) + req B (20u normal) of the same tornillo → **single row of 30u, marked Urgente**.
+  - One proveedor per aggregated row — **no split-across-suppliers** in v1. If split is needed, user un-aggregates manually (out of scope).
+  - Pre-fill rule: if any source line already has `proveedorAsignadoId` set from legacy flow, the aggregated row pre-selects that proveedor (first non-null wins). User can override.
+- Bulk action: "Asignar todos a" Combobox appears when any rows are selected — applies one proveedor to every selected row in one click.
+- Emit action: confirm dialog shows "¿Emitir órdenes para N ítems en M proveedores?" with per-proveedor item count. Disabled when any selected row has no proveedor.
+- **New server action `emitirOcsAgrupadas`** (`oc/actions.ts`):
+  1. Input: `{ asignaciones: [{ itemId, proveedorId }] }`.
+  2. Within `prisma.$transaction`: for each selected item, fetch all pending `RequisicionDetalle` rows. Group by proveedor → **one OC per proveedor** with all its items (not one OC per item).
+  3. For each OC: create `OrdenCompra` + `numeroOc = formatOCNumber(id)`, then one `OrdenCompraDetalle` per source `RequisicionDetalle`, flip detalle `estado='Vinculada OC'` + set `proveedorAsignadoId`.
+  4. Recompute each touched parent requisición estado based on sibling detalles (all Vinculada → `OC Emitida`; some → `Asignado a Proveedor`; none → `Aprobada`). Matches legacy rules in `cancelarOC`.
+  5. Returns `ocIds[]` for the success toast.
+- Error code `item_drained`: selected item has no pending detalles when the action runs (concurrency). UI refreshes.
+
+**Tab "Órdenes emitidas"** — the pre-redesign list (proveedor / comprador / estado / líneas). Unchanged queries, just re-hosted under a tab with the original toolbar.
+
+### 12.3 Recepciones — two tabs, inline modal
+
+`/compras/recepciones` splits into:
+
+**Tab "Pendientes de recibir"** (new, default) — OCs where `estado ∈ {Emitida, Parcialmente Recibida}` and at least one `OrdenCompraDetalle` has `cantidadSolicitada > cantidadRecibida`.
+
+- Row columns: OC · fecha emisión · proveedor · estado badge · `pendientes / total` líneas · two actions.
+- Primary action: **"Recibir"** opens a modal with nº remito + fecha (default today) + recibido por + editable qty per line (pre-filled to `pendiente`) + notas. "Recibir todo" button re-fills all lines to max. Uses the existing `createRecepcion` server action — no new code path.
+- Secondary action: gear icon → `/compras/recepciones/nueva?oc=…` for the **full form** when the user needs attachments, per-line destino (Stock/Directa), or per-line observaciones. The `/nueva` route stays as the canonical form.
+- Modal defaults `destino='Stock'` and per-line observaciones to `null` (the 95% path per §2.5.4). Users who need Directa or per-line observaciones follow the "Usar vista completa" link in the modal footer.
+
+**Tab "Historial"** — the pre-redesign recepciones list (remito / OC / proveedor / facturado state), unchanged.
+
+### 12.4 Facturas — two tabs, pending-first
+
+`/compras/facturas` splits into:
+
+**Tab "Pendientes de facturar"** (new, default) — one row per OC with at least one `RecepcionDetalle` where `facturado=false` and its parent `Recepcion.cerradaSinFactura=false`. Filters OCs in states `Parcialmente Recibida | Completada | Recibida`.
+
+- Row columns: OC · fecha emisión · proveedor · estado · `pendientes / total` líneas facturables · fecha última recepción · "Crear factura" CTA.
+- Click anywhere on the row (or the CTA) → `/compras/facturas/nueva?oc=<id>`. That existing flow already filters unfacturadas recepción lines by the passed `oc` param (see §Slice E).
+- QA-037 "Cerradas sin factura" recepciones are correctly excluded: `Recepcion.cerradaSinFactura=true` filters them out of the pending list.
+
+**Tab "Historial"** — the pre-redesign facturas list (Nº factura / fecha / proveedor / total), unchanged, with the "Nueva factura" CTA preserved for the rare case of creating a factura not tied to any of the pending OCs.
+
+### 12.5 Not changed
+
+- Data model (no Prisma schema edits).
+- Approval, OC cancellation, recepción cierre-sin-factura (QA-037), weighted-average cost update — all still fire from their original code paths.
+- PDF generation, drawer details, KPIs on recepciones/facturas listings.
+- Filter semantics on historial tabs — users keep their muscle memory from pre-redesign.
+
+### 12.6 Acceptance
+
+- `npm run typecheck` + `npm run lint` clean.
+- Manual QA: (a) approve a req → aparece en tab Pendientes de OC · (b) asignar 2 items a un mismo proveedor desde selección múltiple → 1 OC emitida con 2 líneas · (c) recibir parcialmente desde modal → OC queda Parcialmente Recibida, reaparece en pendientes · (d) abrir pendiente de facturar desde tab default → lleva al form con líneas precargadas.
+- Legacy requisiciones ya en `Asignado a Proveedor` no rompen — siguen alcanzables desde requisiciones list.
+

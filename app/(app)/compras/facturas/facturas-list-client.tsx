@@ -1,24 +1,19 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { format } from "date-fns";
 import { es } from "date-fns/locale";
 import type { ColumnDef } from "@tanstack/react-table";
 import {
-  Plus,
   FileSpreadsheet,
   CalendarDays,
   Coins,
   Building2,
 } from "lucide-react";
 
-import { Button } from "@/components/ui/button";
-
 import { DataTable } from "@/components/app/data-table";
-import { PageHeader } from "@/components/app/page-header";
 import { Combobox } from "@/components/app/combobox";
 import { Toolbar } from "@/components/app/toolbar";
 import { KpiCard } from "@/components/stats/kpi-card";
@@ -132,20 +127,7 @@ export function FacturasListClient({
   ];
 
   return (
-    <div className="flex flex-col gap-6 p-6">
-      <PageHeader
-        title={tFac("titulo")}
-        description={tFac("descripcion")}
-        actions={
-          <Button asChild>
-            <Link href="/compras/facturas/nueva">
-              <Plus className="size-4" />
-              {tFac("nueva")}
-            </Link>
-          </Button>
-        }
-      />
-
+    <div className="flex flex-col gap-6">
       <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
         <KpiCard
           icon={FileSpreadsheet}

@@ -334,12 +334,7 @@ export function FacturaFormClient({
       const result = await createFactura(payload);
       if (result.ok) {
         toast.success(tFac("avisos.creadaExitoso", { numero: composed }));
-        // Redirect: OC detail if linked, else factura detail.
-        if (ocContext) {
-          router.push(`/compras/oc/${ocContext.id}`);
-        } else {
-          router.push(`/compras/facturas/${result.id}`);
-        }
+        router.push(`/compras/facturas/${result.id}`);
         router.refresh();
       } else if (result.error === "duplicate_numero") {
         toast.error(tFac("avisos.duplicadoNumero"));
@@ -365,9 +360,7 @@ export function FacturaFormClient({
     <div className="flex flex-col gap-6 p-6 pb-24">
       <div>
         <Button variant="ghost" size="sm" asChild className="mb-2 -ml-2">
-          <Link
-            href={ocContext ? `/compras/oc/${ocContext.id}` : "/compras/facturas"}
-          >
+          <Link href="/compras/facturas">
             <ArrowLeft className="size-4" />
             {tFac("volver")}
           </Link>
@@ -557,13 +550,7 @@ export function FacturaFormClient({
           )}
           <div className="flex items-center gap-2">
             <Button variant="outline" asChild>
-              <Link
-                href={
-                  ocContext
-                    ? `/compras/oc/${ocContext.id}`
-                    : "/compras/facturas"
-                }
-              >
+              <Link href="/compras/facturas">
                 {tFac("acciones.cancelar")}
               </Link>
             </Button>

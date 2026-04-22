@@ -91,7 +91,6 @@ export function DataTable<T>({
     getPaginationRowModel: getPaginationRowModel(),
   });
 
-  const resultCount = filtered.length;
   const hasQuery = !!query.trim();
   const pageCount = table.getPageCount();
   const showPagination = pageCount > 1;
@@ -111,9 +110,6 @@ export function DataTable<T>({
           </div>
         ) : null}
         {filterSlot}
-        <div className="ml-auto text-sm text-muted-foreground">
-          {t("resultados", { count: resultCount })}
-        </div>
       </div>
 
       <div className="rounded-lg border border-border bg-card overflow-hidden">

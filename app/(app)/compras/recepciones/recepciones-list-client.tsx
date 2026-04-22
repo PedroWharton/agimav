@@ -15,7 +15,6 @@ import {
 } from "lucide-react";
 
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
 import {
   Select,
   SelectContent,
@@ -25,7 +24,6 @@ import {
 } from "@/components/ui/select";
 
 import { DataTable } from "@/components/app/data-table";
-import { PageHeader } from "@/components/app/page-header";
 import { Combobox } from "@/components/app/combobox";
 import { Toolbar } from "@/components/app/toolbar";
 import { KpiCard } from "@/components/stats/kpi-card";
@@ -202,17 +200,7 @@ export function RecepcionesListClient({
   ];
 
   return (
-    <div className="flex flex-col gap-6 p-6">
-      <PageHeader
-        title={tRec("titulo")}
-        description={tRec("descripcion")}
-        actions={
-          <Button asChild variant="outline">
-            <Link href="/compras/oc">{tRec("nuevaDesdeOc")}</Link>
-          </Button>
-        }
-      />
-
+    <div className="flex flex-col gap-6">
       <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
         <KpiCard
           icon={PackageCheck}

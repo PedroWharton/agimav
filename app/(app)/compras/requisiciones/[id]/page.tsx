@@ -78,10 +78,6 @@ export default async function RequisicionDetailPage({
   const canMutate =
     requisicion.estado === "Borrador" && (admin || isOwner);
   const canApprove = admin && requisicion.estado === "En Revisión";
-  const canAsignar =
-    admin &&
-    (requisicion.estado === "Aprobada" ||
-      requisicion.estado === "Asignado a Proveedor");
 
   const ocMap = new Map<
     number,
@@ -148,7 +144,6 @@ export default async function RequisicionDetailPage({
       currentUserName={currentUserName}
       canMutate={canMutate}
       canApprove={canApprove}
-      canAsignar={canAsignar}
     />
   );
 }

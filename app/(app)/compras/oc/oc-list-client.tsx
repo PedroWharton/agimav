@@ -15,7 +15,6 @@ import {
 } from "@/components/ui/select";
 
 import { DataTable } from "@/components/app/data-table";
-import { PageHeader } from "@/components/app/page-header";
 import { Combobox } from "@/components/app/combobox";
 import { Toolbar } from "@/components/app/toolbar";
 import { OcStatus } from "@/components/compras/oc-status";
@@ -119,7 +118,7 @@ export function OcListClient({
       header: tOc("campos.estado"),
       enableSorting: true,
       cell: ({ row }) => (
-        <OcStatus estado={row.original.estado} showProgress />
+        <OcStatus estado={row.original.estado} showProgress={false} />
       ),
     },
   ];
@@ -138,12 +137,7 @@ export function OcListClient({
   }
 
   return (
-    <div className="flex flex-col gap-6 p-6">
-      <PageHeader
-        title={tOc("titulo")}
-        description={tOc("descripcion")}
-      />
-
+    <div className="flex flex-col gap-6">
       <Toolbar>
         <Toolbar.Search
           value={search}
@@ -159,9 +153,7 @@ export function OcListClient({
               <SelectValue placeholder={tOc("filtros.estado")} />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value={ESTADO_ALL}>
-                {tOc("filtros.todos")}
-              </SelectItem>
+              <SelectItem value={ESTADO_ALL}>{tOc("filtros.todos")}</SelectItem>
               {OC_ESTADOS.map((e) => (
                 <SelectItem key={e} value={e}>
                   {tEstados(estadoKeyFor(e))}

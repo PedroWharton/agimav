@@ -12,7 +12,6 @@ import {
   Check,
   Send,
   Trash2,
-  Users,
   X,
 } from "lucide-react";
 import { toast } from "sonner";
@@ -115,7 +114,6 @@ export type RequisicionFormProps = {
   currentUserName: string | null;
   canMutate: boolean;
   canApprove: boolean;
-  canAsignar: boolean;
 };
 
 function toDateInput(iso: string | null | undefined): string {
@@ -142,7 +140,6 @@ export function RequisicionForm({
   currentUserName,
   canMutate,
   canApprove,
-  canAsignar,
 }: RequisicionFormProps) {
   const tReq = useTranslations("compras.requisiciones");
   const tCommon = useTranslations("listados.common");
@@ -450,16 +447,11 @@ export function RequisicionForm({
                 </>
               ) : null}
               {showActions &&
-              canAsignar &&
               (estado === "Aprobada" || estado === "Asignado a Proveedor") ? (
-                <Button asChild>
-                  <Link
-                    href={`/compras/requisiciones/${initial.id}/asignar`}
-                  >
-                    <Users className="size-4" />
-                    {estado === "Aprobada"
-                      ? tReq("acciones.asignarProveedores")
-                      : tReq("acciones.revisarAsignacion")}
+                <Button asChild variant="outline">
+                  <Link href="/compras/oc">
+                    <ArrowUpRight className="size-4" />
+                    {tReq("acciones.verEnOc")}
                   </Link>
                 </Button>
               ) : null}

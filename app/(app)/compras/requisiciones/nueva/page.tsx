@@ -52,7 +52,6 @@ export default async function NuevaRequisicionPage() {
       currentUserName={currentUserName}
       canMutate
       canApprove={false}
-      canAsignar={false}
     />
   );
 }

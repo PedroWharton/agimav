@@ -818,8 +818,7 @@
         "enviarRevision": "Enviar a revisión",
         "crear": "Crear requisición",
         "guardar": "Guardar",
-        "asignarProveedores": "Asignar proveedores",
-        "revisarAsignacion": "Revisar asignación"
+        "verEnOc": "Ver en Órdenes de compra"
       },
       "auditoria": {
         "titulo": "Auditoría",
@@ -851,7 +850,7 @@
           "rechazar": "Rechazar"
         },
         "aprobarTitulo": "Aprobar requisición #{id}",
-        "aprobarDescripcion": "Al aprobar, la requisición pasa a estado Aprobada y queda disponible para asignar proveedores.",
+        "aprobarDescripcion": "Al aprobar, la requisición pasa a estado Aprobada y sus líneas quedan disponibles en Órdenes de compra para asignar proveedor.",
         "rechazarTitulo": "Rechazar requisición #{id}",
         "rechazarDescripcion": "El rechazo es definitivo. La requisición queda solo lectura.",
         "comentarioOpcional": "Comentario (opcional)",
@@ -863,36 +862,6 @@
           "rechazadaExitoso": "Requisición #{id} rechazada.",
           "yaNoEsEnRevision": "La requisición ya no está en revisión."
         }
-      },
-      "asignar": {
-        "titulo": "Asignar proveedores · Requisición #{id}",
-        "descripcion": "Asigná un proveedor a cada línea para poder generar las órdenes de compra.",
-        "asignados": "{asignadas} de {total} líneas asignadas",
-        "seleccionar": "Seleccionar proveedor",
-        "bulk": {
-          "label": "Asignar todas a",
-          "placeholder": "Elegí un proveedor"
-        },
-        "columnas": {
-          "codigo": "Código",
-          "descripcion": "Descripción",
-          "cantidad": "Cantidad",
-          "unidad": "Unidad",
-          "proveedor": "Proveedor"
-        },
-        "acciones": {
-          "guardarBorrador": "Guardar asignación",
-          "generar": "Generar OCs"
-        },
-        "avisos": {
-          "guardadoExitoso": "Asignación guardada.",
-          "estadoIncorrecto": "La requisición ya no admite cambios de asignación.",
-          "generadoExitoso": "{count, plural, one {# OC generada} other {# OCs generadas}}.",
-          "asignarTodas": "Asigná un proveedor a todas las líneas antes de generar las OCs.",
-          "generarTitulo": "¿Generar {count, plural, one {# OC} other {# OCs}}?",
-          "generarLinea": "{nombre}: {count, plural, one {# línea} other {# líneas}}",
-          "sinGrupos": "Todavía no hay líneas asignadas."
-        }
       }
     },
     "subnav": {
@@ -903,8 +872,54 @@
     },
     "oc": {
       "titulo": "Órdenes de compra",
-      "descripcion": "Órdenes emitidas a proveedores.",
+      "descripcion": "Asignación de proveedores y órdenes emitidas.",
       "volver": "Volver a órdenes",
+      "tabs": {
+        "pendientes": "Pendientes de asignar",
+        "emitidas": "Órdenes emitidas"
+      },
+      "pendientes": {
+        "buscarPlaceholder": "Buscar por código o descripción…",
+        "urgente": "Urgente",
+        "normal": "Normal",
+        "elegirProveedor": "Seleccionar proveedor",
+        "filtros": {
+          "todas": "Todas las urgencias",
+          "urgentes": "Solo urgentes"
+        },
+        "columnas": {
+          "seleccionar": "Seleccionar ítem",
+          "seleccionarTodos": "Seleccionar todos",
+          "codigo": "Código",
+          "descripcion": "Descripción",
+          "cantidad": "Cant. total",
+          "unidad": "Unidad",
+          "urgencia": "Urgencia",
+          "requisiciones": "Requisiciones",
+          "requisicionesCount": "{count, plural, one {# requisición} other {# requisiciones}}",
+          "proveedor": "Proveedor"
+        },
+        "bulk": {
+          "seleccionados": "{count, plural, one {# ítem seleccionado} other {# ítems seleccionados}}",
+          "asignarTodos": "Asignar todos a",
+          "elegirProveedor": "Elegí un proveedor"
+        },
+        "acciones": {
+          "emitir": "Emitir OCs"
+        },
+        "avisos": {
+          "emitirTitulo": "¿Emitir órdenes para {items, plural, one {# ítem} other {# ítems}} en {proveedores, plural, one {# proveedor} other {# proveedores}}?",
+          "emitirLinea": "{proveedor}: {count, plural, one {# ítem} other {# ítems}}",
+          "emitidoExitoso": "{count, plural, one {# OC emitida} other {# OCs emitidas}}.",
+          "faltanProveedores": "{count, plural, one {# ítem seleccionado sin proveedor} other {# ítems seleccionados sin proveedor}}.",
+          "nadaSeleccionado": "No hay ítems seleccionados para emitir.",
+          "itemDrained": "Algún ítem seleccionado ya no tiene líneas pendientes. Refrescá la página."
+        },
+        "vacio": {
+          "titulo": "Sin líneas pendientes de asignar",
+          "descripcion": "Cuando haya requisiciones aprobadas sin OC emitida, van a aparecer acá agrupadas por material."
+        }
+      },
       "buscarPlaceholder": "Buscar por Nº, proveedor o comprador…",
       "resultadosCount": "{count, plural, one {# orden} other {# órdenes}}",
       "subtotalEstimado": "Subtotal estimado",
@@ -973,11 +988,35 @@
     },
     "recepciones": {
       "titulo": "Recepciones",
-      "descripcion": "Remitos recibidos contra órdenes de compra.",
+      "descripcion": "OCs pendientes de recibir e historial de remitos.",
       "volver": "Volver a recepciones",
       "nuevaDesdeOc": "Nueva recepción desde OC",
       "nuevaTitulo": "Nueva recepción · {numero} · {proveedor}",
       "nuevaDescripcion": "Cargá las cantidades efectivamente recibidas.",
+      "tabs": {
+        "pendientes": "Pendientes de recibir",
+        "historial": "Historial"
+      },
+      "pendientes": {
+        "buscarPlaceholder": "Buscar por OC o proveedor…",
+        "columnas": {
+          "pendientes": "Pend. / Total"
+        },
+        "acciones": {
+          "recibir": "Recibir",
+          "vistaCompleta": "Abrir vista completa"
+        },
+        "modal": {
+          "titulo": "Recibir · {numero} · {proveedor}",
+          "descripcion": "Cargá las cantidades y el nº de remito para registrar la recepción.",
+          "ayudaCantidad": "Editá la cantidad a recibir por línea. El máximo es el pendiente.",
+          "vistaCompleta": "Usar vista completa (adjuntos, destino, observaciones)"
+        },
+        "vacio": {
+          "titulo": "Sin OCs pendientes de recibir",
+          "descripcion": "Cuando haya OCs emitidas o parcialmente recibidas, aparecerán acá para registrar la recepción."
+        }
+      },
       "detalleTitulo": "Remito {remito}",
       "buscarPlaceholder": "Buscar por remito, proveedor u OC…",
       "resultadosCount": "{count, plural, one {# recepción} other {# recepciones}}",
@@ -990,7 +1029,8 @@
         "proveedor": "Proveedor",
         "recibidoPor": "Recibido por",
         "lineas": "Líneas",
-        "observaciones": "Observaciones"
+        "observaciones": "Observaciones",
+        "estado": "Estado"
       },
       "columnas": {
         "codigo": "Código",
@@ -1075,8 +1115,30 @@
     },
     "facturas": {
       "titulo": "Facturas",
-      "descripcion": "Facturas de proveedores asociadas a recepciones.",
+      "descripcion": "Pendientes de facturar e historial de facturas.",
       "volver": "Volver a facturas",
+      "tabs": {
+        "pendientes": "Pendientes de facturar",
+        "historial": "Historial"
+      },
+      "pendientes": {
+        "buscarPlaceholder": "Buscar por OC o proveedor…",
+        "columnas": {
+          "oc": "OC",
+          "fechaEmision": "Fecha OC",
+          "proveedor": "Proveedor",
+          "estado": "Estado",
+          "pendientes": "Pend. / Total",
+          "ultimaRecepcion": "Última recepción"
+        },
+        "acciones": {
+          "crear": "Crear factura"
+        },
+        "vacio": {
+          "titulo": "Sin OCs pendientes de facturar",
+          "descripcion": "Cuando haya recepciones sin factura asociada, van a aparecer acá."
+        }
+      },
       "nueva": "Nueva factura",
       "nuevaTitulo": "Nueva factura",
       "nuevaDescripcion": "Seleccioná el proveedor y asociá las líneas ya recibidas.",
