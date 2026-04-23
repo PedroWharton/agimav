@@ -1,10 +1,15 @@
 import { redirect } from "next/navigation";
 import { getTranslations } from "next-intl/server";
 
+import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/db";
+import { requireViewOrRedirect } from "@/lib/rbac";
 import { PageHeader } from "@/components/app/page-header";
 
 export default async function MaquinariaIndexPage() {
+  const session = await auth();
+  requireViewOrRedirect(session, "maquinaria.view");
+
   const t = await getTranslations("maquinaria.index");
 
   const defaultTipo =

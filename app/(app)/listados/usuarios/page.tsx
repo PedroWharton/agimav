@@ -1,6 +1,6 @@
 import { prisma } from "@/lib/db";
 import { auth } from "@/lib/auth";
-import { isAdmin, userIdFromSession } from "@/lib/rbac";
+import { hasPermission, requireViewOrRedirect, userIdFromSession } from "@/lib/rbac";
 
 import {
   UsuariosClient,
@@ -11,7 +11,8 @@ import {
 
 export default async function UsuariosPage() {
   const session = await auth();
-  const admin = isAdmin(session);
+  requireViewOrRedirect(session, "listados.view");
+  const canManage = hasPermission(session, "listados.usuarios.manage");
   const currentUserId = userIdFromSession(session);
 
   const [usuarios, roles] = await Promise.all([
@@ -59,7 +60,7 @@ export default async function UsuariosPage() {
     <UsuariosClient
       rows={rows}
       roles={rolOptions}
-      isAdmin={admin}
+      canManage={canManage}
       currentUserId={currentUserId}
       kpis={kpis}
     />

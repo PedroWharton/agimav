@@ -1,8 +1,13 @@
 import { prisma } from "@/lib/db";
+import { auth } from "@/lib/auth";
+import { requireViewOrRedirect } from "@/lib/rbac";
 
 import { HorometrosClient, type RegistroRow } from "./horometros-client";
 
 export default async function HorometrosPage() {
+  const session = await auth();
+  requireViewOrRedirect(session, "mantenimiento.view");
+
   const [registros, maquinarias] = await Promise.all([
     prisma.registroHorasMaquinaria.findMany({
       select: {

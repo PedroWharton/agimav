@@ -62,11 +62,11 @@ function norm(s: unknown): string {
 
 export function TiposUnidadClient({
   rows,
-  isAdmin,
+  canManage,
   kpis,
 }: {
   rows: TipoUnidadRow[];
-  isAdmin: boolean;
+  canManage: boolean;
   kpis: TiposUnidadKpis;
 }) {
   const t = useTranslations();
@@ -185,7 +185,7 @@ export function TiposUnidadClient({
       header: "",
       enableSorting: false,
       cell: ({ row }) => {
-        if (!isAdmin) return null;
+        if (!canManage) return null;
         const r = row.original;
         return (
           <div onClick={(e) => e.stopPropagation()}>
@@ -228,7 +228,7 @@ export function TiposUnidadClient({
         title={t("listados.tiposUnidad.titulo")}
         description={t("listados.tiposUnidad.descripcion")}
         actions={
-          isAdmin ? (
+          canManage ? (
             <Button onClick={openCreate}>
               <Plus className="size-4" />
               {t("listados.common.crear")}
@@ -266,11 +266,11 @@ export function TiposUnidadClient({
         columns={columns}
         data={filtered}
         initialSort={[{ id: "nombre", desc: false }]}
-        onRowClick={isAdmin ? openEdit : undefined}
+        onRowClick={canManage ? openEdit : undefined}
         emptyState={
           search.trim()
             ? t("listados.common.sinResultadosFiltrados")
-            : isAdmin
+            : canManage
               ? t("listados.common.vacioAdmin", {
                   entidad: t("listados.tiposUnidad.plural"),
                 })

@@ -102,6 +102,10 @@ export function PermisosEditorClient({
         );
       } else if (result.error === "unknown_codigo") {
         toast.error("Permiso desconocido. Recargá la página e intentá de nuevo.");
+      } else if (result.error === "permisos_not_seeded") {
+        toast.error(
+          "El catálogo de permisos no está cargado en la base de datos. Ejecutá 'npm run db:seed' y volvé a intentar.",
+        );
       } else {
         toast.error("No se pudieron guardar los permisos.");
       }

@@ -1,7 +1,7 @@
 import { notFound, redirect } from "next/navigation";
 
 import { auth } from "@/lib/auth";
-import { isAdmin } from "@/lib/rbac";
+import { hasPermission, requireViewOrRedirect } from "@/lib/rbac";
 import { prisma } from "@/lib/db";
 
 import { PlantillaDetailClient } from "./plantilla-detail-client";
@@ -13,7 +13,7 @@ export default async function PlantillaDetailPage({
   params: Promise<{ id: string }>;
 }) {
   const session = await auth();
-  if (!session?.user) redirect("/login");
+  requireViewOrRedirect(session, "mantenimiento.view");
 
   const { id: idParam } = await params;
   const id = Number.parseInt(idParam, 10);
@@ -129,7 +129,7 @@ export default async function PlantillaDetailPage({
         nombre: up.nombre,
         localidad: up.localidad?.nombre ?? null,
       }))}
-      isAdmin={isAdmin(session)}
+      canManage={hasPermission(session, "mantenimiento.plantillas.manage")}
     />
   );
 }

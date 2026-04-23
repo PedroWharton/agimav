@@ -4,7 +4,7 @@ import { getTranslations } from "next-intl/server";
 
 import { prisma } from "@/lib/db";
 import { auth } from "@/lib/auth";
-import { isPañolero, userNameFromSession } from "@/lib/rbac";
+import { hasPermission, requireViewOrRedirect, userNameFromSession } from "@/lib/rbac";
 import { formatOCNumber } from "@/lib/compras/oc-number";
 
 import { EmptyState } from "@/components/app/states";
@@ -22,8 +22,10 @@ export default async function NuevaRecepcionPage({
   searchParams: Promise<{ ocId?: string; oc?: string }>;
 }) {
   const session = await auth();
-  if (!session?.user) redirect("/login");
-  if (!isPañolero(session)) redirect("/compras/recepciones");
+  requireViewOrRedirect(session, "compras.view");
+  if (!hasPermission(session, "compras.recepcion.create")) {
+    redirect("/compras/recepciones");
+  }
 
   const tRec = await getTranslations("compras.recepciones");
 

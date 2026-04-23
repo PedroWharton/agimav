@@ -6,9 +6,7 @@ import { z } from "zod";
 import { prisma } from "@/lib/db";
 import { auth } from "@/lib/auth";
 import {
-  isAdmin,
-  isPañolero,
-  requireAuthenticated,
+  requirePermission,
   userNameFromSession,
 } from "@/lib/rbac";
 
@@ -35,11 +33,10 @@ export async function createRecepcion(
 ): Promise<RecepcionActionResult> {
   const session = await auth();
   try {
-    requireAuthenticated(session);
+    requirePermission(session, "compras.recepcion.create");
   } catch {
     return { ok: false, error: "forbidden" };
   }
-  if (!isPañolero(session)) return { ok: false, error: "forbidden" };
   const creadoPor = userNameFromSession(session);
 
   const parsed = recepcionSchema.safeParse(raw);
@@ -200,11 +197,10 @@ export async function cerrarRecepcionSinFactura(
 ): Promise<CerrarSinFacturaResult> {
   const session = await auth();
   try {
-    requireAuthenticated(session);
+    requirePermission(session, "compras.recepcion.update");
   } catch {
     return { ok: false, error: "forbidden" };
   }
-  if (!isAdmin(session)) return { ok: false, error: "forbidden" };
   const cerradoPor = userNameFromSession(session);
 
   const parsed = cerrarSinFacturaSchema.safeParse(raw);

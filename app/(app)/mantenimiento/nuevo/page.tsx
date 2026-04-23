@@ -2,6 +2,7 @@ import { notFound, redirect } from "next/navigation";
 
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/db";
+import { hasPermission, requireViewOrRedirect } from "@/lib/rbac";
 
 import { MantenimientoFormClient } from "./mantenimiento-form-client";
 
@@ -13,7 +14,10 @@ export default async function NuevoMantenimientoPage({
   searchParams: Promise<Record<string, string | string[] | undefined>>;
 }) {
   const session = await auth();
-  if (!session?.user) redirect("/login");
+  requireViewOrRedirect(session, "mantenimiento.view");
+  if (!hasPermission(session, "mantenimiento.create")) {
+    redirect("/mantenimiento");
+  }
 
   const sp = await searchParams;
   const rawMaquinariaId = Array.isArray(sp.maquinariaId)

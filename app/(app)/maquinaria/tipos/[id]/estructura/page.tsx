@@ -5,7 +5,7 @@ import { ArrowLeft } from "lucide-react";
 
 import { prisma } from "@/lib/db";
 import { auth } from "@/lib/auth";
-import { isAdmin } from "@/lib/rbac";
+import { hasPermission } from "@/lib/rbac";
 import { Button } from "@/components/ui/button";
 import { PageHeader } from "@/components/app/page-header";
 import {
@@ -19,7 +19,7 @@ export default async function EstructuraPage({
   params: Promise<{ id: string }>;
 }) {
   const session = await auth();
-  if (!isAdmin(session)) {
+  if (!hasPermission(session, "maquinaria.tipos.manage")) {
     redirect("/maquinaria");
   }
 

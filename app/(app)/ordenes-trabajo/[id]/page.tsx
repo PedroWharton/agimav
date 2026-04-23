@@ -1,7 +1,8 @@
-import { notFound, redirect } from "next/navigation";
+import { notFound } from "next/navigation";
 
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/db";
+import { requireViewOrRedirect } from "@/lib/rbac";
 
 import { OtDetailClient } from "./ot-detail-client";
 import { OT_PRIORIDADES, type OtPrioridad } from "../types";
@@ -12,7 +13,7 @@ export default async function OtDetailPage({
   params: Promise<{ id: string }>;
 }) {
   const session = await auth();
-  if (!session?.user) redirect("/login");
+  requireViewOrRedirect(session, "ot.view");
 
   const { id: idParam } = await params;
   const id = Number.parseInt(idParam, 10);

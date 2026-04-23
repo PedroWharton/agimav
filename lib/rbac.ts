@@ -1,9 +1,24 @@
+import { redirect } from "next/navigation";
 import type { Session } from "next-auth";
 
 import { ADMIN_ALL } from "@/lib/permisos/catalog";
 
 export const ADMIN_ROL = "Administrador";
-export const PANOLERO_ROL = "Pañolero";
+
+/**
+ * Ordered list of (view permiso → landing path). Used by `firstViewPath`
+ * to pick a sensible home for a user based on the permisos they hold.
+ * Matches the sidebar order.
+ */
+const VIEW_ROUTES: Array<{ codigo: string; path: string }> = [
+  { codigo: "maquinaria.view", path: "/maquinaria" },
+  { codigo: "inventario.view", path: "/inventario" },
+  { codigo: "compras.view", path: "/compras/solicitudes" },
+  { codigo: "mantenimiento.view", path: "/mantenimiento" },
+  { codigo: "ot.view", path: "/ordenes-trabajo" },
+  { codigo: "estadisticas.view", path: "/estadisticas" },
+  { codigo: "listados.view", path: "/listados" },
+];
 
 function rolOf(session: Session | null | undefined): string | null {
   if (!session?.user || !("rol" in session.user)) return null;
@@ -19,10 +34,9 @@ export function permisosOf(session: Session | null | undefined): string[] {
 /**
  * True when the session carries `codigo` (or the `admin.all` umbrella).
  *
- * Transition fallback: if the JWT predates Slice A (no `permisos` array) and
- * the rol is `Administrador`, grant. Keeps existing admin sessions alive
- * until the next login. Drop this fallback once we're confident all JWTs
- * have cycled (~2 weeks post-deploy).
+ * Transition fallback: if the JWT predates the permisos rollout (no `permisos`
+ * array) and the rol is `Administrador`, grant. Keeps existing admin sessions
+ * alive until next login. Drop once all JWTs have cycled (~2 weeks post-deploy).
  */
 export function hasPermission(
   session: Session | null | undefined,
@@ -41,21 +55,48 @@ export function requirePermission(
   if (!hasPermission(session, codigo)) throw new Error("forbidden");
 }
 
+/**
+ * First route the user can view, or `null` if they hold no view permiso.
+ * Used to pick a landing page after login and as the redirect target when a
+ * user hits a route they aren't authorized to view.
+ */
+export function firstViewPath(session: Session | null | undefined): string | null {
+  for (const { codigo, path } of VIEW_ROUTES) {
+    if (hasPermission(session, codigo)) return path;
+  }
+  return null;
+}
+
+/**
+ * Page-level guard. Call at the top of a server component after loading the
+ * session. Redirects to the user's first viewable module if they're missing
+ * the required codigo, or to `/sin-permisos` if they have no views at all.
+ *
+ * Never returns when unauthorized — throws a Next.js redirect.
+ */
+export function requireViewOrRedirect(
+  session: Session | null | undefined,
+  codigo: string,
+): void {
+  if (!session?.user) redirect("/login");
+  if (hasPermission(session, codigo)) return;
+  const fallback = firstViewPath(session);
+  if (fallback && fallback !== currentRoutePrefixFor(codigo)) {
+    redirect(fallback);
+  }
+  redirect("/sin-permisos");
+}
+
+function currentRoutePrefixFor(codigo: string): string | null {
+  return VIEW_ROUTES.find((r) => r.codigo === codigo)?.path ?? null;
+}
+
 export function isAdmin(session: Session | null | undefined): boolean {
   return hasPermission(session, ADMIN_ALL);
 }
 
-export function isPañolero(session: Session | null | undefined): boolean {
-  const r = rolOf(session);
-  return r === PANOLERO_ROL || r === ADMIN_ROL || isAdmin(session);
-}
-
 export function requireAdmin(session: Session | null | undefined): asserts session is Session {
   if (!isAdmin(session)) throw new Error("forbidden");
-}
-
-export function requirePañolero(session: Session | null | undefined): asserts session is Session {
-  if (!isPañolero(session)) throw new Error("forbidden");
 }
 
 export function requireAuthenticated(

@@ -6,8 +6,7 @@ import { z } from "zod";
 import { prisma } from "@/lib/db";
 import { auth } from "@/lib/auth";
 import {
-  isAdmin,
-  requireAuthenticated,
+  requirePermission,
   userNameFromSession,
 } from "@/lib/rbac";
 
@@ -39,11 +38,10 @@ export async function createFactura(
 ): Promise<FacturaActionResult> {
   const session = await auth();
   try {
-    requireAuthenticated(session);
+    requirePermission(session, "compras.factura.create");
   } catch {
     return { ok: false, error: "forbidden" };
   }
-  if (!isAdmin(session)) return { ok: false, error: "forbidden" };
   const usuario = userNameFromSession(session);
 
   const parsed = facturaSchema.safeParse(raw);

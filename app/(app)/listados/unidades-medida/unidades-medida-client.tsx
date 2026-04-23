@@ -66,11 +66,11 @@ function norm(s: unknown): string {
 
 export function UnidadesMedidaClient({
   rows,
-  isAdmin,
+  canManage,
   kpis,
 }: {
   rows: UnidadMedidaRow[];
-  isAdmin: boolean;
+  canManage: boolean;
   kpis: UnidadesMedidaKpis;
 }) {
   const t = useTranslations();
@@ -191,7 +191,7 @@ export function UnidadesMedidaClient({
       header: "",
       enableSorting: false,
       cell: ({ row }) => {
-        if (!isAdmin) return null;
+        if (!canManage) return null;
         const r = row.original;
         return (
           <div onClick={(e) => e.stopPropagation()}>
@@ -234,7 +234,7 @@ export function UnidadesMedidaClient({
         title={t("listados.unidadesMedida.titulo")}
         description={t("listados.unidadesMedida.descripcion")}
         actions={
-          isAdmin ? (
+          canManage ? (
             <Button onClick={openCreate}>
               <Plus className="size-4" />
               {t("listados.common.crear")}
@@ -265,11 +265,11 @@ export function UnidadesMedidaClient({
         columns={columns}
         data={filtered}
         initialSort={[{ id: "nombre", desc: false }]}
-        onRowClick={isAdmin ? openEdit : undefined}
+        onRowClick={canManage ? openEdit : undefined}
         emptyState={
           search.trim()
             ? t("listados.common.sinResultadosFiltrados")
-            : isAdmin
+            : canManage
               ? t("listados.common.vacioAdmin", {
                   entidad: t("listados.unidadesMedida.plural"),
                 })

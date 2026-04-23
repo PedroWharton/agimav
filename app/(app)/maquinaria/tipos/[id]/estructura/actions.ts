@@ -5,7 +5,7 @@ import { z } from "zod";
 
 import { prisma } from "@/lib/db";
 import { auth } from "@/lib/auth";
-import { requireAdmin } from "@/lib/rbac";
+import { requirePermission } from "@/lib/rbac";
 
 import type { AtributoActionResult } from "./types";
 
@@ -83,7 +83,7 @@ export async function createNivelAtributo(
 ): Promise<AtributoActionResult> {
   const session = await auth();
   try {
-    requireAdmin(session);
+    requirePermission(session, "maquinaria.tipos.manage");
   } catch {
     return { ok: false, error: "forbidden" };
   }
@@ -137,7 +137,7 @@ export async function updateNivelAtributo(
 ): Promise<AtributoActionResult> {
   const session = await auth();
   try {
-    requireAdmin(session);
+    requirePermission(session, "maquinaria.tipos.manage");
   } catch {
     return { ok: false, error: "forbidden" };
   }
@@ -208,7 +208,7 @@ export async function setNivelAtributoActivo(
 ): Promise<AtributoActionResult> {
   const session = await auth();
   try {
-    requireAdmin(session);
+    requirePermission(session, "maquinaria.tipos.manage");
   } catch {
     return { ok: false, error: "forbidden" };
   }
@@ -236,7 +236,7 @@ export async function deleteNivelAtributo(
 ): Promise<AtributoActionResult> {
   const session = await auth();
   try {
-    requireAdmin(session);
+    requirePermission(session, "maquinaria.tipos.manage");
   } catch {
     return { ok: false, error: "forbidden" };
   }

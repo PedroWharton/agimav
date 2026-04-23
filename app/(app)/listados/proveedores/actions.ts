@@ -5,7 +5,7 @@ import { z } from "zod";
 
 import { prisma } from "@/lib/db";
 import { auth } from "@/lib/auth";
-import { requireAdmin, userIdFromSession } from "@/lib/rbac";
+import { requirePermission, userIdFromSession } from "@/lib/rbac";
 
 import { CONDICIONES_IVA } from "./types";
 import type { ActionResult } from "./types";
@@ -59,7 +59,7 @@ const schema = z.object({
 export async function createProveedor(raw: unknown): Promise<ActionResult> {
   const session = await auth();
   try {
-    requireAdmin(session);
+    requirePermission(session, "listados.proveedores.manage");
   } catch {
     return { ok: false, error: "forbidden" };
   }
@@ -92,7 +92,7 @@ export async function updateProveedor(
 ): Promise<ActionResult> {
   const session = await auth();
   try {
-    requireAdmin(session);
+    requirePermission(session, "listados.proveedores.manage");
   } catch {
     return { ok: false, error: "forbidden" };
   }
@@ -121,7 +121,7 @@ export async function updateProveedor(
 export async function deactivateProveedor(id: number): Promise<ActionResult> {
   const session = await auth();
   try {
-    requireAdmin(session);
+    requirePermission(session, "listados.proveedores.manage");
   } catch {
     return { ok: false, error: "forbidden" };
   }
@@ -139,7 +139,7 @@ export async function deactivateProveedor(id: number): Promise<ActionResult> {
 export async function reactivateProveedor(id: number): Promise<ActionResult> {
   const session = await auth();
   try {
-    requireAdmin(session);
+    requirePermission(session, "listados.proveedores.manage");
   } catch {
     return { ok: false, error: "forbidden" };
   }

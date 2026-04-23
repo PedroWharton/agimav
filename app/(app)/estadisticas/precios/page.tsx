@@ -4,6 +4,7 @@ import { getTranslations } from "next-intl/server";
 import { ArrowLeft, Activity, DollarSign, ListOrdered } from "lucide-react";
 
 import { auth } from "@/lib/auth";
+import { requireViewOrRedirect } from "@/lib/rbac";
 import { prisma } from "@/lib/db";
 import { Button } from "@/components/ui/button";
 import { PageHeader } from "@/components/app/page-header";
@@ -67,7 +68,7 @@ export default async function PreciosPage({
   searchParams: Promise<{ itemId?: string; range?: string }>;
 }) {
   const session = await auth();
-  if (!session?.user) redirect("/login");
+  requireViewOrRedirect(session, "estadisticas.view");
 
   const t = await getTranslations("estadisticas");
   const sp = await searchParams;

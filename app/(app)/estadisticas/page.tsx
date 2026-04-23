@@ -13,7 +13,7 @@ import {
 } from "lucide-react";
 
 import { auth } from "@/lib/auth";
-import { hasPermission } from "@/lib/rbac";
+import { hasPermission, requireViewOrRedirect } from "@/lib/rbac";
 import {
   loadBacklogPorMaquina,
   loadGastoPorRubro,
@@ -481,9 +481,7 @@ function TallerTrendCard({
                     opacity={0.35}
                     rx={2}
                   >
-                    <title>
-                      {formatMonthYear(p.mes)}: {p.mantenimientos} mant.
-                    </title>
+                    <title>{`${formatMonthYear(p.mes)}: ${p.mantenimientos} mant.`}</title>
                   </rect>
                   <text
                     x={cx}
@@ -513,9 +511,7 @@ function TallerTrendCard({
                 r={2.5}
                 fill="var(--brand)"
               >
-                <title>
-                  {labels[i]}: {formatCurrencyARS(values[i] ?? 0)}
-                </title>
+                <title>{`${labels[i]}: ${formatCurrencyARS(values[i] ?? 0)}`}</title>
               </circle>
             ))}
           </svg>
@@ -641,7 +637,7 @@ function HeatmapCard({
 
 export default async function EstadisticasPage() {
   const session = await auth();
-  if (!session?.user) redirect("/login");
+  requireViewOrRedirect(session, "estadisticas.view");
   const canViewProveedores = hasPermission(session, "estadisticas.proveedores.view");
 
   const t = await getTranslations("estadisticas");

@@ -79,8 +79,24 @@ export async function updateRolPermisos(raw: unknown): Promise<ActionResult> {
 
   const permisoRows = await prisma.permiso.findMany({
     where: { codigo: { in: codigos } },
-    select: { id: true },
+    select: { id: true, codigo: true },
   });
+
+  // Guard: if any requested codigo didn't resolve to a DB row, the `permisos`
+  // table is out of sync with `lib/permisos/catalog.ts`. Most commonly: the
+  // migration ran but the seed didn't. Fail loud instead of committing a
+  // no-op transaction that would silently "succeed" and change nothing.
+  if (permisoRows.length !== codigos.length) {
+    const totalPermisos = await prisma.permiso.count();
+    console.error(
+      `[updateRolPermisos] catalog mismatch: ` +
+        `requested ${codigos.length} codigos, DB resolved ${permisoRows.length}. ` +
+        `permisos table has ${totalPermisos} rows total. ` +
+        `Run 'npm run db:seed' to populate the catalog.`,
+    );
+    return { ok: false, error: "permisos_not_seeded" };
+  }
+
   const targetPermisoIds = new Set(permisoRows.map((p) => p.id));
   const createdById = userIdFromSession(session);
 

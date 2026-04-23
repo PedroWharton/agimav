@@ -5,7 +5,7 @@ import { z } from "zod";
 
 import { prisma } from "@/lib/db";
 import { auth } from "@/lib/auth";
-import { requireAdmin, userIdFromSession } from "@/lib/rbac";
+import { requirePermission, userIdFromSession } from "@/lib/rbac";
 import type { Prisma } from "@/lib/generated/prisma/client";
 
 import type { ActionResult } from "./types";
@@ -34,7 +34,7 @@ const payloadSchema = z.object({
 export async function createMaquinaria(raw: unknown): Promise<ActionResult> {
   const session = await auth();
   try {
-    requireAdmin(session);
+    requirePermission(session, "maquinaria.create");
   } catch {
     return { ok: false, error: "forbidden" };
   }
@@ -77,7 +77,7 @@ export async function updateMaquinaria(
 ): Promise<ActionResult> {
   const session = await auth();
   try {
-    requireAdmin(session);
+    requirePermission(session, "maquinaria.update");
   } catch {
     return { ok: false, error: "forbidden" };
   }
@@ -125,7 +125,7 @@ export async function updateMaquinaria(
 export async function deleteMaquinaria(id: number): Promise<ActionResult> {
   const session = await auth();
   try {
-    requireAdmin(session);
+    requirePermission(session, "maquinaria.delete");
   } catch {
     return { ok: false, error: "forbidden" };
   }

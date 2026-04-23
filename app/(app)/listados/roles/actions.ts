@@ -5,7 +5,7 @@ import { z } from "zod";
 
 import { prisma } from "@/lib/db";
 import { auth } from "@/lib/auth";
-import { requireAdmin, userIdFromSession } from "@/lib/rbac";
+import { requirePermission, userIdFromSession } from "@/lib/rbac";
 
 import type { ActionResult } from "./types";
 
@@ -16,7 +16,7 @@ const rolSchema = z.object({
 export async function createRol(raw: unknown): Promise<ActionResult> {
   const session = await auth();
   try {
-    requireAdmin(session);
+    requirePermission(session, "listados.roles.manage");
   } catch {
     return { ok: false, error: "forbidden" };
   }
@@ -42,7 +42,7 @@ export async function createRol(raw: unknown): Promise<ActionResult> {
 export async function updateRol(id: number, raw: unknown): Promise<ActionResult> {
   const session = await auth();
   try {
-    requireAdmin(session);
+    requirePermission(session, "listados.roles.manage");
   } catch {
     return { ok: false, error: "forbidden" };
   }
@@ -66,7 +66,7 @@ export async function updateRol(id: number, raw: unknown): Promise<ActionResult>
 export async function deleteRol(id: number): Promise<ActionResult & { usuariosCount?: number }> {
   const session = await auth();
   try {
-    requireAdmin(session);
+    requirePermission(session, "listados.roles.manage");
   } catch {
     return { ok: false, error: "forbidden" };
   }

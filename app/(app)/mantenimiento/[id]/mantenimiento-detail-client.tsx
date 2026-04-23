@@ -160,13 +160,15 @@ function formatARS(n: number): string {
 
 export function MantenimientoDetailClient({
   data,
-  isAdmin,
+  canUpdate,
+  canCancel,
   usuarios,
   unidadesProductivas,
   inventario,
 }: {
   data: MantenimientoDetailData;
-  isAdmin: boolean;
+  canUpdate: boolean;
+  canCancel: boolean;
   usuarios: UsuarioOpt[];
   unidadesProductivas: UpOpt[];
   inventario: InventarioOption[];
@@ -177,7 +179,7 @@ export function MantenimientoDetailClient({
   const router = useRouter();
 
   const terminal = isTerminal(data.estado);
-  const transitions = allowedTransitions(data.estado, { isAdmin });
+  const transitions = allowedTransitions(data.estado, { canCancel });
 
   const reparacionEn: "Chacra" | "Taller" | undefined =
     data.estado === "En Reparación - Chacra"
@@ -568,7 +570,7 @@ export function MantenimientoDetailClient({
             title={data.maquinaria.label}
             subtitle={subtitle}
             actions={
-              !terminal ? (
+              !terminal && canUpdate ? (
                 <Button
                   variant="outline"
                   size="sm"

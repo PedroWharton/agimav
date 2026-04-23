@@ -6,7 +6,7 @@ import { z } from "zod";
 import { prisma } from "@/lib/db";
 import { auth } from "@/lib/auth";
 import {
-  requireAuthenticated,
+  requirePermission,
   userNameFromSession,
 } from "@/lib/rbac";
 import { formatOTNumber } from "@/lib/ot/ot-number";
@@ -55,7 +55,7 @@ export async function createOT(
 ): Promise<OtActionResult> {
   const session = await auth();
   try {
-    requireAuthenticated(session);
+    requirePermission(session, "ot.create");
   } catch {
     return { ok: false, error: "forbidden" };
   }
@@ -103,7 +103,7 @@ export async function updateOT(
 ): Promise<OtActionResult> {
   const session = await auth();
   try {
-    requireAuthenticated(session);
+    requirePermission(session, "ot.update");
   } catch {
     return { ok: false, error: "forbidden" };
   }
@@ -167,7 +167,7 @@ export async function saveOtInsumos(
 ): Promise<OtActionResult> {
   const session = await auth();
   try {
-    requireAuthenticated(session);
+    requirePermission(session, "ot.update");
   } catch {
     return { ok: false, error: "forbidden" };
   }
@@ -247,7 +247,7 @@ export async function saveOtInsumos(
 export async function cerrarOT(id: number): Promise<OtActionResult> {
   const session = await auth();
   try {
-    requireAuthenticated(session);
+    requirePermission(session, "ot.close");
   } catch {
     return { ok: false, error: "forbidden" };
   }
@@ -323,7 +323,7 @@ export async function cerrarOT(id: number): Promise<OtActionResult> {
 export async function cancelarOT(id: number): Promise<OtActionResult> {
   const session = await auth();
   try {
-    requireAuthenticated(session);
+    requirePermission(session, "ot.update");
   } catch {
     return { ok: false, error: "forbidden" };
   }

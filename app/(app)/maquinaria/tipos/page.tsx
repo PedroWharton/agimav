@@ -2,13 +2,13 @@ import { redirect } from "next/navigation";
 
 import { prisma } from "@/lib/db";
 import { auth } from "@/lib/auth";
-import { isAdmin } from "@/lib/rbac";
+import { hasPermission } from "@/lib/rbac";
 
 import { TiposClient, type TipoRow, type TiposKpis } from "./tipos-client";
 
 export default async function MaquinariaTiposPage() {
   const session = await auth();
-  if (!isAdmin(session)) {
+  if (!hasPermission(session, "maquinaria.tipos.manage")) {
     redirect("/maquinaria");
   }
 

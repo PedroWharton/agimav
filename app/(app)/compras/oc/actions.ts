@@ -6,8 +6,7 @@ import { z } from "zod";
 import { prisma } from "@/lib/db";
 import { auth } from "@/lib/auth";
 import {
-  isAdmin,
-  requireAuthenticated,
+  requirePermission,
   userNameFromSession,
 } from "@/lib/rbac";
 import { formatOCNumber } from "@/lib/compras/oc-number";
@@ -17,11 +16,10 @@ import type { EmitirOcsResult, OcActionResult } from "./types";
 export async function cancelarOC(id: number): Promise<OcActionResult> {
   const session = await auth();
   try {
-    requireAuthenticated(session);
+    requirePermission(session, "compras.oc.update");
   } catch {
     return { ok: false, error: "forbidden" };
   }
-  if (!isAdmin(session)) return { ok: false, error: "forbidden" };
   const canceladoPor = userNameFromSession(session);
 
   try {
@@ -113,11 +111,10 @@ export async function emitirOcsAgrupadas(
 ): Promise<EmitirOcsResult> {
   const session = await auth();
   try {
-    requireAuthenticated(session);
+    requirePermission(session, "compras.oc.create");
   } catch {
     return { ok: false, error: "forbidden" };
   }
-  if (!isAdmin(session)) return { ok: false, error: "forbidden" };
   const comprador = userNameFromSession(session);
 
   const parsed = emitirSchema.safeParse(raw);

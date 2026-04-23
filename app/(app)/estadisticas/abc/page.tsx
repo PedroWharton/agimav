@@ -4,6 +4,7 @@ import { getTranslations } from "next-intl/server";
 import { ArrowLeft, Layers, ListOrdered, Wallet } from "lucide-react";
 
 import { auth } from "@/lib/auth";
+import { requireViewOrRedirect } from "@/lib/rbac";
 import { Button } from "@/components/ui/button";
 import { PageHeader } from "@/components/app/page-header";
 import { InlineState } from "@/components/app/states";
@@ -26,7 +27,7 @@ export default async function AbcPage({
   searchParams: Promise<{ range?: string }>;
 }) {
   const session = await auth();
-  if (!session?.user) redirect("/login");
+  requireViewOrRedirect(session, "estadisticas.view");
 
   const t = await getTranslations("estadisticas");
   const sp = await searchParams;

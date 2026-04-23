@@ -7,8 +7,8 @@ import { z } from "zod";
 import { prisma } from "@/lib/db";
 import { auth } from "@/lib/auth";
 import {
-  isAdmin,
-  requireAuthenticated,
+  hasPermission,
+  requirePermission,
   userNameFromSession,
 } from "@/lib/rbac";
 
@@ -78,7 +78,8 @@ function canMutate(
 ): boolean {
   if (!session?.user) return false;
   if (solicitud.estado !== "Borrador") return false;
-  if (isAdmin(session)) return true;
+  if (hasPermission(session, "compras.requisicion.approve")) return true;
+  if (!hasPermission(session, "compras.requisicion.create")) return false;
   const name = userNameFromSession(session);
   return !!name && !!solicitud.creadoPor && name === solicitud.creadoPor;
 }
@@ -88,7 +89,7 @@ export async function createSolicitud(
 ): Promise<SolicitudActionResult> {
   const session = await auth();
   try {
-    requireAuthenticated(session);
+    requirePermission(session, "compras.requisicion.create");
   } catch {
     return { ok: false, error: "forbidden" };
   }
@@ -146,7 +147,7 @@ export async function updateSolicitud(
 ): Promise<SolicitudActionResult> {
   const session = await auth();
   try {
-    requireAuthenticated(session);
+    requirePermission(session, "compras.requisicion.create");
   } catch {
     return { ok: false, error: "forbidden" };
   }
@@ -243,7 +244,7 @@ export async function deleteSolicitud(
 ): Promise<SolicitudActionResult> {
   const session = await auth();
   try {
-    requireAuthenticated(session);
+    requirePermission(session, "compras.requisicion.create");
   } catch {
     return { ok: false, error: "forbidden" };
   }
@@ -273,7 +274,7 @@ export async function submitSolicitud(
 ): Promise<SolicitudActionResult> {
   const session = await auth();
   try {
-    requireAuthenticated(session);
+    requirePermission(session, "compras.requisicion.create");
   } catch {
     return { ok: false, error: "forbidden" };
   }
@@ -338,11 +339,10 @@ export async function approveSolicitud(
 ): Promise<SolicitudActionResult> {
   const session = await auth();
   try {
-    requireAuthenticated(session);
+    requirePermission(session, "compras.requisicion.approve");
   } catch {
     return { ok: false, error: "forbidden" };
   }
-  if (!isAdmin(session)) return { ok: false, error: "forbidden" };
 
   const existing = await prisma.requisicion.findUnique({
     where: { id },
@@ -433,11 +433,10 @@ export async function rejectSolicitud(
 ): Promise<SolicitudActionResult> {
   const session = await auth();
   try {
-    requireAuthenticated(session);
+    requirePermission(session, "compras.requisicion.approve");
   } catch {
     return { ok: false, error: "forbidden" };
   }
-  if (!isAdmin(session)) return { ok: false, error: "forbidden" };
 
   const existing = await prisma.requisicion.findUnique({
     where: { id },

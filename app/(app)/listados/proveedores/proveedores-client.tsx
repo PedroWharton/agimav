@@ -147,12 +147,12 @@ function norm(s: unknown): string {
 export function ProveedoresClient({
   rows,
   localidades,
-  isAdmin,
+  canManage,
   kpis,
 }: {
   rows: ProveedorRow[];
   localidades: LocalidadOption[];
-  isAdmin: boolean;
+  canManage: boolean;
   kpis: ProveedoresKpis;
 }) {
   const t = useTranslations();
@@ -330,7 +330,7 @@ export function ProveedoresClient({
       header: "",
       enableSorting: false,
       cell: ({ row }) => {
-        if (!isAdmin) return null;
+        if (!canManage) return null;
         const p = row.original;
         const activo = p.estado === "activo";
         return (
@@ -378,7 +378,7 @@ export function ProveedoresClient({
         title={t("listados.proveedores.titulo")}
         description={t("listados.proveedores.descripcion")}
         actions={
-          isAdmin ? (
+          canManage ? (
             <Button onClick={openCreate}>
               <Plus className="size-4" />
               {t("listados.common.crear")}
@@ -453,9 +453,9 @@ export function ProveedoresClient({
         columns={columns}
         data={filtered}
         initialSort={[{ id: "nombre", desc: false }]}
-        onRowClick={isAdmin ? openEdit : undefined}
+        onRowClick={canManage ? openEdit : undefined}
         emptyState={
-          isAdmin
+          canManage
             ? t("listados.common.vacioAdmin", {
                 entidad: t("listados.proveedores.plural"),
               })

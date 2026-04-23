@@ -6,7 +6,7 @@ import { z } from "zod";
 import { prisma } from "@/lib/db";
 import { auth } from "@/lib/auth";
 import {
-  requireAuthenticated,
+  requirePermission,
   userNameFromSession,
 } from "@/lib/rbac";
 
@@ -53,7 +53,7 @@ export async function createRegistroHoras(
 ): Promise<HorometroActionResult> {
   const session = await auth();
   try {
-    requireAuthenticated(session);
+    requirePermission(session, "mantenimiento.horas.register");
   } catch {
     return { ok: false, error: "forbidden" };
   }

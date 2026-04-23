@@ -2,6 +2,7 @@ import { notFound } from "next/navigation";
 
 import { prisma } from "@/lib/db";
 import { auth } from "@/lib/auth";
+import { requireViewOrRedirect } from "@/lib/rbac";
 
 import { PerItemMovimientosClient } from "./per-item-client";
 
@@ -26,7 +27,7 @@ export default async function PerItemMovimientosPage({
   searchParams: Promise<Search>;
 }) {
   const session = await auth();
-  if (!session?.user) return null;
+  requireViewOrRedirect(session, "inventario.view");
 
   const { id: idStr } = await params;
   const id = Number(idStr);

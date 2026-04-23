@@ -3,7 +3,6 @@ import { getTranslations } from "next-intl/server";
 
 import { SidebarNav, type SidebarBadges } from "@/components/app/sidebar-nav";
 import { auth, signOut } from "@/lib/auth";
-import { isAdmin } from "@/lib/rbac";
 
 export type { SidebarBadges };
 
@@ -23,7 +22,9 @@ export async function Sidebar({ badges }: { badges?: SidebarBadges }) {
 
   const user = session?.user;
   const nombre = user?.name?.trim() || user?.email || "—";
-  const role = isAdmin(session) ? "Administrador" : "Usuario";
+  const rolFromSession =
+    user && "rol" in user ? ((user as { rol?: string | null }).rol ?? null) : null;
+  const role = rolFromSession ?? "Usuario";
   const initials = computeInitials(user?.name, user?.email);
   const signOutLabel = t("nav.cerrarSesion");
 

@@ -8,8 +8,8 @@ import type { Prisma } from "@/lib/generated/prisma/client";
 import { prisma } from "@/lib/db";
 import { auth } from "@/lib/auth";
 import {
-  isAdmin,
-  requireAuthenticated,
+  hasPermission,
+  requirePermission,
   userNameFromSession,
 } from "@/lib/rbac";
 import {
@@ -99,7 +99,7 @@ export async function createMantenimiento(
 ): Promise<MantActionResult> {
   const session = await auth();
   try {
-    requireAuthenticated(session);
+    requirePermission(session, "mantenimiento.create");
   } catch {
     return { ok: false, error: "forbidden" };
   }
@@ -212,7 +212,7 @@ export async function updateMantenimientoHeader(
 ): Promise<MantActionResult> {
   const session = await auth();
   try {
-    requireAuthenticated(session);
+    requirePermission(session, "mantenimiento.update");
   } catch {
     return { ok: false, error: "forbidden" };
   }
@@ -337,7 +337,7 @@ export async function transitionEstado(
 ): Promise<MantActionResult> {
   const session = await auth();
   try {
-    requireAuthenticated(session);
+    requirePermission(session, "mantenimiento.update");
   } catch {
     return { ok: false, error: "forbidden" };
   }
@@ -352,7 +352,7 @@ export async function transitionEstado(
   }
   const { target } = parsed.data;
 
-  if (target === "Cancelado" && !isAdmin(session)) {
+  if (target === "Cancelado" && !hasPermission(session, "mantenimiento.cancel")) {
     return { ok: false, error: "forbidden" };
   }
 
@@ -550,7 +550,7 @@ export async function saveInsumos(
 ): Promise<MantActionResult> {
   const session = await auth();
   try {
-    requireAuthenticated(session);
+    requirePermission(session, "mantenimiento.update");
   } catch {
     return { ok: false, error: "forbidden" };
   }
@@ -635,7 +635,7 @@ export async function saveTareas(
 ): Promise<MantActionResult> {
   const session = await auth();
   try {
-    requireAuthenticated(session);
+    requirePermission(session, "mantenimiento.update");
   } catch {
     return { ok: false, error: "forbidden" };
   }
@@ -716,7 +716,7 @@ export async function addObservacion(
 ): Promise<MantActionResult> {
   const session = await auth();
   try {
-    requireAuthenticated(session);
+    requirePermission(session, "mantenimiento.update");
   } catch {
     return { ok: false, error: "forbidden" };
   }

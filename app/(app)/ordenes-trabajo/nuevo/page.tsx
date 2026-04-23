@@ -2,12 +2,16 @@ import { redirect } from "next/navigation";
 
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/db";
+import { hasPermission, requireViewOrRedirect } from "@/lib/rbac";
 
 import { OtForm } from "../ot-form";
 
 export default async function NuevaOtPage() {
   const session = await auth();
-  if (!session?.user) redirect("/login");
+  requireViewOrRedirect(session, "ot.view");
+  if (!hasPermission(session, "ot.create")) {
+    redirect("/ordenes-trabajo");
+  }
 
   const [usuarios, localidades, unidadesProductivas] = await Promise.all([
     prisma.usuario.findMany({

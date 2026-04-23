@@ -1,4 +1,6 @@
 import { prisma } from "@/lib/db";
+import { auth } from "@/lib/auth";
+import { requireViewOrRedirect } from "@/lib/rbac";
 import { formatOCNumber } from "@/lib/compras/oc-number";
 
 import {
@@ -22,6 +24,9 @@ type PendingOcAccumulator = {
 };
 
 export default async function FacturasListPage() {
+  const session = await auth();
+  requireViewOrRedirect(session, "compras.view");
+
   const [facturas, ocsConPendientes] = await Promise.all([
     prisma.factura.findMany({
       select: {

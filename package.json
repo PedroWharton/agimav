@@ -12,6 +12,7 @@
     "db:generate": "prisma generate",
     "db:migrate": "prisma migrate dev",
     "db:seed": "tsx --env-file=.env.local prisma/seed.ts",
+    "db:seed-permisos": "tsx --env-file=.env.local scripts/seed-permisos.ts",
     "db:studio": "prisma studio",
     "db:migrate-legacy": "tsx --env-file=.env.local scripts/migrate-from-sqlite.ts",
     "db:cleanup-inventario": "tsx --env-file=.env.local scripts/inventario-cleanup.ts"

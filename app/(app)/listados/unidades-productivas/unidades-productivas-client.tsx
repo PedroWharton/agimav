@@ -94,13 +94,13 @@ export function UnidadesProductivasClient({
   rows,
   localidades,
   tipos,
-  isAdmin,
+  canManage,
   kpis,
 }: {
   rows: UnidadProductivaRow[];
   localidades: LocalidadOption[];
   tipos: TipoUnidadOption[];
-  isAdmin: boolean;
+  canManage: boolean;
   kpis: UnidadesProductivasKpis;
 }) {
   const t = useTranslations();
@@ -267,7 +267,7 @@ export function UnidadesProductivasClient({
       header: "",
       enableSorting: false,
       cell: ({ row }) => {
-        if (!isAdmin) return null;
+        if (!canManage) return null;
         const u = row.original;
         return (
           <div onClick={(e) => e.stopPropagation()}>
@@ -310,7 +310,7 @@ export function UnidadesProductivasClient({
         title={t("listados.unidadesProductivas.titulo")}
         description={t("listados.unidadesProductivas.descripcion")}
         actions={
-          isAdmin ? (
+          canManage ? (
             <Button onClick={openCreate}>
               <Plus className="size-4" />
               {t("listados.common.crear")}
@@ -387,11 +387,11 @@ export function UnidadesProductivasClient({
         columns={columns}
         data={filtered}
         initialSort={[{ id: "nombre", desc: false }]}
-        onRowClick={isAdmin ? openEdit : undefined}
+        onRowClick={canManage ? openEdit : undefined}
         emptyState={
           hasActiveFilters
             ? t("listados.common.sinResultadosFiltrados")
-            : isAdmin
+            : canManage
               ? t("listados.common.vacioAdmin", {
                   entidad: t("listados.unidadesProductivas.plural"),
                 })

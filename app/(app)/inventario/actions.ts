@@ -7,7 +7,7 @@ import { Prisma } from "@/lib/generated/prisma/client";
 
 import { prisma } from "@/lib/db";
 import { auth } from "@/lib/auth";
-import { requireAdmin, requirePañolero, userIdFromSession } from "@/lib/rbac";
+import { requirePermission, userIdFromSession } from "@/lib/rbac";
 import { round4 } from "@/lib/format";
 import { ITEM_HEADERS } from "@/lib/xlsx-headers";
 
@@ -54,7 +54,7 @@ function fieldErrorsFromZod(err: z.ZodError): Record<string, string> {
 export async function createItem(raw: unknown): Promise<InventarioActionResult> {
   const session = await auth();
   try {
-    requireAdmin(session);
+    requirePermission(session, "inventario.create");
   } catch {
     return { ok: false, error: "forbidden" };
   }
@@ -100,7 +100,7 @@ export async function updateItem(
 ): Promise<InventarioActionResult> {
   const session = await auth();
   try {
-    requireAdmin(session);
+    requirePermission(session, "inventario.update");
   } catch {
     return { ok: false, error: "forbidden" };
   }
@@ -264,7 +264,7 @@ export async function registerMovimiento(
 ): Promise<InventarioActionResult> {
   const session = await auth();
   try {
-    requirePañolero(session);
+    requirePermission(session, "inventario.movimiento.create");
   } catch {
     return { ok: false, error: "forbidden" };
   }
@@ -375,7 +375,7 @@ export async function registerMovimiento(
 export async function deleteItem(id: number): Promise<InventarioActionResult> {
   const session = await auth();
   try {
-    requireAdmin(session);
+    requirePermission(session, "inventario.delete");
   } catch {
     return { ok: false, error: "forbidden" };
   }
@@ -714,7 +714,7 @@ export async function previewImportInventario(
 ): Promise<ImportPreview | { error: string }> {
   const session = await auth();
   try {
-    requireAdmin(session);
+    requirePermission(session, "inventario.import_export");
   } catch {
     return { error: "forbidden" };
   }
@@ -789,7 +789,7 @@ export async function commitImportInventario(
 > {
   const session = await auth();
   try {
-    requireAdmin(session);
+    requirePermission(session, "inventario.import_export");
   } catch {
     return { ok: false, error: "forbidden" };
   }

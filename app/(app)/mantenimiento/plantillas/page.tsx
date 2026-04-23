@@ -1,12 +1,13 @@
 import { prisma } from "@/lib/db";
 import { auth } from "@/lib/auth";
-import { isAdmin } from "@/lib/rbac";
+import { hasPermission, requireViewOrRedirect } from "@/lib/rbac";
 
 import { PlantillasClient, type PlantillaRow } from "./plantillas-client";
 
 export default async function PlantillasListPage() {
   const session = await auth();
-  const admin = isAdmin(session);
+  requireViewOrRedirect(session, "mantenimiento.view");
+  const canManage = hasPermission(session, "mantenimiento.plantillas.manage");
 
   const rows = await prisma.plantillaMantenimiento.findMany({
     select: {
@@ -38,5 +39,5 @@ export default async function PlantillasListPage() {
     mantenimientosCount: p._count.mantenimientos,
   }));
 
-  return <PlantillasClient rows={data} isAdmin={admin} />;
+  return <PlantillasClient rows={data} canManage={canManage} />;
 }

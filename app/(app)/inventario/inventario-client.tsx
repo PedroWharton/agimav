@@ -206,7 +206,10 @@ export function InventarioClient({
   localidades,
   unidadesProductivas,
   unidadesMedida,
-  isAdmin,
+  canCreate,
+  canUpdate,
+  canDelete,
+  canImport,
   canRegisterMovimiento,
   kpis,
   lastMovimientoAt,
@@ -216,7 +219,10 @@ export function InventarioClient({
   localidades: string[];
   unidadesProductivas: string[];
   unidadesMedida: string[];
-  isAdmin: boolean;
+  canCreate: boolean;
+  canUpdate: boolean;
+  canDelete: boolean;
+  canImport: boolean;
   canRegisterMovimiento: boolean;
   kpis: InventarioKpis;
   lastMovimientoAt: Date | null;
@@ -515,8 +521,9 @@ export function InventarioClient({
       header: "",
       enableSorting: false,
       cell: ({ row }) => {
-        if (!canRegisterMovimiento && !isAdmin) return null;
+        if (!canRegisterMovimiento && !canUpdate && !canDelete) return null;
         const item = row.original;
+        const showAdminActions = canUpdate || canDelete;
         return (
           <div onClick={(e) => e.stopPropagation()}>
             <ActionsMenu>
@@ -530,29 +537,33 @@ export function InventarioClient({
                   {t("inventario.movimientos.verHistorial")}
                 </Link>
               </DropdownMenuItem>
-              {isAdmin ? (
+              {showAdminActions ? (
                 <>
                   <DropdownMenuSeparator />
-                  <DropdownMenuItem onClick={() => openEdit(item)}>
-                    {t("listados.common.editar")}
-                  </DropdownMenuItem>
-                  <ConfirmDialog
-                    trigger={
-                      <DropdownMenuItem
-                        onSelect={(e) => e.preventDefault()}
-                        className="text-destructive focus:text-destructive"
-                      >
-                        {t("listados.common.eliminar")}
-                      </DropdownMenuItem>
-                    }
-                    title={t("inventario.avisos.eliminarPregunta", {
-                      nombre: item.descripcion,
-                    })}
-                    description="Si el item tiene movimientos o está referenciado en otros módulos, no podrá eliminarse."
-                    confirmLabel={t("listados.common.eliminar")}
-                    destructive
-                    onConfirm={() => onDelete(item)}
-                  />
+                  {canUpdate ? (
+                    <DropdownMenuItem onClick={() => openEdit(item)}>
+                      {t("listados.common.editar")}
+                    </DropdownMenuItem>
+                  ) : null}
+                  {canDelete ? (
+                    <ConfirmDialog
+                      trigger={
+                        <DropdownMenuItem
+                          onSelect={(e) => e.preventDefault()}
+                          className="text-destructive focus:text-destructive"
+                        >
+                          {t("listados.common.eliminar")}
+                        </DropdownMenuItem>
+                      }
+                      title={t("inventario.avisos.eliminarPregunta", {
+                        nombre: item.descripcion,
+                      })}
+                      description="Si el item tiene movimientos o está referenciado en otros módulos, no podrá eliminarse."
+                      confirmLabel={t("listados.common.eliminar")}
+                      destructive
+                      onConfirm={() => onDelete(item)}
+                    />
+                  ) : null}
                 </>
               ) : null}
             </ActionsMenu>
@@ -605,7 +616,7 @@ export function InventarioClient({
               <Download className="size-4" />
               {t("inventario.exportar")}
             </Button>
-            {isAdmin ? (
+            {canImport ? (
               <Button
                 type="button"
                 variant="outline"
@@ -615,7 +626,7 @@ export function InventarioClient({
                 {t("inventario.importar.titulo")}
               </Button>
             ) : null}
-            {isAdmin ? (
+            {canCreate ? (
               <Button onClick={openCreate}>
                 <Plus className="size-4" />
                 {t("inventario.nuevoItem")}
@@ -740,7 +751,7 @@ export function InventarioClient({
         initialSort={[{ id: "descripcion", desc: false }]}
         onRowClick={openDetail}
         emptyState={
-          isAdmin
+          canCreate
             ? t("inventario.avisos.vacioAdmin")
             : t("inventario.avisos.vacio")
         }
@@ -968,7 +979,7 @@ export function InventarioClient({
         footer={
           detail ? (
             <>
-              {isAdmin ? (
+              {canUpdate ? (
                 <Button
                   type="button"
                   size="sm"

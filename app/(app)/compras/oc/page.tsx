@@ -1,4 +1,6 @@
 import { prisma } from "@/lib/db";
+import { auth } from "@/lib/auth";
+import { requireViewOrRedirect } from "@/lib/rbac";
 
 import { OcPageClient } from "./oc-page-client";
 import type { OcRow } from "./oc-list-client";
@@ -8,6 +10,9 @@ import type {
 } from "./oc-pendientes-client";
 
 export default async function OcListPage() {
+  const session = await auth();
+  requireViewOrRedirect(session, "compras.view");
+
   const [ocs, pendientes, proveedores] = await Promise.all([
     prisma.ordenCompra.findMany({
       select: {

@@ -1,13 +1,20 @@
 import { prisma } from "@/lib/db";
 import { auth } from "@/lib/auth";
-import { isAdmin, isPañolero } from "@/lib/rbac";
+import { hasPermission, requireViewOrRedirect } from "@/lib/rbac";
 
 import { InventarioClient, type InventarioRow } from "./inventario-client";
 
 export default async function InventarioPage() {
   const session = await auth();
-  const admin = isAdmin(session);
-  const panolero = isPañolero(session);
+  requireViewOrRedirect(session, "inventario.view");
+  const canCreate = hasPermission(session, "inventario.create");
+  const canUpdate = hasPermission(session, "inventario.update");
+  const canDelete = hasPermission(session, "inventario.delete");
+  const canImport = hasPermission(session, "inventario.import_export");
+  const canRegisterMovimiento = hasPermission(
+    session,
+    "inventario.movimiento.create",
+  );
 
   const [
     items,
@@ -101,8 +108,11 @@ export default async function InventarioPage() {
       localidades={localidadesDistinct}
       unidadesProductivas={unidadesProductivasNombres}
       unidadesMedida={unidadesMedidaNombres}
-      isAdmin={admin}
-      canRegisterMovimiento={panolero}
+      canCreate={canCreate}
+      canUpdate={canUpdate}
+      canDelete={canDelete}
+      canImport={canImport}
+      canRegisterMovimiento={canRegisterMovimiento}
       kpis={kpis}
       lastMovimientoAt={lastMovimiento?.fecha ?? null}
     />

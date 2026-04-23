@@ -1,15 +1,17 @@
-import { notFound, redirect } from "next/navigation";
+import { redirect } from "next/navigation";
 
 import { auth } from "@/lib/auth";
-import { isAdmin } from "@/lib/rbac";
+import { hasPermission, requireViewOrRedirect } from "@/lib/rbac";
 import { prisma } from "@/lib/db";
 
 import { PlantillaForm } from "../plantilla-form";
 
 export default async function NuevaPlantillaPage() {
   const session = await auth();
-  if (!session?.user) redirect("/login");
-  if (!isAdmin(session)) notFound();
+  requireViewOrRedirect(session, "mantenimiento.view");
+  if (!hasPermission(session, "mantenimiento.plantillas.manage")) {
+    redirect("/mantenimiento/plantillas");
+  }
 
   const [tipos, inventario] = await Promise.all([
     prisma.maquinariaTipo.findMany({
@@ -48,7 +50,7 @@ export default async function NuevaPlantillaPage() {
         descripcion: i.descripcion,
         unidadMedida: i.unidadMedida,
       }))}
-      isAdmin={true}
+      canManage={true}
     />
   );
 }

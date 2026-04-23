@@ -1,9 +1,14 @@
 import { prisma } from "@/lib/db";
+import { auth } from "@/lib/auth";
+import { requireViewOrRedirect } from "@/lib/rbac";
 
 import { MantenimientosClient, type MantenimientoRow } from "./mantenimientos-client";
 import { MANT_ESTADOS_ACTIVOS } from "@/lib/mantenimiento/estado";
 
 export default async function MantenimientoListPage() {
+  const session = await auth();
+  requireViewOrRedirect(session, "mantenimiento.view");
+
   const rows = await prisma.mantenimiento.findMany({
     select: {
       id: true,

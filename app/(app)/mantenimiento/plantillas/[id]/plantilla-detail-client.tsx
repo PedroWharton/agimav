@@ -39,7 +39,7 @@ export function PlantillaDetailClient({
   maquinarias,
   usuarios,
   unidadesProductivas,
-  isAdmin,
+  canManage,
 }: {
   initial: PlantillaFormInitial;
   tipos: TipoMaquinariaOpt[];
@@ -47,7 +47,7 @@ export function PlantillaDetailClient({
   maquinarias: MaquinariaOpt[];
   usuarios: UsuarioOpt[];
   unidadesProductivas: UpOpt[];
-  isAdmin: boolean;
+  canManage: boolean;
 }) {
   const tM = useTranslations("mantenimiento");
   const tP = useTranslations("mantenimiento.plantillas");
@@ -187,7 +187,7 @@ export function PlantillaDetailClient({
         initial={initial}
         tipos={tipos}
         inventario={inventario}
-        isAdmin={isAdmin}
+        canManage={canManage}
       />
     </div>
   );

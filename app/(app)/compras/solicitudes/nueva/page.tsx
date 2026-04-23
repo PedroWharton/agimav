@@ -2,13 +2,20 @@ import { redirect } from "next/navigation";
 
 import { prisma } from "@/lib/db";
 import { auth } from "@/lib/auth";
-import { userNameFromSession } from "@/lib/rbac";
+import {
+  hasPermission,
+  requireViewOrRedirect,
+  userNameFromSession,
+} from "@/lib/rbac";
 
 import { SolicitudForm } from "../solicitud-form";
 
 export default async function NuevaSolicitudPage() {
   const session = await auth();
-  if (!session?.user) redirect("/login");
+  requireViewOrRedirect(session, "compras.view");
+  if (!hasPermission(session, "compras.requisicion.create")) {
+    redirect("/compras/solicitudes");
+  }
   const currentUserName = userNameFromSession(session);
 
   const [inventario, unidades, localidades, usuarios] = await Promise.all([

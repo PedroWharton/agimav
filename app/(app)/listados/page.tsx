@@ -11,9 +11,11 @@ import {
   type LucideIcon,
 } from "lucide-react";
 
+import { auth } from "@/lib/auth";
+import { prisma } from "@/lib/db";
+import { requireViewOrRedirect } from "@/lib/rbac";
 import { PageHeader } from "@/components/app/page-header";
 import { CatalogTile } from "@/components/listados/catalog-tile";
-import { prisma } from "@/lib/db";
 
 type TileEntry = {
   href: string;
@@ -37,6 +39,9 @@ function joinSample(items: string[], maxItems = 3, ellipsis = "…"): string {
 }
 
 export default async function ListadosIndexPage() {
+  const session = await auth();
+  requireViewOrRedirect(session, "listados.view");
+
   const t = await getTranslations();
 
   const [

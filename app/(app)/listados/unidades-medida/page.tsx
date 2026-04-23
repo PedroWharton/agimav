@@ -1,6 +1,6 @@
 import { prisma } from "@/lib/db";
 import { auth } from "@/lib/auth";
-import { isAdmin } from "@/lib/rbac";
+import { hasPermission, requireViewOrRedirect } from "@/lib/rbac";
 
 import {
   UnidadesMedidaClient,
@@ -10,7 +10,8 @@ import {
 
 export default async function UnidadesMedidaPage() {
   const session = await auth();
-  const admin = isAdmin(session);
+  requireViewOrRedirect(session, "listados.view");
+  const canManage = hasPermission(session, "listados.master_data.manage");
 
   const rows = await prisma.unidadMedida.findMany({
     select: { id: true, nombre: true, abreviacion: true, createdAt: true },
@@ -21,5 +22,5 @@ export default async function UnidadesMedidaPage() {
 
   const kpis: UnidadesMedidaKpis = { total: data.length };
 
-  return <UnidadesMedidaClient rows={data} isAdmin={admin} kpis={kpis} />;
+  return <UnidadesMedidaClient rows={data} canManage={canManage} kpis={kpis} />;
 }

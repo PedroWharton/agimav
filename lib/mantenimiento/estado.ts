@@ -46,21 +46,21 @@ export type MantTransition =
 
 export function allowedTransitions(
   estado: string,
-  opts: { isAdmin: boolean },
+  opts: { canCancel: boolean },
 ): MantTransition[] {
   const out: MantTransition[] = [];
   switch (estado) {
     case "Pendiente":
       out.push("iniciarChacra", "iniciarTaller");
-      if (opts.isAdmin) out.push("cancelar");
+      if (opts.canCancel) out.push("cancelar");
       break;
     case "En Reparación - Chacra":
       out.push("cambiarTaller", "finalizar");
-      if (opts.isAdmin) out.push("cancelar");
+      if (opts.canCancel) out.push("cancelar");
       break;
     case "En Reparación - Taller":
       out.push("cambiarTaller", "finalizar");
-      if (opts.isAdmin) out.push("cancelar");
+      if (opts.canCancel) out.push("cancelar");
       break;
   }
   return out;

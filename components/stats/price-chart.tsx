@@ -181,9 +181,7 @@ export function PriceChart({
           r={3}
           fill="currentColor"
         >
-          <title>
-            {points[i]!.fecha}: ARS {p.v.toLocaleString("es-AR")}
-          </title>
+          <title>{`${points[i]!.fecha}: ARS ${p.v.toLocaleString("es-AR")}`}</title>
         </circle>
       ))}
 

@@ -145,9 +145,7 @@ export function Heatmap({
                 rx={3}
                 fill={fill}
               >
-                <title>
-                  {row} · {col}: {value}
-                </title>
+                <title>{`${row} · ${col}: ${value}`}</title>
               </rect>
               {label ? (
                 <text

@@ -2,7 +2,7 @@ import { redirect } from "next/navigation";
 
 import { prisma } from "@/lib/db";
 import { auth } from "@/lib/auth";
-import { isAdmin } from "@/lib/rbac";
+import { hasPermission, requireViewOrRedirect } from "@/lib/rbac";
 
 import {
   FacturaFormClient,
@@ -19,8 +19,10 @@ export default async function NuevaFacturaPage({
   searchParams: Promise<{ proveedorId?: string; oc?: string }>;
 }) {
   const session = await auth();
-  if (!session?.user) redirect("/login");
-  if (!isAdmin(session)) redirect("/compras/facturas");
+  requireViewOrRedirect(session, "compras.view");
+  if (!hasPermission(session, "compras.factura.create")) {
+    redirect("/compras/facturas");
+  }
 
   const { proveedorId: rawPid, oc: rawOc } = await searchParams;
   const ocIdParam = rawOc ? Number.parseInt(rawOc, 10) : null;

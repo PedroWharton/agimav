@@ -4,7 +4,7 @@ import * as XLSX from "xlsx";
 
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/db";
-import { requireAdmin } from "@/lib/rbac";
+import { requirePermission } from "@/lib/rbac";
 import { rangeToGte } from "@/lib/stats/range";
 
 import type {
@@ -18,7 +18,7 @@ export async function computeProveedoresGasto(
   range: ProvRange,
 ): Promise<ProvResult> {
   const session = await auth();
-  requireAdmin(session);
+  requirePermission(session, "estadisticas.proveedores.view");
 
   const gte = rangeToGte(range);
 
@@ -72,7 +72,7 @@ export async function exportarProveedores(
   range: ProvRange,
 ): Promise<ExportResult> {
   const session = await auth();
-  requireAdmin(session);
+  requirePermission(session, "estadisticas.export");
 
   const result = await computeProveedoresGasto(range);
 

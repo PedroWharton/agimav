@@ -82,7 +82,8 @@ export function SolicitudesClient({
 }: {
   rows: SolicitudRow[];
   unidadesProductivas: string[];
-  isAdmin: boolean;
+  canCreate: boolean;
+  canApprove: boolean;
   currentUserName: string | null;
   kpis: SolicitudesKpis;
 }) {

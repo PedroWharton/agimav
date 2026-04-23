@@ -2,7 +2,7 @@ import { notFound } from "next/navigation";
 
 import { prisma } from "@/lib/db";
 import { auth } from "@/lib/auth";
-import { isAdmin } from "@/lib/rbac";
+import { hasPermission, requireViewOrRedirect } from "@/lib/rbac";
 
 import {
   MaquinariaClient,
@@ -21,7 +21,11 @@ export default async function MaquinariaTipoPage({
   params: Promise<{ tipoId: string }>;
 }) {
   const session = await auth();
-  const admin = isAdmin(session);
+  requireViewOrRedirect(session, "maquinaria.view");
+  const canCreate = hasPermission(session, "maquinaria.create");
+  const canUpdate = hasPermission(session, "maquinaria.update");
+  const canDelete = hasPermission(session, "maquinaria.delete");
+  const canConfigureColumns = hasPermission(session, "maquinaria.columnas.configure");
 
   const { tipoId: tipoIdParam } = await params;
   const tipoId = Number.parseInt(tipoIdParam, 10);
@@ -192,7 +196,10 @@ export default async function MaquinariaTipoPage({
   return (
     <div className="flex flex-col gap-6 p-6">
       <MaquinariaClient
-        admin={admin}
+        canCreate={canCreate}
+        canUpdate={canUpdate}
+        canDelete={canDelete}
+        canConfigureColumns={canConfigureColumns}
         tipo={{
           id: tipo.id,
           nombre: tipo.nombre,

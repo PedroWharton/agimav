@@ -2,7 +2,7 @@ import { notFound, redirect } from "next/navigation";
 
 import { prisma } from "@/lib/db";
 import { auth } from "@/lib/auth";
-import { hasPermission, isAdmin } from "@/lib/rbac";
+import { hasPermission } from "@/lib/rbac";
 import {
   MODULO_LABELS,
   MODULO_ORDEN,
@@ -57,7 +57,7 @@ export default async function PermisosRolPage({
       rol={{ id: rol.id, nombre: rol.nombre, usuariosCount: rol._count.usuarios }}
       groups={groups}
       locked={rol.nombre === "Administrador"}
-      canEdit={isAdmin(session) || hasPermission(session, "listados.roles.manage")}
+      canEdit={hasPermission(session, "listados.roles.manage")}
     />
   );
 }

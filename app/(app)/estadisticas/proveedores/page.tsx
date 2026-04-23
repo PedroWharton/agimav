@@ -4,7 +4,7 @@ import { getTranslations } from "next-intl/server";
 import { ArrowLeft, Building2, PieChart, Wallet } from "lucide-react";
 
 import { auth } from "@/lib/auth";
-import { isAdmin } from "@/lib/rbac";
+import { hasPermission } from "@/lib/rbac";
 import { Button } from "@/components/ui/button";
 import { PageHeader } from "@/components/app/page-header";
 import { InlineState } from "@/components/app/states";
@@ -39,7 +39,9 @@ export default async function ProveedoresStatsPage({
 }) {
   const session = await auth();
   if (!session?.user) redirect("/login");
-  if (!isAdmin(session)) redirect("/estadisticas");
+  if (!hasPermission(session, "estadisticas.proveedores.view")) {
+    redirect("/estadisticas");
+  }
 
   const t = await getTranslations("estadisticas");
   const sp = await searchParams;

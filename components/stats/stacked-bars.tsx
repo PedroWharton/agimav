@@ -174,9 +174,7 @@ export function StackedBars({
                   fill={fill}
                   rx={2}
                 >
-                  <title>
-                    {group.label} · {seg.key}: {fmt(seg.value)}
-                  </title>
+                  <title>{`${group.label} · ${seg.key}: ${fmt(seg.value)}`}</title>
                 </rect>
               );
             })}

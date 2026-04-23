@@ -123,13 +123,13 @@ function norm(s: unknown): string {
 export function UsuariosClient({
   rows,
   roles,
-  isAdmin,
+  canManage,
   currentUserId,
   kpis,
 }: {
   rows: UsuarioRow[];
   roles: RolOption[];
-  isAdmin: boolean;
+  canManage: boolean;
   currentUserId: number | null;
   kpis: UsuariosKpis;
 }) {
@@ -347,7 +347,7 @@ export function UsuariosClient({
       header: "",
       enableSorting: false,
       cell: ({ row }) => {
-        if (!isAdmin) return null;
+        if (!canManage) return null;
         const u = row.original;
         const isSelf = currentUserId === u.id;
         const activo = u.estado === "activo";
@@ -413,7 +413,7 @@ export function UsuariosClient({
         title={t("listados.usuarios.titulo")}
         description={t("listados.usuarios.descripcion")}
         actions={
-          isAdmin ? (
+          canManage ? (
             <Button onClick={openCreate}>
               <Plus className="size-4" />
               {t("listados.common.crear")}
@@ -486,11 +486,11 @@ export function UsuariosClient({
         columns={columns}
         data={filtered}
         initialSort={[{ id: "nombre", desc: false }]}
-        onRowClick={isAdmin ? openEdit : undefined}
+        onRowClick={canManage ? openEdit : undefined}
         emptyState={
           hasActiveFilters
             ? t("listados.common.sinResultadosFiltrados")
-            : isAdmin
+            : canManage
               ? t("listados.common.vacioAdmin", {
                   entidad: t("listados.usuarios.plural"),
                 })

@@ -68,13 +68,13 @@ export function PlantillaForm({
   initial,
   tipos,
   inventario,
-  isAdmin,
+  canManage,
 }: {
   mode: "new" | "edit";
   initial: PlantillaFormInitial;
   tipos: TipoMaquinariaOpt[];
   inventario: InventarioLite[];
-  isAdmin: boolean;
+  canManage: boolean;
 }) {
   const tM = useTranslations("mantenimiento");
   const tP = useTranslations("mantenimiento.plantillas");
@@ -240,7 +240,7 @@ export function PlantillaForm({
           title={mode === "new" ? tP("nuevaTitulo") : tP("editarTitulo")}
           description={tP("formAyuda")}
           actions={
-            mode === "edit" && isAdmin ? (
+            mode === "edit" && canManage ? (
               <ConfirmDialog
                 trigger={
                   <Button variant="outline" size="sm" disabled={busy}>

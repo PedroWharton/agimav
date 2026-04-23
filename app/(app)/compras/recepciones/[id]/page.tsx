@@ -6,7 +6,7 @@ import { es } from "date-fns/locale";
 
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/db";
-import { isAdmin } from "@/lib/rbac";
+import { hasPermission, requireViewOrRedirect } from "@/lib/rbac";
 import { formatOCNumber } from "@/lib/compras/oc-number";
 import { getTranslations } from "next-intl/server";
 
@@ -59,12 +59,13 @@ export default async function RecepcionDetailPage({
   if (!rec) notFound();
 
   const session = await auth();
-  const admin = isAdmin(session);
+  requireViewOrRedirect(session, "compras.view");
+  const canUpdate = hasPermission(session, "compras.recepcion.update");
   const tRec = await getTranslations("compras.recepciones");
   const numeroOc = rec.oc.numeroOc ?? formatOCNumber(rec.oc.id);
   const pendientes = rec.detalle.filter((d) => !d.facturado).length;
   const canCerrarSinFactura =
-    admin && !rec.cerradaSinFactura && pendientes > 0;
+    canUpdate && !rec.cerradaSinFactura && pendientes > 0;
 
   return (
     <div className="flex flex-col gap-6 p-6">

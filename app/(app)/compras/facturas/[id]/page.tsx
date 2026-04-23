@@ -5,7 +5,9 @@ import { es } from "date-fns/locale";
 import { ArrowLeft } from "lucide-react";
 import { getTranslations } from "next-intl/server";
 
+import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/db";
+import { requireViewOrRedirect } from "@/lib/rbac";
 import { formatOCNumber } from "@/lib/compras/oc-number";
 
 import { Button } from "@/components/ui/button";
@@ -23,6 +25,9 @@ export default async function FacturaDetailPage({
 }: {
   params: Promise<{ id: string }>;
 }) {
+  const session = await auth();
+  requireViewOrRedirect(session, "compras.view");
+
   const { id: idParam } = await params;
   const id = Number.parseInt(idParam, 10);
   if (!Number.isFinite(id)) notFound();

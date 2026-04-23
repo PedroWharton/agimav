@@ -6,8 +6,8 @@ import { z } from "zod";
 import { prisma } from "@/lib/db";
 import { auth } from "@/lib/auth";
 import {
-  isAdmin,
-  requireAuthenticated,
+  hasPermission,
+  requirePermission,
   userNameFromSession,
 } from "@/lib/rbac";
 import { MANT_PRIORIDADES } from "@/lib/mantenimiento/estado";
@@ -60,7 +60,7 @@ export async function createPlantilla(
 ): Promise<PlantillaActionResult> {
   const session = await auth();
   try {
-    requireAuthenticated(session);
+    requirePermission(session, "mantenimiento.plantillas.manage");
   } catch {
     return { ok: false, error: "forbidden" };
   }
@@ -135,7 +135,7 @@ export async function updatePlantilla(
 ): Promise<PlantillaActionResult> {
   const session = await auth();
   try {
-    requireAuthenticated(session);
+    requirePermission(session, "mantenimiento.plantillas.manage");
   } catch {
     return { ok: false, error: "forbidden" };
   }
@@ -271,7 +271,9 @@ export async function deletePlantilla(
   id: number,
 ): Promise<PlantillaActionResult> {
   const session = await auth();
-  if (!isAdmin(session)) return { ok: false, error: "forbidden" };
+  if (!hasPermission(session, "mantenimiento.plantillas.manage")) {
+    return { ok: false, error: "forbidden" };
+  }
 
   const inUse = await prisma.mantenimiento.count({
     where: { plantillaId: id },
@@ -314,7 +316,7 @@ export async function aplicarPlantilla(
 ): Promise<PlantillaActionResult> {
   const session = await auth();
   try {
-    requireAuthenticated(session);
+    requirePermission(session, "mantenimiento.plantillas.manage");
   } catch {
     return { ok: false, error: "forbidden" };
   }

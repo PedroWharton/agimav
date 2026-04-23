@@ -65,11 +65,11 @@ function norm(s: unknown): string {
 
 export function RolesClient({
   roles,
-  isAdmin,
+  canManage,
   kpis,
 }: {
   roles: RolRow[];
-  isAdmin: boolean;
+  canManage: boolean;
   kpis: RolesKpis;
 }) {
   const t = useTranslations();
@@ -198,7 +198,7 @@ export function RolesClient({
       header: "",
       enableSorting: false,
       cell: ({ row }) => {
-        if (!isAdmin) return null;
+        if (!canManage) return null;
         const rol = row.original;
         return (
           <div onClick={(e) => e.stopPropagation()}>
@@ -244,7 +244,7 @@ export function RolesClient({
         title={t("listados.roles.titulo")}
         description={t("listados.roles.descripcion")}
         actions={
-          isAdmin ? (
+          canManage ? (
             <Button onClick={openCreate}>
               <Plus className="size-4" />
               {t("listados.common.crear")}
@@ -289,11 +289,11 @@ export function RolesClient({
         columns={columns}
         data={filtered}
         initialSort={[{ id: "nombre", desc: false }]}
-        onRowClick={isAdmin ? openEdit : undefined}
+        onRowClick={canManage ? openEdit : undefined}
         emptyState={
           search.trim()
             ? t("listados.common.sinResultadosFiltrados")
-            : isAdmin
+            : canManage
               ? t("listados.common.vacioAdmin", {
                   entidad: t("listados.roles.plural"),
                 })

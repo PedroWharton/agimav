@@ -1,4 +1,6 @@
 import { prisma } from "@/lib/db";
+import { auth } from "@/lib/auth";
+import { requireViewOrRedirect } from "@/lib/rbac";
 import { formatOCNumber } from "@/lib/compras/oc-number";
 
 import {
@@ -12,6 +14,9 @@ import {
 } from "./recepciones-list-client";
 
 export default async function RecepcionesListPage() {
+  const session = await auth();
+  requireViewOrRedirect(session, "compras.view");
+
   const [recepciones, ocsPendientes] = await Promise.all([
     prisma.recepcion.findMany({
       select: {

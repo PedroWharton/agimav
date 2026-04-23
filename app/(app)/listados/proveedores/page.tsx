@@ -1,6 +1,6 @@
 import { prisma } from "@/lib/db";
 import { auth } from "@/lib/auth";
-import { isAdmin } from "@/lib/rbac";
+import { hasPermission, requireViewOrRedirect } from "@/lib/rbac";
 
 import {
   ProveedoresClient,
@@ -11,7 +11,8 @@ import {
 
 export default async function ProveedoresPage() {
   const session = await auth();
-  const admin = isAdmin(session);
+  requireViewOrRedirect(session, "listados.view");
+  const canManage = hasPermission(session, "listados.proveedores.manage");
 
   const since30d = new Date();
   since30d.setDate(since30d.getDate() - 30);
@@ -81,7 +82,7 @@ export default async function ProveedoresPage() {
     <ProveedoresClient
       rows={rows}
       localidades={localidadOptions}
-      isAdmin={admin}
+      canManage={canManage}
       kpis={kpis}
     />
   );

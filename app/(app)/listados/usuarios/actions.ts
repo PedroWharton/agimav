@@ -6,7 +6,7 @@ import { z } from "zod";
 
 import { prisma } from "@/lib/db";
 import { auth } from "@/lib/auth";
-import { requireAdmin, userIdFromSession, ADMIN_ROL } from "@/lib/rbac";
+import { requirePermission, userIdFromSession, ADMIN_ROL } from "@/lib/rbac";
 
 import type { MutationResult } from "./types";
 
@@ -28,7 +28,7 @@ function mintToken(): { token: string; expiresAt: Date } {
 export async function createUsuario(raw: unknown): Promise<MutationResult> {
   const session = await auth();
   try {
-    requireAdmin(session);
+    requirePermission(session, "listados.usuarios.manage");
   } catch {
     return { ok: false, error: "forbidden" };
   }
@@ -76,7 +76,7 @@ export async function updateUsuario(
 ): Promise<MutationResult> {
   const session = await auth();
   try {
-    requireAdmin(session);
+    requirePermission(session, "listados.usuarios.manage");
   } catch {
     return { ok: false, error: "forbidden" };
   }
@@ -109,7 +109,7 @@ export async function updateUsuario(
 export async function regenerateInvite(id: number): Promise<MutationResult> {
   const session = await auth();
   try {
-    requireAdmin(session);
+    requirePermission(session, "listados.usuarios.manage");
   } catch {
     return { ok: false, error: "forbidden" };
   }
@@ -142,7 +142,7 @@ export async function regenerateInvite(id: number): Promise<MutationResult> {
 export async function deactivateUsuario(id: number): Promise<MutationResult> {
   const session = await auth();
   try {
-    requireAdmin(session);
+    requirePermission(session, "listados.usuarios.manage");
   } catch {
     return { ok: false, error: "forbidden" };
   }
@@ -183,7 +183,7 @@ export async function deactivateUsuario(id: number): Promise<MutationResult> {
 export async function reactivateUsuario(id: number): Promise<MutationResult> {
   const session = await auth();
   try {
-    requireAdmin(session);
+    requirePermission(session, "listados.usuarios.manage");
   } catch {
     return { ok: false, error: "forbidden" };
   }

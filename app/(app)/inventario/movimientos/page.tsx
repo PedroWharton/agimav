@@ -1,5 +1,6 @@
 import { prisma } from "@/lib/db";
 import { auth } from "@/lib/auth";
+import { requireViewOrRedirect } from "@/lib/rbac";
 
 import {
   MovimientosClient,
@@ -25,7 +26,7 @@ export default async function MovimientosPage({
   searchParams: Promise<Search>;
 }) {
   const session = await auth();
-  if (!session?.user) return null;
+  requireViewOrRedirect(session, "inventario.view");
 
   const params = await searchParams;
   const tipo = sparam(params, "tipo");

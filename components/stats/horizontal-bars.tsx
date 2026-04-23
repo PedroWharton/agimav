@@ -140,9 +140,7 @@ export function HorizontalBars({
               rx={2}
               fill={fill}
             >
-              <title>
-                {row.label}: {fmt(row.value)}
-              </title>
+              <title>{`${row.label}: ${fmt(row.value)}`}</title>
             </rect>
             {typeof row.objective === "number" ? (
               <line

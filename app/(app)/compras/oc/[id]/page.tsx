@@ -2,7 +2,7 @@ import { notFound } from "next/navigation";
 
 import { prisma } from "@/lib/db";
 import { auth } from "@/lib/auth";
-import { isAdmin, isPañolero } from "@/lib/rbac";
+import { hasPermission, requireViewOrRedirect } from "@/lib/rbac";
 
 import { OcDetailClient, type OcDetailData } from "./oc-detail-client";
 
@@ -12,7 +12,9 @@ export default async function OcDetailPage({
   params: Promise<{ id: string }>;
 }) {
   const session = await auth();
-  const admin = isAdmin(session);
+  requireViewOrRedirect(session, "compras.view");
+  const canUpdateOc = hasPermission(session, "compras.oc.update");
+  const canCreateRecepcion = hasPermission(session, "compras.recepcion.create");
 
   const { id: idParam } = await params;
   const id = Number.parseInt(idParam, 10);
@@ -103,10 +105,10 @@ export default async function OcDetailPage({
     })),
   };
 
-  const canCancel = admin && oc.estado === "Emitida";
+  const canCancel = canUpdateOc && oc.estado === "Emitida";
   const hasRecepciones = oc._count.recepciones > 0;
   const canRecibir =
-    isPañolero(session) &&
+    canCreateRecepcion &&
     (oc.estado === "Emitida" || oc.estado === "Parcialmente Recibida");
 
   return (

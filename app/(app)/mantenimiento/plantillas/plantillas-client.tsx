@@ -45,10 +45,10 @@ function norm(s: unknown): string {
 
 export function PlantillasClient({
   rows,
-  isAdmin,
+  canManage,
 }: {
   rows: PlantillaRow[];
-  isAdmin: boolean;
+  canManage: boolean;
 }) {
   const tM = useTranslations("mantenimiento");
   const tP = useTranslations("mantenimiento.plantillas");
@@ -140,7 +140,7 @@ export function PlantillasClient({
         title={tP("titulo")}
         description={tP("descripcion")}
         actions={
-          isAdmin ? (
+          canManage ? (
             <Button asChild>
               <Link href="/mantenimiento/plantillas/nueva">
                 <Plus className="size-4" />

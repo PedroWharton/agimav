@@ -1,6 +1,6 @@
 import { prisma } from "@/lib/db";
 import { auth } from "@/lib/auth";
-import { isAdmin } from "@/lib/rbac";
+import { hasPermission, requireViewOrRedirect } from "@/lib/rbac";
 
 import {
   LocalidadesClient,
@@ -10,7 +10,8 @@ import {
 
 export default async function LocalidadesPage() {
   const session = await auth();
-  const admin = isAdmin(session);
+  requireViewOrRedirect(session, "listados.view");
+  const canManage = hasPermission(session, "listados.master_data.manage");
 
   const rows = await prisma.localidad.findMany({
     select: {
@@ -42,5 +43,5 @@ export default async function LocalidadesPage() {
 
   const kpis: LocalidadesKpis = { total, enUso, sinUso };
 
-  return <LocalidadesClient rows={data} isAdmin={admin} kpis={kpis} />;
+  return <LocalidadesClient rows={data} canManage={canManage} kpis={kpis} />;
 }

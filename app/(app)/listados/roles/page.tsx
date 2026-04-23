@@ -1,12 +1,13 @@
 import { prisma } from "@/lib/db";
 import { auth } from "@/lib/auth";
-import { isAdmin } from "@/lib/rbac";
+import { hasPermission, requireViewOrRedirect } from "@/lib/rbac";
 
 import { RolesClient, type RolRow, type RolesKpis } from "./roles-client";
 
 export default async function RolesPage() {
   const session = await auth();
-  const admin = isAdmin(session);
+  requireViewOrRedirect(session, "listados.view");
+  const canManage = hasPermission(session, "listados.roles.manage");
 
   const rows = await prisma.rol.findMany({
     select: {
@@ -32,5 +33,5 @@ export default async function RolesPage() {
 
   const kpis: RolesKpis = { total, asignados, sinUsuarios };
 
-  return <RolesClient roles={roles} isAdmin={admin} kpis={kpis} />;
+  return <RolesClient roles={roles} canManage={canManage} kpis={kpis} />;
 }

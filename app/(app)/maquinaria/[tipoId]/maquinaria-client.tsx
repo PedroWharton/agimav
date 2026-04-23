@@ -286,7 +286,10 @@ function normalizeColumnConfig(
 }
 
 export function MaquinariaClient({
-  admin,
+  canCreate,
+  canUpdate,
+  canDelete,
+  canConfigureColumns,
   tipo,
   tipos,
   niveles,
@@ -294,7 +297,10 @@ export function MaquinariaClient({
   refs,
   columnConfig,
 }: {
-  admin: boolean;
+  canCreate: boolean;
+  canUpdate: boolean;
+  canDelete: boolean;
+  canConfigureColumns: boolean;
   tipo: TipoInfo;
   tipos: TipoOption[];
   niveles: NivelDef[];
@@ -585,7 +591,7 @@ export function MaquinariaClient({
         });
       }
     }
-    if (admin) {
+    if (canUpdate || canDelete) {
       cols.push({
         id: "actions",
         header: "",
@@ -595,24 +601,28 @@ export function MaquinariaClient({
           return (
             <div onClick={(e) => e.stopPropagation()}>
               <ActionsMenu>
-                <DropdownMenuItem onClick={() => openEdit(m)}>
-                  {t("listados.common.editar")}
-                </DropdownMenuItem>
-                <ConfirmDialog
-                  trigger={
-                    <DropdownMenuItem
-                      onSelect={(e) => e.preventDefault()}
-                      className="text-destructive focus:text-destructive"
-                    >
-                      {t("listados.common.eliminar")}
-                    </DropdownMenuItem>
-                  }
-                  title={t("maquinaria.maquinas.eliminarPregunta")}
-                  description={t("maquinaria.maquinas.eliminarAviso")}
-                  confirmLabel={t("listados.common.eliminar")}
-                  destructive
-                  onConfirm={() => onDelete(m)}
-                />
+                {canUpdate ? (
+                  <DropdownMenuItem onClick={() => openEdit(m)}>
+                    {t("listados.common.editar")}
+                  </DropdownMenuItem>
+                ) : null}
+                {canDelete ? (
+                  <ConfirmDialog
+                    trigger={
+                      <DropdownMenuItem
+                        onSelect={(e) => e.preventDefault()}
+                        className="text-destructive focus:text-destructive"
+                      >
+                        {t("listados.common.eliminar")}
+                      </DropdownMenuItem>
+                    }
+                    title={t("maquinaria.maquinas.eliminarPregunta")}
+                    description={t("maquinaria.maquinas.eliminarAviso")}
+                    confirmLabel={t("listados.common.eliminar")}
+                    destructive
+                    onConfirm={() => onDelete(m)}
+                  />
+                ) : null}
               </ActionsMenu>
             </div>
           );
@@ -625,7 +635,8 @@ export function MaquinariaClient({
     effectiveConfig,
     principalAtributos,
     atributosById,
-    admin,
+    canUpdate,
+    canDelete,
     tipo.abrevUnidad,
     dateFormatter,
   ]);
@@ -775,7 +786,7 @@ export function MaquinariaClient({
         })}
         actions={
           <div className="flex items-center gap-2">
-            {admin ? (
+            {canConfigureColumns ? (
               <Button
                 variant="outline"
                 onClick={() => setColumnsOpen(true)}
@@ -785,7 +796,7 @@ export function MaquinariaClient({
                 {t("maquinaria.columnas.boton")}
               </Button>
             ) : null}
-            {admin ? (
+            {canCreate ? (
               <Button onClick={openCreate} disabled={sinEstructura}>
                 <Plus className="size-4" />
                 {t("maquinaria.maquinas.nueva")}
@@ -919,7 +930,7 @@ export function MaquinariaClient({
                 title={
                   searchQuery.trim()
                     ? undefined
-                    : admin
+                    : canCreate
                       ? t("maquinaria.maquinas.vacioAdmin")
                       : t("maquinaria.maquinas.vacio")
                 }
@@ -943,7 +954,7 @@ export function MaquinariaClient({
               searchPlaceholder={t("maquinaria.maquinas.buscarPlaceholder")}
               onRowClick={openDetail}
               emptyState={
-                admin
+                canCreate
                   ? t("maquinaria.maquinas.vacioAdmin")
                   : t("maquinaria.maquinas.vacio")
               }
@@ -966,7 +977,7 @@ export function MaquinariaClient({
         mantenimientos={detailMantenimientos}
         mantenimientosLoading={detailMantenimientosLoading}
         footer={
-          admin && detailRow ? (
+          canUpdate && detailRow ? (
             <Button
               type="button"
               size="sm"
@@ -1076,7 +1087,7 @@ export function MaquinariaClient({
         </Form>
       </FormSheet>
 
-      {admin ? (
+      {canConfigureColumns ? (
         <ColumnsDrawer
           open={columnsOpen}
           onOpenChange={setColumnsOpen}

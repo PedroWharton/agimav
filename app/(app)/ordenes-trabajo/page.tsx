@@ -1,4 +1,6 @@
+import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/db";
+import { requireViewOrRedirect } from "@/lib/rbac";
 import { formatOTNumber } from "@/lib/ot/ot-number";
 import type { CalendarEvent } from "@/components/ordenes/week-calendar";
 
@@ -58,6 +60,9 @@ export default async function OrdenesTrabajoListPage({
 }: {
   searchParams: Promise<{ week?: string | string[] }>;
 }) {
+  const session = await auth();
+  requireViewOrRedirect(session, "ot.view");
+
   const params = await searchParams;
   const weekMonday = parseMondayParam(params.week);
   const weekEnd = new Date(weekMonday);

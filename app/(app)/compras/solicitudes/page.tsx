@@ -1,6 +1,6 @@
 import { prisma } from "@/lib/db";
 import { auth } from "@/lib/auth";
-import { isAdmin, userNameFromSession } from "@/lib/rbac";
+import { hasPermission, requireViewOrRedirect, userNameFromSession } from "@/lib/rbac";
 
 import {
   SolicitudesClient,
@@ -10,7 +10,9 @@ import {
 
 export default async function SolicitudesPage() {
   const session = await auth();
-  const admin = isAdmin(session);
+  requireViewOrRedirect(session, "compras.view");
+  const canCreate = hasPermission(session, "compras.requisicion.create");
+  const canApprove = hasPermission(session, "compras.requisicion.approve");
   const currentUser = userNameFromSession(session);
 
   const [reqs, unidadesProductivas] = await Promise.all([
@@ -71,7 +73,8 @@ export default async function SolicitudesPage() {
     <SolicitudesClient
       rows={rows}
       unidadesProductivas={upOptions}
-      isAdmin={admin}
+      canCreate={canCreate}
+      canApprove={canApprove}
       currentUserName={currentUser}
       kpis={kpis}
     />

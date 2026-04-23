@@ -2,7 +2,7 @@ import { notFound, redirect } from "next/navigation";
 
 import { prisma } from "@/lib/db";
 import { auth } from "@/lib/auth";
-import { isAdmin, userNameFromSession } from "@/lib/rbac";
+import { hasPermission, requireViewOrRedirect, userNameFromSession } from "@/lib/rbac";
 
 import { SolicitudForm } from "../solicitud-form";
 import type { DetalleLine } from "@/components/compras/detalle-lines-editor";
@@ -13,7 +13,7 @@ export default async function SolicitudDetailPage({
   params: Promise<{ id: string }>;
 }) {
   const session = await auth();
-  if (!session?.user) redirect("/login");
+  requireViewOrRedirect(session, "compras.view");
 
   const { id: idParam } = await params;
   const id = Number.parseInt(idParam, 10);
@@ -70,14 +70,16 @@ export default async function SolicitudDetailPage({
   if (!solicitud) notFound();
 
   const currentUserName = userNameFromSession(session);
-  const admin = isAdmin(session);
+  const canApproveReqs = hasPermission(session, "compras.requisicion.approve");
+  const canCreateReqs = hasPermission(session, "compras.requisicion.create");
   const isOwner =
     !!currentUserName &&
     !!solicitud.creadoPor &&
     currentUserName === solicitud.creadoPor;
   const canMutate =
-    solicitud.estado === "Borrador" && (admin || isOwner);
-  const canApprove = admin && solicitud.estado === "En Revisión";
+    solicitud.estado === "Borrador" &&
+    (canApproveReqs || (canCreateReqs && isOwner));
+  const canApprove = canApproveReqs && solicitud.estado === "En Revisión";
 
   const ocMap = new Map<
     number,

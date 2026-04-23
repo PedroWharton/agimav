@@ -63,11 +63,11 @@ function norm(s: unknown): string {
 
 export function LocalidadesClient({
   rows,
-  isAdmin,
+  canManage,
   kpis,
 }: {
   rows: LocalidadRow[];
-  isAdmin: boolean;
+  canManage: boolean;
   kpis: LocalidadesKpis;
 }) {
   const t = useTranslations();
@@ -186,7 +186,7 @@ export function LocalidadesClient({
       header: "",
       enableSorting: false,
       cell: ({ row }) => {
-        if (!isAdmin) return null;
+        if (!canManage) return null;
         const r = row.original;
         return (
           <div onClick={(e) => e.stopPropagation()}>
@@ -229,7 +229,7 @@ export function LocalidadesClient({
         title={t("listados.localidades.titulo")}
         description={t("listados.localidades.descripcion")}
         actions={
-          isAdmin ? (
+          canManage ? (
             <Button onClick={openCreate}>
               <Plus className="size-4" />
               {t("listados.common.crear")}
@@ -274,11 +274,11 @@ export function LocalidadesClient({
         columns={columns}
         data={filtered}
         initialSort={[{ id: "nombre", desc: false }]}
-        onRowClick={isAdmin ? openEdit : undefined}
+        onRowClick={canManage ? openEdit : undefined}
         emptyState={
           search.trim()
             ? t("listados.common.sinResultadosFiltrados")
-            : isAdmin
+            : canManage
               ? t("listados.common.vacioAdmin", {
                   entidad: t("listados.localidades.plural"),
                 })
