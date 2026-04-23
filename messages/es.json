@@ -1764,6 +1764,8 @@
       "plural": "roles",
       "nombre": "Nombre",
       "usuariosCount": "Usuarios",
+      "permisosCount": "Permisos",
+      "editarPermisos": "Editar permisos",
       "buscarPlaceholder": "Buscar rol…",
       "eliminarPregunta": "¿Eliminar el rol \"{nombre}\"?",
       "eliminarAviso": "Esta acción no se puede deshacer.",

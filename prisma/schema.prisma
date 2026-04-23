@@ -19,9 +19,10 @@ datasource db {
 // ──────────────────────────────────────────────────────────────────────────────
 
 model Rol {
-  id       Int       @id @default(autoincrement())
-  nombre   String    @unique
+  id       Int          @id @default(autoincrement())
+  nombre   String       @unique
   usuarios Usuario[]
+  permisos RolPermiso[]
 
   createdAt   DateTime @default(now()) @map("created_at")
   updatedAt   DateTime @updatedAt @map("updated_at")
@@ -29,6 +30,41 @@ model Rol {
   createdBy   Usuario? @relation("RolCreatedBy", fields: [createdById], references: [id], onDelete: SetNull)
 
   @@map("roles")
+}
+
+/// Catalog of permission codes. Seeded from lib/permisos/catalog.ts at
+/// migration/seed time and not user-editable — admins pick from the shipped
+/// list, they don't invent new codes.
+model Permiso {
+  id          Int    @id @default(autoincrement())
+  codigo      String @unique
+  modulo      String
+  descripcion String
+
+  roles RolPermiso[]
+
+  createdAt DateTime @default(now()) @map("created_at")
+
+  @@index([modulo])
+  @@map("permisos")
+}
+
+/// Join table: which permisos each rol has. `Administrador` is seeded with
+/// `admin.all` (umbrella). Editing happens from /listados/roles/[id]/permisos.
+model RolPermiso {
+  rolId     Int @map("rol_id")
+  permisoId Int @map("permiso_id")
+
+  rol     Rol     @relation(fields: [rolId], references: [id], onDelete: Cascade)
+  permiso Permiso @relation(fields: [permisoId], references: [id], onDelete: Cascade)
+
+  createdAt   DateTime @default(now()) @map("created_at")
+  createdById Int?     @map("created_by")
+  createdBy   Usuario? @relation("RolPermisoCreatedBy", fields: [createdById], references: [id], onDelete: SetNull)
+
+  @@id([rolId, permisoId])
+  @@index([rolId])
+  @@map("rol_permisos")
 }
 
 /// Cervi's legacy usuarios table has only (id, nombre, rol_id, estado).
@@ -67,6 +103,8 @@ model Usuario {
 
   maquinariaTiposCreados MaquinariaTipo[] @relation("MaquinariaTipoCreatedBy")
   maquinariasCreadas     Maquinaria[]     @relation("MaquinariaCreatedBy")
+
+  rolPermisosCreados RolPermiso[] @relation("RolPermisoCreatedBy")
 
   @@map("usuarios")
 }

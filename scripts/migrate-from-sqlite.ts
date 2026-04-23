@@ -20,6 +20,7 @@ import BetterSqlite3 from "better-sqlite3";
 import { PrismaPg } from "@prisma/adapter-pg";
 
 import { PrismaClient } from "../lib/generated/prisma/client";
+import { seedPermisos } from "../lib/permisos/seed";
 
 type Row = Record<string, unknown>;
 
@@ -1035,6 +1036,16 @@ async function main() {
     process.exit(1);
   }
   console.log("\n✓ All tables imported with row count parity.");
+
+  // ──────────────────────────────────────────────────────────────────────────
+  // Seed permisos catalog (idempotent — never revokes admin edits)
+  // ──────────────────────────────────────────────────────────────────────────
+  console.log("\n→ Seeding permisos catalog");
+  const { catalogUpserts, adminGrants, panoleroGrants } =
+    await seedPermisos(prisma);
+  console.log(
+    `  ✓ catalog=${catalogUpserts} admin+=${adminGrants} pañolero+=${panoleroGrants}`,
+  );
 }
 
 main()

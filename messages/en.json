@@ -1,0 +1,1926 @@
+{
+  "app": {
+    "nombre": "Agimav",
+    "tagline": "Fleet management"
+  },
+  "nav": {
+    "maquinaria": "Machinery",
+    "inventario": "Inventory",
+    "compras": "Purchasing",
+    "mantenimiento": "Maintenance",
+    "ordenesTrabajo": "Work orders",
+    "estadisticas": "Statistics",
+    "listados": "Lists",
+    "cerrarSesion": "Sign out"
+  },
+  "topbar": {
+    "buscar": {
+      "placeholder": "Search across Agimav…",
+      "dialogPlaceholder": "Search…",
+      "proximamente": "Coming soon"
+    },
+    "tweaks": {
+      "abrir": "Appearance settings"
+    },
+    "notificaciones": {
+      "etiqueta": "Notifications",
+      "proximamente": "Coming soon"
+    }
+  },
+  "calendar": {
+    "diasCortos": {
+      "lun": "Mon",
+      "mar": "Tue",
+      "mie": "Wed",
+      "jue": "Thu",
+      "vie": "Fri",
+      "sab": "Sat",
+      "dom": "Sun"
+    },
+    "diasMini": {
+      "L": "M",
+      "M": "T",
+      "X": "W",
+      "J": "T",
+      "V": "F",
+      "S": "S",
+      "D": "S"
+    },
+    "meses": {
+      "1": "January",
+      "2": "February",
+      "3": "March",
+      "4": "April",
+      "5": "May",
+      "6": "June",
+      "7": "July",
+      "8": "August",
+      "9": "September",
+      "10": "October",
+      "11": "November",
+      "12": "December"
+    },
+    "tipos": {
+      "mant": "Maintenance",
+      "inv": "Inventory",
+      "comp": "Purchasing",
+      "log": "Logistics",
+      "ins": "Inspection"
+    },
+    "mesAnterior": "Previous month",
+    "mesSiguiente": "Next month"
+  },
+  "auth": {
+    "login": {
+      "titulo": "Sign in",
+      "subtitulo": "Enter your credentials to continue",
+      "email": "Email",
+      "password": "Password",
+      "submit": "Sign in",
+      "submitting": "Signing in…",
+      "error": "Incorrect email or password"
+    },
+    "logout": {
+      "titulo": "Sign out"
+    },
+    "invitacion": {
+      "titulo": "Set your password",
+      "subtitulo": "Hi {nombre}. Choose a password to activate your account.",
+      "subtituloSinNombre": "Choose a password to activate your account.",
+      "password": "Password",
+      "passwordConfirmacion": "Repeat password",
+      "requisito": "Minimum 8 characters.",
+      "submit": "Save and continue",
+      "submitting": "Saving…",
+      "exito": "Password set. You can now sign in.",
+      "errorInvalido": "The link is invalid or has already been used.",
+      "errorExpirado": "The link has expired. Ask the administrator to generate a new one.",
+      "errorPasswordCorta": "Minimum 8 characters.",
+      "errorPasswordNoCoincide": "Passwords do not match.",
+      "errorGenerico": "Could not save. Please retry.",
+      "volverLogin": "Back to sign in"
+    }
+  },
+  "inventario": {
+    "titulo": "Inventory",
+    "descripcion": "Catalog of supplies, parts and consumables.",
+    "singular": "item",
+    "plural": "items",
+    "nuevoItem": "New item",
+    "editarItem": "Edit item",
+    "buscarPlaceholder": "Search by code or description…",
+    "resultadosCount": "{total, plural, one {# item} other {# items}}",
+    "filtros": {
+      "categoria": "Category",
+      "localidad": "Location",
+      "todos": "All",
+      "bajoMinimo": "Below minimum",
+      "stockNegativo": "Negative stock",
+      "stockOk": "Stock OK"
+    },
+    "kpis": {
+      "items": "Items in catalog",
+      "itemsCaption": "Active and available",
+      "bajoMinimo": "Below minimum",
+      "bajoMinimoCaption": "{count, plural, =0 {Nothing below minimum} one {# item needs restocking} other {# items need restocking}}",
+      "stockNegativo": "Negative stock",
+      "stockNegativoCaption": "{count, plural, =0 {No outstanding debt} one {# item with debt} other {# items with debt}}",
+      "valorTotal": "Total value",
+      "valorTotalCaption": "Stock × unit value"
+    },
+    "estado": {
+      "label": "Status",
+      "ok": "Stock OK",
+      "bajo": "Below minimum",
+      "negativo": "Negative",
+      "cero": "Out of stock"
+    },
+    "tabs": {
+      "resumen": "Summary",
+      "movimientos": "Movements",
+      "porLlegar": "Incoming",
+      "historial": "Invoices"
+    },
+    "avisosDetail": {
+      "facturasNoDisponible": "Not available",
+      "facturasPronto": "Invoice integration is coming in a future version."
+    },
+    "compras": {
+      "cargando": "Loading…",
+      "sinPorLlegar": "No purchase orders pending receipt.",
+      "sinHistorial": "No purchase history recorded."
+    },
+    "campos": {
+      "codigo": "Code",
+      "descripcion": "Description",
+      "item": "Item",
+      "categoria": "Category",
+      "localidad": "Location",
+      "unidadProductiva": "Production unit",
+      "unidadMedida": "Unit of measure",
+      "stock": "Stock",
+      "stockMinimo": "Minimum stock",
+      "valorUnitario": "Unit value",
+      "valorTotal": "Total value"
+    },
+    "formSecciones": {
+      "identificacion": "Identification",
+      "identificacionHint": "Unique code, description and unit of measure.",
+      "clasificacion": "Classification",
+      "clasificacionHint": "How the item is grouped and where it lives.",
+      "economicos": "Economic data",
+      "economicosHint": "Unit value and stock alert threshold."
+    },
+    "avisos": {
+      "stockSoloMovimientos": "To adjust stock, use \"Record movement\" from the row.",
+      "stockNegativo": "Negative stock — review",
+      "nadaBajoMinimo": "Nothing below minimum right now.",
+      "sinResultadosFiltrados": "No results. Clear the filters.",
+      "vacio": "No items in inventory.",
+      "vacioAdmin": "No items in inventory. Create the first one.",
+      "codigoDuplicado": "An item with code \"{codigo}\" already exists.",
+      "eliminarPregunta": "Delete the item \"{nombre}\"?",
+      "eliminarEnUsoMovs": "Cannot delete: it has {count, plural, one {# movement} other {# movements}}.",
+      "eliminarEnUsoRefs": "Cannot delete: it is in use in other modules."
+    },
+    "movimientos": {
+      "titulo": "Inventory movements",
+      "descripcion": "History of entries and exits.",
+      "tituloItem": "Movements — {item}",
+      "registrar": "Record movement",
+      "registrado": "Movement recorded.",
+      "verHistorial": "View history",
+      "verTodo": "View full history",
+      "ultimos": "Recent movements",
+      "sinMovimientos": "No movements recorded.",
+      "columnas": {
+        "fecha": "Date",
+        "item": "Item",
+        "tipo": "Type",
+        "cantidad": "Quantity",
+        "valorUnitario": "Unit val.",
+        "origen": "Origin",
+        "usuario": "User",
+        "motivo": "Reason"
+      },
+      "tipos": {
+        "entrada": "Entry",
+        "salida": "Exit",
+        "ajustePrecio": "Price adjustment"
+      },
+      "campos": {
+        "tipo": "Type",
+        "cantidad": "Quantity",
+        "valorUnitario": "Unit value",
+        "nuevoValor": "New unit value",
+        "total": "Total",
+        "motivo": "Reason",
+        "observaciones": "Notes"
+      },
+      "filtros": {
+        "tipo": "Type",
+        "modulo": "Module",
+        "desde": "From",
+        "hasta": "To",
+        "item": "Item"
+      },
+      "total": "{count, plural, one {# movement} other {# movements}}",
+      "exportar": "Export",
+      "exportarError": "Could not export.",
+      "limpiar": "Clear",
+      "todos": "All",
+      "breadcrumb": "Inventory",
+      "codigoLabel": "Code {codigo}",
+      "kpis": {
+        "stock": "Stock",
+        "valorUnitario": "Unit value",
+        "valorTotal": "Total value"
+      },
+      "avisos": {
+        "stockActual": "Current stock: {stock}",
+        "stockResultante": "Remaining: {stock}",
+        "negativoConfirmar": "This exit would leave stock at {stock}. Please confirm this is correct."
+      }
+    },
+    "exportar": "Export",
+    "exportarError": "Could not export.",
+    "importar": {
+      "titulo": "Import",
+      "descripcion": "Update the item catalog from an Excel file.",
+      "dropZone": "Drag an .xlsx here or choose a file.",
+      "elegirArchivo": "Choose file",
+      "formatoEsperado": "Expected format",
+      "formatoAyuda": "Code and Description columns are required. The rest are optional.",
+      "formatoStock": "Stock is not imported — use \"Record movement\" to adjust it.",
+      "cancelar": "Cancel",
+      "volver": "Back",
+      "importar": "Import",
+      "cerrar": "Close",
+      "ignorarInvalidos": "Ignore invalid rows and import the rest.",
+      "masFilas": "… and {count} more rows.",
+      "errorTamaño": "The file exceeds 2 MB.",
+      "errorDemasiadasFilas": "The file has too many rows (max 5,000).",
+      "errorArchivoVacio": "The file is empty.",
+      "errorParseo": "Could not read the file.",
+      "errorColumnasRequeridas": "Missing Code and/or Description columns.",
+      "errorTieneInvalidos": "There are invalid rows. Check \"Ignore invalid rows\" to continue.",
+      "errorDuplicateCodigo": "Duplicate code conflict.",
+      "errorForbidden": "You do not have permission to import.",
+      "errorDesconocido": "An error occurred during import.",
+      "estado": {
+        "new": "New",
+        "updated": "Updated",
+        "unchanged": "Unchanged",
+        "invalid": "Invalid"
+      },
+      "motivo": {
+        "falta_codigo": "Missing code",
+        "falta_descripcion": "Missing description",
+        "codigo_demasiado_largo": "Code too long",
+        "descripcion_demasiado_larga": "Description too long",
+        "codigo_duplicado_en_archivo": "Duplicate code in the file",
+        "stock_minimo_invalido": "Minimum stock not numeric",
+        "stock_minimo_negativo": "Negative minimum stock",
+        "valor_unitario_invalido": "Unit value not numeric",
+        "valor_unitario_negativo": "Negative unit value"
+      },
+      "columnas": {
+        "estado": "Status",
+        "codigo": "Code",
+        "descripcion": "Description",
+        "detalle": "Detail"
+      },
+      "resultado": {
+        "titulo": "Import completed",
+        "aplicados": "{count, plural, one {# item applied} other {# items applied}}.",
+        "ignorados": "{count, plural, one {# row ignored} other {# rows ignored}}."
+      }
+    }
+  },
+  "maquinaria": {
+    "index": {
+      "titulo": "Machinery",
+      "descripcion": "Machine catalog grouped by type.",
+      "administrarTipos": "Manage types",
+      "instancias": "{count, plural, =0 {No instances} one {# instance} other {# instances}}",
+      "inactivo": "Inactive",
+      "proximamente": "Coming soon",
+      "sinTipos": "No types loaded yet. An administrator can create the first one."
+    },
+    "maquinas": {
+      "titulo": "{nombre}",
+      "descripcion": "{count, plural, =0 {No machines loaded} one {# machine loaded} other {# machines loaded}}.",
+      "volver": "Back to machinery",
+      "otrosTipos": "View another type",
+      "nueva": "New machine",
+      "nuevoTitulo": "New machine",
+      "editarTitulo": "Edit machine",
+      "nroSerie": "Serial no.",
+      "estado": "Status",
+      "estadoTodos": "All statuses",
+      "horometro": "Hour meter",
+      "horometroConUnidad": "Hour meter ({unidad})",
+      "horas": "Hours",
+      "horasUnidad": "{unidad}",
+      "buscarPlaceholder": "Search by serial no…",
+      "sinEstructura": "This type has no structure configured. Ask a developer to load it before registering machines.",
+      "vacio": "No machines loaded for this type yet.",
+      "vacioAdmin": "No machines yet. Tap \"New machine\" to create the first one.",
+      "eliminarPregunta": "Delete this machine?",
+      "eliminarAviso": "Its nodes, attributes and records will also be deleted. This cannot be undone.",
+      "eliminarEnUso": "Cannot delete: {count, plural, one {there is # associated maintenance} other {there are # associated maintenances}}.",
+      "creadaExitosa": "Machine created.",
+      "actualizadaExitosa": "Machine updated.",
+      "eliminadaExitosa": "Machine deleted.",
+      "noEncontrada": "The machine no longer exists.",
+      "verTarjetas": "Cards",
+      "verTabla": "Table",
+      "verDetalle": "View detail",
+      "totalEquipos": "{count, plural, =0 {No equipment} one {# unit} other {# units}}",
+      "kpi": {
+        "total": "Total",
+        "totalCaption": "Machines loaded in {tipo}",
+        "activos": "Active",
+        "activosCaption": "In service",
+        "inactivos": "Out of service",
+        "inactivosCaption": "{inactivos} inactive · {baja} retired",
+        "horometro": "Total hour meter",
+        "horometroCaption": "Sum across all units"
+      }
+    },
+    "detalle": {
+      "abrir": "Open record",
+      "editar": "Edit",
+      "altaEl": "Registered: {fecha}",
+      "sinAtributos": "This machine has no attributes loaded yet.",
+      "hero": {
+        "horometro": "Hour meter"
+      },
+      "tabs": {
+        "resumen": "Summary",
+        "mantenimientos": "Maintenances"
+      },
+      "mantenimientos": {
+        "titulo": "Maintenance history",
+        "resumen": "{count, plural, =0 {No maintenances recorded} one {# maintenance} other {# maintenances}}",
+        "iniciar": "Start maintenance",
+        "cargando": "Loading…",
+        "sinDescripcion": "No description.",
+        "cerradoEl": "Closed {fecha}",
+        "vacio": {
+          "titulo": "No maintenances",
+          "descripcion": "This machine does not have any maintenances recorded yet."
+        }
+      }
+    },
+    "tipos": {
+      "titulo": "Machine types",
+      "descripcion": "Manage machine classes and their structures.",
+      "singular": "type",
+      "plural": "machine types",
+      "nuevo": "New type",
+      "nuevoTitulo": "New machine type",
+      "editarTitulo": "Edit type",
+      "nombre": "Name",
+      "estado": "Status",
+      "unidad": "Unit",
+      "unidadMedicion": "Unit of measurement",
+      "abrevUnidad": "Abbreviation",
+      "unidadAyuda": "Used for hour meter or odometer records.",
+      "instancias": "Instances",
+      "atributos": "Attributes",
+      "nivelesCount": "{count, plural, one {# level} other {# levels}}",
+      "atributosCount": "{count, plural, one {# attribute} other {# attributes}}",
+      "creado": "Created",
+      "verEstructura": "View structure",
+      "abrir": "Open {nombre}",
+      "accionesTitulo": "Actions for {nombre}",
+      "buscarPlaceholder": "Search by name or unit…",
+      "eliminarPregunta": "Delete the type \"{nombre}\"?",
+      "eliminarAviso": "Associated levels and attributes may be deleted. This cannot be undone.",
+      "eliminarEnUso": "Cannot delete \"{nombre}\": {count, plural, one {there is # machine loaded} other {there are # machines loaded}} with this type.",
+      "kpi": {
+        "total": "Types",
+        "totalCaption": "{activos} active · {inactivos} inactive",
+        "instancias": "Machines",
+        "instanciasCaption": "Total instances loaded",
+        "instanciasLabel": "{count, plural, =0 {No instances} one {# instance} other {# instances}}",
+        "atributos": "Attributes",
+        "atributosCaption": "Fields defined in structures",
+        "estado": "Active",
+        "estadoCaption": "{inactivos, plural, =0 {All in use} one {# inactive type} other {# inactive types}}"
+      }
+    },
+    "estructura": {
+      "titulo": "{nombre} — Structure",
+      "subtitulo": "{instancias, plural, one {# instance} other {# instances}} · {niveles, plural, one {# level} other {# levels}} · {atributos, plural, one {# attribute} other {# attributes}}",
+      "volver": "Back to types",
+      "nivelesBloqueados": "Level creation, deletion and reordering is handled by development. You can manage attributes here.",
+      "sinEstructura": "This type has no levels configured yet.",
+      "sinAtributos": "No attributes.",
+      "nivelRaiz": "Root",
+      "profundidad": "Level {depth}",
+      "inactivo": "Inactive",
+      "archivado": "Archived",
+      "requerido": "Required",
+      "principal": "Primary",
+      "agregarAtributo": "Add attribute",
+      "editarAtributo": "Edit",
+      "archivarAtributo": "Archive",
+      "reactivarAtributo": "Reactivate",
+      "eliminarAtributo": "Delete",
+      "accionesAtributo": "Attribute actions",
+      "eliminarPregunta": "Delete the attribute \"{nombre}\"?",
+      "eliminarAviso": "Only deletable if no machines have values loaded. This cannot be undone.",
+      "eliminarEnUso": "Cannot delete: {count, plural, one {there is # value loaded} other {there are # values loaded}}. Archive it instead.",
+      "atributoCreado": "Attribute created.",
+      "atributoActualizado": "Attribute updated.",
+      "atributoArchivado": "Attribute archived.",
+      "atributoReactivado": "Attribute reactivated.",
+      "atributoEliminado": "Attribute deleted.",
+      "nuevoAtributoTitulo": "New attribute — {nivel}",
+      "editarAtributoTitulo": "Edit attribute — {nivel}",
+      "editarAtributoAyuda": "The data type cannot be changed. If you need a different type, create a new attribute and archive the current one.",
+      "avisoCrear": "It will be added to the machine form for this type.",
+      "avisoInstancias": "There {count, plural, one {is # machine loaded} other {are # machines loaded}}. They will have no value for this attribute until you edit them.",
+      "atributoNombre": "Name",
+      "tipoDato": "Data type",
+      "tipoDatoBloqueado": "Type: {tipo}",
+      "opcionesLista": "Options (comma-separated)",
+      "opcionesListaPlaceholder": "Option 1, Option 2, Option 3",
+      "origenRef": "Source",
+      "seleccionarOrigen": "Select source…",
+      "origen": {
+        "unidades_productivas": "Production units",
+        "inventario": "Inventory"
+      },
+      "atributoRequerido": "Required",
+      "atributoRequeridoAyuda": "Enforced when creating or editing a machine.",
+      "crearAtributo": "Create attribute",
+      "guardar": "Save",
+      "guardando": "Saving…",
+      "cancelar": "Cancel",
+      "duplicadoNombre": "An attribute with that name already exists at this level.",
+      "errorGuardar": "Could not save. Please try again.",
+      "errorPermisos": "You need administrator permissions.",
+      "dataType": {
+        "text": "Text",
+        "number": "Number",
+        "date": "Date",
+        "list": "List",
+        "ref": "Reference"
+      }
+    },
+    "columnas": {
+      "boton": "Columns",
+      "titulo": "Configure columns",
+      "descripcion": "Choose which columns to show and in what order. Saved per type.",
+      "visibleTodas": "{visible} of {total} visible",
+      "subir": "Move up",
+      "bajar": "Move down",
+      "principalBloqueado": "Always visible",
+      "builtins": "General attributes",
+      "atributos": "Structure attributes",
+      "builtin": {
+        "es_principal": "★ Primary",
+        "nro_serie": "Serial no.",
+        "estado": "Status",
+        "horas_acumuladas": "Hour meter",
+        "created_at": "Registration date"
+      },
+      "nivelEtiqueta": "{nivel}",
+      "guardar": "Save",
+      "guardando": "Saving…",
+      "cancelar": "Cancel",
+      "restaurarDefault": "Restore default",
+      "sinAtributos": "This type has no attributes to show.",
+      "guardadoExitoso": "Column configuration saved.",
+      "errorGuardar": "Could not save. Please try again."
+    }
+  },
+  "placeholder": {
+    "proximamente": "Coming soon",
+    "descripcionModulo": {
+      "maquinaria": "Machine catalog, hierarchical structure by type and hour meters.",
+      "inventario": "Parts and supplies stock, movements and alerts.",
+      "compras": "Requests, approvals, purchase orders, receptions and invoicing.",
+      "mantenimiento": "Corrective and preventive maintenance, templates and history.",
+      "ordenesTrabajo": "Work orders with supplies and traceability.",
+      "estadisticas": "Dashboards, ABC analysis, USD price trends and machinery metrics.",
+      "listados": "Master data: users, suppliers, locations and production units."
+    }
+  },
+  "estadisticas": {
+    "titulo": "Statistics",
+    "descripcion": "Monthly operational summary and trends.",
+    "adminSeccion": "Admin",
+    "exportar": "Export",
+    "exportarCsv": "Export CSV",
+    "reportePdf": "PDF report",
+    "configurarKpis": "Configure KPIs",
+    "exportarError": "Could not export. Please try again.",
+    "actualizadoHace": "updated {mins} min ago",
+    "rangos": {
+      "7d": "Last 7 days",
+      "30d": "Last 30 days",
+      "90d": "Last 90 days",
+      "ytd": "Year to date",
+      "todo": "All history"
+    },
+    "kpi": {
+      "maquinas": "Active machines",
+      "maquinasCaption": "of {total, plural, one {# total} other {# total}}",
+      "bajoStock": "Low stock",
+      "bajoStockCaption": "of {total, plural, one {# item} other {# items}}",
+      "ocsAbiertas": "Open POs",
+      "ocsAbiertasCaption": "of {total, plural, one {# PO} other {# POs}}",
+      "mantPendientes": "Pending maint.",
+      "mantPendientesCaption": "unassigned or not started",
+      "facturacionMes": "Monthly billing",
+      "facturacionMesCaption": "{count, plural, =0 {No invoices in {mes}} one {# invoice · {mes}} other {# invoices · {mes}}}",
+      "otEnCurso": "WOs in progress",
+      "otEnCursoCaption": "open work orders"
+    },
+    "lentes": {
+      "titulo": "Detailed analysis",
+      "abc": "ABC analysis",
+      "abcDesc": "Classification by consumed value.",
+      "precios": "Price trends",
+      "preciosDesc": "ARS and USD history per item.",
+      "maquinaria": "Machine metrics",
+      "maquinariaDesc": "Corrective, preventive, MTBF and cost per unit.",
+      "proveedores": "Supplier spend",
+      "proveedoresDesc": "Ranking of suppliers by billing."
+    },
+    "dashboard": {
+      "subtitulo": "Operational indicators for fleet, workshop and procurement",
+      "kpi": {
+        "disponibilidad": "Fleet availability",
+        "disponibilidadCaption": "{activas} active of {total}",
+        "bajoStock": "Low stock",
+        "bajoStockCaption": "{count, plural, =0 {No items below stock} one {# item below minimum} other {# items below minimum}} · of {total}",
+        "ocsAbiertas": "Open POs",
+        "ocsAbiertasCaption": "{count, plural, =0 {No open POs} one {# PO pending receipt} other {# POs pending receipt}}",
+        "mantPendientes": "Pending maintenances",
+        "mantPendientesCaption": "unassigned or not started",
+        "otEnCurso": "WOs in progress",
+        "otEnCursoCaption": "open work orders",
+        "facturacionMes": "Monthly billing",
+        "facturacionMesCaption": "{count, plural, =0 {No invoices in {mes}} one {# invoice · {mes}} other {# invoices · {mes}}}"
+      },
+      "mezcla": {
+        "titulo": "Maintenance mix",
+        "subtitulo": "Created in the last 90 days",
+        "ratio": "P/C ratio",
+        "totalCaption": "Maint. / 90d",
+        "verMas": "Machine metrics"
+      },
+      "repuestos": {
+        "titulo": "Most consumed parts",
+        "subtitulo": "90 days · by total value",
+        "verMas": "ABC analysis"
+      },
+      "backlog": {
+        "titulo": "Backlog per machine",
+        "subtitulo": "Pending + in-progress maintenances",
+        "verMas": "Machine metrics"
+      },
+      "otif": {
+        "titulo": "Supplier performance",
+        "subtitulo": "% received vs. ordered · POs in the last 90 days",
+        "objetivo": "target 90%",
+        "verMas": "Supplier spend"
+      },
+      "tecnicos": {
+        "titulo": "Technician productivity",
+        "subtitulo": "Maintenances assigned · last 90 days"
+      },
+      "taller": {
+        "titulo": "Workshop load & spend",
+        "subtitulo": "Maintenances created and billing per month · last 12 months",
+        "legendaMant": "Maintenances",
+        "legendaGasto": "Spend (ARS)"
+      },
+      "gasto": {
+        "titulo": "Monthly spend by category",
+        "subtitulo": "Billing by inventory category · last 6 months",
+        "otros": "Other"
+      },
+      "heatmap": {
+        "titulo": "Corrective maintenances per machine · calendar",
+        "subtitulo": "Top {count} machines × last {weeks} weeks",
+        "leyendaMenos": "Less",
+        "leyendaMas": "More"
+      },
+      "tipos": {
+        "correctivo": "Corrective",
+        "preventivo": "Preventive",
+        "mejora": "Improvement",
+        "otro": "Other"
+      },
+      "sinDatos": "No data for the period"
+    },
+    "precios": {
+      "titulo": "Price trends",
+      "descripcion": "Price history in ARS and USD per item and supplier.",
+      "volver": "Back to Statistics",
+      "sinHistorial": "No historical prices loaded yet.",
+      "elegirItem": "Choose an item to see its trend.",
+      "unSoloPunto": "This item only has one price point in the period. No trend to chart.",
+      "chartTitulo": "Price over time",
+      "chartSubtitulo": "ARS (solid line) and USD (dotted line)",
+      "tablaTitulo": "Price history",
+      "tablaSubtitulo": "Entries ordered by ascending date",
+      "kpi": {
+        "registros": "Records",
+        "registrosCaption": "{count, plural, one {# price point} other {# price points}} in the period",
+        "ultimoArs": "Latest ARS price",
+        "ultimoArsCaption": "Recorded on {fecha}",
+        "variacion": "Period variation",
+        "variacionCaption": "First vs. last record"
+      },
+      "columnas": {
+        "fecha": "Date",
+        "ars": "ARS price",
+        "usd": "USD price",
+        "proveedor": "Supplier"
+      },
+      "picker": {
+        "placeholder": "Choose an item…",
+        "buscar": "Search item…",
+        "unSoloPrecio": "only 1 price"
+      }
+    },
+    "proveedores": {
+      "titulo": "Supplier spend",
+      "descripcion": "Supplier ranking by total billed in the period.",
+      "volver": "Back to Statistics",
+      "vacio": "No invoices in the selected period.",
+      "top": "Top 10",
+      "topSubtitulo": "Suppliers by total billed",
+      "tablaTitulo": "Spend by supplier",
+      "tablaSubtitulo": "Ordered by total billed",
+      "totalGeneral": "Period total",
+      "resumen": "{con} of {total} suppliers with invoices in the period.",
+      "kpi": {
+        "total": "Total billed",
+        "totalCaption": "Invoices recorded in the period",
+        "proveedores": "Active suppliers",
+        "proveedoresCaption": "of {total, plural, one {# supplier} other {# suppliers}} in the system",
+        "topShare": "Top 5 concentration",
+        "topShareCaption": "Share of the 5 largest"
+      },
+      "columnas": {
+        "proveedor": "Supplier",
+        "facturas": "Invoices",
+        "total": "Total",
+        "porcentaje": "% of total",
+        "ultima": "Last invoice"
+      }
+    },
+    "maquinaria": {
+      "titulo": "Machine metrics",
+      "descripcion": "Ranking by total maintenance cost. MTBF in hours when the maintenance has an hour meter at creation time; otherwise estimated by dates.",
+      "mtbfTooltip": "Mean time between failures. In hours if correctives have an hour meter at creation; otherwise in days.",
+      "mtbfSufijo": {
+        "horas": "h",
+        "dias": "d"
+      },
+      "mtbfUnidad": {
+        "horas": "Hours between correctives",
+        "dias": "Days between correctives"
+      },
+      "volver": "Back to Statistics",
+      "vacio": "No machines match the selected filter.",
+      "sinHistorial": "{count, plural, =0 {All machines have history.} one {# machine without history in the period.} other {# machines without history in the period.}}",
+      "totales": "{total, plural, one {# machine total} other {# machines total}}",
+      "topCostoTitulo": "Top machines by cost",
+      "topCostoSubtitulo": "Machines with the highest maintenance spend",
+      "tablaTitulo": "Machine metrics",
+      "tablaSubtitulo": "Filtered by minimum maintenance count",
+      "kpi": {
+        "totales": "Machines",
+        "totalesCaption": "in the system",
+        "conHistorial": "With history",
+        "conHistorialCaption": "machines with maintenances in the period",
+        "costoTotal": "Accumulated cost",
+        "costoTotalCaption": "sum of supplies consumed"
+      },
+      "filtros": {
+        "min2": "≥ 2 maintenances",
+        "min3": "≥ 3 maintenances",
+        "todas": "All machines"
+      },
+      "columnas": {
+        "maquina": "Machine",
+        "tipo": "Type",
+        "correctivos": "Corrective",
+        "preventivos": "Preventive",
+        "mtbf": "MTBF (days)",
+        "horas": "Hours operated",
+        "costo": "Total cost"
+      }
+    },
+    "abc": {
+      "titulo": "ABC analysis",
+      "descripcion": "Classification by value consumed in the period.",
+      "volver": "Back to Statistics",
+      "vacio": "No outgoing movements in the selected period.",
+      "distribucion": "Distribution by class",
+      "distribucionSubtitulo": "Value consumed by class A/B/C",
+      "tablaTitulo": "Classified items",
+      "tablaSubtitulo": "Ordered by value consumed",
+      "totalValor": "Total value in period",
+      "sinConsumo": "{count, plural, =0 {All items had movements in the period.} one {# item without consumption in the period.} other {# items without consumption in the period.}}",
+      "kpi": {
+        "valorTotal": "Total value",
+        "valorTotalCaption": "consumed in the period",
+        "items": "Classified items",
+        "itemsCaption": "{count, plural, one {# item with consumption} other {# items with consumption}}",
+        "claseA": "Class A",
+        "claseACaption": "{count, plural, one {# item} other {# items}} · 80% of value"
+      },
+      "clases": {
+        "a": "A · 80% of value",
+        "b": "B · 15% of value",
+        "c": "C · 5% of value"
+      },
+      "columnas": {
+        "codigo": "Code",
+        "descripcion": "Description",
+        "cantidad": "Quantity",
+        "valor": "Value",
+        "porcentaje": "% of total",
+        "acumulado": "% cumulative",
+        "clase": "Class"
+      }
+    }
+  },
+  "compras": {
+    "common": {
+      "singular": "request",
+      "plural": "requests",
+      "estados": {
+        "Borrador": "Draft",
+        "EnRevision": "Under Review",
+        "Aprobada": "Approved",
+        "AsignadoAProveedor": "Assigned to Supplier",
+        "OCEmitida": "PO Issued",
+        "Rechazada": "Rejected",
+        "Emitida": "Issued",
+        "ParcialmenteRecibida": "Partially Received",
+        "Completada": "Completed",
+        "Cancelada": "Cancelled",
+        "Pendiente": "Pending",
+        "VinculadaOC": "Linked PO"
+      },
+      "prioridades": {
+        "Normal": "Normal",
+        "Urgente": "Urgent"
+      }
+    },
+    "solicitudes": {
+      "titulo": "Requests",
+      "descripcion": "Purchase requests from creation to PO issuance.",
+      "nuevaDescripcion": "Enter the data and the lines of items to purchase. Saved as a draft; you can send it for review afterwards.",
+      "tabs": {
+        "activas": "Active",
+        "historico": "Historical"
+      },
+      "datosGeneralesTitulo": "General data",
+      "itemsTitulo": "Requested items",
+      "itemsAyuda": "Add one row per item with the required quantity.",
+      "nueva": "New request",
+      "editar": "Edit request",
+      "ver": "View request",
+      "volver": "Back to requests",
+      "buscarPlaceholder": "Search by requester, production unit or notes…",
+      "resultadosCount": "{count, plural, one {# request} other {# requests}}",
+      "campos": {
+        "numero": "No.",
+        "fecha": "Date",
+        "fechaCreacion": "Created on",
+        "solicitante": "Requester",
+        "unidadProductiva": "Production unit",
+        "localidad": "Location",
+        "prioridad": "Priority",
+        "estado": "Status",
+        "fechaTentativa": "Target date",
+        "fechaTentativaHelper": "Ideal delivery date",
+        "fechaLimite": "Deadline",
+        "fechaLimiteHelper": "Latest acceptable date",
+        "notas": "Notes",
+        "lineas": "Lines",
+        "lineasCount": "{count, plural, one {# line} other {# lines}}",
+        "lineasResumen": "{aprobadas, plural, one {# approved} other {# approved}} · {rechazadas, plural, one {# rejected} other {# rejected}}"
+      },
+      "lineas": {
+        "titulo": "Lines",
+        "agregar": "Add line",
+        "item": "Item",
+        "cantidad": "Quantity",
+        "unidad": "Unit",
+        "prioridad": "Priority",
+        "notas": "Notes",
+        "eliminar": "Remove line",
+        "itemPlaceholder": "Search by code or description…",
+        "sinLineas": "No lines yet. Add at least one to submit for review.",
+        "duplicada": "This item is already on another line.",
+        "cantidadInvalida": "There are lines with an item selected but quantity 0. Fix the quantity or remove the line.",
+        "cantidadMayorACero": "Must be greater than 0.",
+        "rechazadaBadge": "Rejected",
+        "aprobadaParcial": "Partially approved"
+      },
+      "filtros": {
+        "estado": "Status",
+        "unidadProductiva": "Production unit",
+        "incluirRechazadas": "Include rejected",
+        "todos": "All"
+      },
+      "kpi": {
+        "total": "Total requests",
+        "totalCaption": "loaded in the system",
+        "pendientes": "Pending review",
+        "pendientesCaption": "{count, plural, =0 {Nothing pending} one {# awaiting approval} other {# awaiting approval}}",
+        "aprobadas": "Approved without PO",
+        "aprobadasCaption": "ready to issue an order",
+        "delMes": "New this month",
+        "delMesCaption": "created in {mes}"
+      },
+      "acciones": {
+        "enviarRevision": "Submit for review",
+        "crear": "Create request",
+        "crearYEnviar": "Create and submit for review",
+        "guardar": "Save",
+        "verEnOc": "View in Purchase orders"
+      },
+      "auditoria": {
+        "titulo": "Audit",
+        "creadaPor": "Created by {nombre} · {fecha}",
+        "aprobadaPor": "Approved by {nombre} · {fecha}",
+        "rechazadaPor": "Rejected by {nombre} · {fecha}",
+        "canceladaPor": "Cancelled by {nombre} · {fecha}",
+        "aprobacionPendiente": "Approval pending.",
+        "sinDatos": "No audit data.",
+        "ocsVinculadas": "Linked POs"
+      },
+      "avisos": {
+        "vacio": "No requests yet.",
+        "vacioFiltrado": "No requests match the filters.",
+        "eliminarPregunta": "Delete request #{id}?",
+        "eliminarAviso": "Only draft requests can be deleted.",
+        "enviarConfirmacion": "Submit request #{id} for review?",
+        "enviarAviso": "After submitting, you will not be able to edit the lines.",
+        "sinLineas": "Add at least one line before submitting for review.",
+        "soloBorrador": "This request is no longer a draft.",
+        "creadaExitoso": "Request #{id} created.",
+        "creadaSinEnviar": "Created but could not be submitted for review. Please try again from the detail view.",
+        "actualizadaExitoso": "Request #{id} updated.",
+        "enviadaExitoso": "Request #{id} submitted for review.",
+        "eliminadaExitoso": "Request #{id} deleted."
+      },
+      "aprobaciones": {
+        "acciones": {
+          "aprobar": "Approve",
+          "rechazar": "Reject"
+        },
+        "aprobarTitulo": "Approve request #{id}",
+        "aprobarDescripcion": "When approved, the request moves to Approved state and its lines become available in Purchase orders for supplier assignment.",
+        "aprobarDescripcionParcial": "Check the lines to approve and adjust the quantities if needed. Unchecked lines will be rejected.",
+        "rechazarTitulo": "Reject request #{id}",
+        "rechazarDescripcion": "Rejection is final. The request becomes read-only.",
+        "comentarioOpcional": "Comment (optional)",
+        "motivoRequeridoLabel": "Rejection reason",
+        "motivoRequerido": "Please enter the rejection reason.",
+        "motivoRechazo": "Rejection reason",
+        "aprobar": {
+          "columnas": {
+            "codigo": "Code",
+            "descripcion": "Description",
+            "pedida": "Requested",
+            "aprobada": "Approved"
+          },
+          "lineasCount": "{count, plural, one {# line} other {# lines}}",
+          "seleccionarTodas": "Select all",
+          "deseleccionarTodas": "Deselect all",
+          "ajustada": "Adjusted",
+          "rechazadaBadge": "Rejected",
+          "pedidaInline": "Requested: {cantidad} {unidad}",
+          "comentarioPlaceholder": "Optional note added to the request notes…",
+          "resumen": "{aprobadas} of {total} lines approved",
+          "accion": "Approve {aprobadas} of {total}",
+          "usarRechazar": "No lines approved · use Reject"
+        },
+        "avisos": {
+          "aprobadaExitoso": "Request #{id} approved.",
+          "rechazadaExitoso": "Request #{id} rejected.",
+          "yaNoEsEnRevision": "The request is no longer under review.",
+          "aprobarSinLineas": "You must approve at least one line. Use Reject for a total rejection.",
+          "cantidadAprobadaInvalida": "Approved quantities must be between 1 and the requested quantity."
+        }
+      }
+    },
+    "subnav": {
+      "solicitudes": "Requests",
+      "oc": "Purchase orders",
+      "recepciones": "Receptions",
+      "facturas": "Invoices"
+    },
+    "oc": {
+      "titulo": "Purchase orders",
+      "descripcion": "Supplier assignment and issued orders.",
+      "volver": "Back to orders",
+      "tabs": {
+        "pendientes": "Pending assignment",
+        "emitidas": "Issued orders"
+      },
+      "pendientes": {
+        "buscarPlaceholder": "Search by code or description…",
+        "urgente": "Urgent",
+        "normal": "Normal",
+        "elegirProveedor": "Select supplier",
+        "filtros": {
+          "todas": "All urgencies",
+          "urgentes": "Urgent only"
+        },
+        "columnas": {
+          "seleccionar": "Select item",
+          "seleccionarTodos": "Select all",
+          "codigo": "Code",
+          "descripcion": "Description",
+          "item": "Item",
+          "cantidad": "Total qty.",
+          "cantidadTotal": "Total quantity",
+          "unidad": "Unit",
+          "urgencia": "Urgency",
+          "solicitudes": "Requests",
+          "solicitudesCount": "{count, plural, one {# request} other {# requests}}",
+          "proveedor": "Supplier"
+        },
+        "bulk": {
+          "seleccionados": "{count, plural, one {# item selected} other {# items selected}}",
+          "asignarTodos": "Assign all to",
+          "elegirProveedor": "Choose a supplier"
+        },
+        "acciones": {
+          "emitir": "Issue POs"
+        },
+        "avisos": {
+          "emitirTitulo": "Issue orders for {items, plural, one {# item} other {# items}} across {proveedores, plural, one {# supplier} other {# suppliers}}?",
+          "emitirLinea": "{proveedor}: {count, plural, one {# item} other {# items}}",
+          "emitidoExitoso": "{count, plural, one {# PO issued} other {# POs issued}}.",
+          "faltanProveedores": "{count, plural, one {# selected item without supplier} other {# selected items without supplier}}.",
+          "nadaSeleccionado": "No items selected to issue.",
+          "itemDrained": "A selected item no longer has pending lines. Please refresh the page."
+        },
+        "vacio": {
+          "titulo": "No lines pending assignment",
+          "descripcion": "When there are approved requests without an issued PO, they will appear here grouped by material."
+        }
+      },
+      "buscarPlaceholder": "Search by No., supplier or buyer…",
+      "resultadosCount": "{count, plural, one {# order} other {# orders}}",
+      "subtotalEstimado": "Estimated subtotal",
+      "solicitudOrigen": "Source request",
+      "canceladaPor": "Cancelled by {nombre} · {fecha}",
+      "campos": {
+        "numero": "No.",
+        "fechaEmision": "Date",
+        "proveedor": "Supplier",
+        "comprador": "Buyer",
+        "lineas": "Lines",
+        "estado": "Status",
+        "observaciones": "Notes"
+      },
+      "columnas": {
+        "codigo": "Code",
+        "descripcion": "Description",
+        "item": "Item",
+        "cantidad": "Quantity",
+        "precio": "Unit price",
+        "total": "Subtotal",
+        "recibido": "Received"
+      },
+      "secciones": {
+        "proveedor": "Supplier",
+        "lineas": "Lines",
+        "resumen": "Summary",
+        "avanceRecepcion": "Receipt progress",
+        "recepciones": "Receptions",
+        "cerradaSinFactura": "Closed without invoice"
+      },
+      "filtros": {
+        "estado": "Status",
+        "proveedor": "Supplier",
+        "todos": "All"
+      },
+      "acciones": {
+        "descargarPdf": "Download PDF",
+        "cancelar": "Cancel PO",
+        "recibir": "Receive"
+      },
+      "avisos": {
+        "vacio": "No purchase orders yet.",
+        "vacioFiltrado": "No orders match the filters.",
+        "canceladaExitoso": "Order cancelled.",
+        "tieneRecepciones": "The PO has receptions; it cannot be cancelled.",
+        "yaNoEsEmitida": "The PO is no longer in Issued state.",
+        "cancelarTitulo": "Cancel this PO?",
+        "cancelarDescripcion": "The lines will return to Pending in their request.",
+        "cargandoDetalle": "Loading details…",
+        "errorCargaDetalle": "Could not load the details.",
+        "sinRecepciones": "No receptions for this PO yet.",
+        "sinFacturas": "No invoices for this PO yet."
+      },
+      "drawer": {
+        "tabs": {
+          "resumen": "Summary",
+          "lineas": "Lines",
+          "recepciones": "Receptions",
+          "facturas": "Invoices"
+        },
+        "verPaginaCompleta": "Open full page",
+        "registrarRecepcion": "Record reception",
+        "adjuntarFactura": "Attach invoice",
+        "proximamente": "Coming soon",
+        "columnas": {
+          "remito": "Delivery note",
+          "fecha": "Date",
+          "recibidoPor": "Received by",
+          "lineas": "Lines",
+          "factura": "Invoice",
+          "total": "Total"
+        }
+      }
+    },
+    "recepciones": {
+      "titulo": "Receptions",
+      "descripcion": "POs pending receipt and delivery note history.",
+      "volver": "Back to receptions",
+      "nuevaDesdeOc": "New reception from PO",
+      "nuevaTitulo": "New reception · {numero} · {proveedor}",
+      "nuevaDescripcion": "Enter the quantities actually received.",
+      "tabs": {
+        "pendientes": "Pending receipt",
+        "historial": "History"
+      },
+      "pendientes": {
+        "buscarPlaceholder": "Search by PO or supplier…",
+        "columnas": {
+          "pendientes": "Pend. / Total"
+        },
+        "acciones": {
+          "recibir": "Receive",
+          "vistaCompleta": "Open full view"
+        },
+        "modal": {
+          "titulo": "Receive · {numero} · {proveedor}",
+          "descripcion": "Enter the quantities and the delivery note number to record the reception.",
+          "ayudaCantidad": "Edit the received quantity per line. The maximum is the pending amount.",
+          "vistaCompleta": "Use full view (attachments, destination, notes)"
+        },
+        "vacio": {
+          "titulo": "No POs pending receipt",
+          "descripcion": "When there are issued or partially received POs, they will appear here to record the reception."
+        }
+      },
+      "detalleTitulo": "Delivery note {remito}",
+      "buscarPlaceholder": "Search by delivery note, supplier or PO…",
+      "resultadosCount": "{count, plural, one {# reception} other {# receptions}}",
+      "facturadoSi": "Invoiced",
+      "facturadoNo": "Not invoiced",
+      "campos": {
+        "remito": "Delivery note",
+        "fecha": "Date",
+        "oc": "PO",
+        "proveedor": "Supplier",
+        "recibidoPor": "Received by",
+        "lineas": "Lines",
+        "observaciones": "Notes",
+        "estado": "Status"
+      },
+      "columnas": {
+        "codigo": "Code",
+        "descripcion": "Description",
+        "pendiente": "Pend.",
+        "recibirAhora": "Receive",
+        "destino": "Destination",
+        "observaciones": "Notes",
+        "cantidad": "Quantity",
+        "facturado": "Invoiced"
+      },
+      "filtros": {
+        "proveedor": "Supplier",
+        "todos": "All"
+      },
+      "kpi": {
+        "total": "Total receptions",
+        "totalCaption": "delivery notes recorded",
+        "delMes": "This month",
+        "delMesCaption": "{count, plural, =0 {No receptions in {mes}} one {# reception · {mes}} other {# receptions · {mes}}}",
+        "sinFacturar": "Uninvoiced",
+        "sinFacturarCaption": "delivery notes with pending lines",
+        "cerradas": "Closed without invoice",
+        "cerradasCaption": "returns or voided delivery notes"
+      },
+      "destinos": {
+        "Stock": "Stock",
+        "Directa": "Direct"
+      },
+      "acciones": {
+        "recibirTodo": "Receive all",
+        "guardar": "Save reception"
+      },
+      "resumen": {
+        "sinLineas": "No quantities entered.",
+        "completa": "PO complete",
+        "parcial": "PO partially received",
+        "detalle": "Balance after reception: {saldo}. {stock} to stock · {directa} direct."
+      },
+      "avisos": {
+        "vacio": "No receptions yet.",
+        "vacioFiltrado": "No receptions match the filters.",
+        "creadaExitoso": "Reception #{id} recorded.",
+        "sobreRecepcion": "Some quantity exceeds the pending amount. Please review the lines.",
+        "ocNoRecibible": "This PO no longer accepts receptions.",
+        "nadaParaRecibir": "Enter at least one quantity before saving.",
+        "sinOcSeleccionada": "Select a PO",
+        "sinOcSeleccionadaDesc": "To record a reception, open a purchase order and use the \"Record reception\" button.",
+        "ocInexistente": "The requested PO does not exist."
+      },
+      "volverAOc": "Back to purchase orders",
+      "resumenSidebar": {
+        "titulo": "Summary",
+        "lineas": "Lines",
+        "unidadesPedidas": "Ordered",
+        "unidadesRecibidas": "To receive",
+        "notas": "Notes",
+        "notasPlaceholder": "General notes (optional)",
+        "adjuntos": "Attachments",
+        "adjuntosNota": "Files are stored in the browser for now (no upload)."
+      },
+      "footer": {
+        "cancelar": "Cancel",
+        "confirmar": "Confirm reception",
+        "guardando": "Saving…"
+      },
+      "cerrarSinFactura": {
+        "accion": "Close without invoice",
+        "dialogTitulo": "Close reception without invoice",
+        "dialogDescripcion": "Pending lines will be excluded from the new invoices list. Use this for returns, replacements or delivery notes that will not be invoiced.",
+        "motivoLabel": "Reason",
+        "motivoPlaceholder": "E.g.: return to supplier, warranty replacement.",
+        "confirmar": "Close without invoice",
+        "banner": "Reception closed without invoice.",
+        "cerradaPor": "Closed by {nombre} on {fecha}.",
+        "toastOk": "Reception closed without invoice.",
+        "toastYaCerrada": "The reception was already closed.",
+        "toastNadaPorCerrar": "No pending lines to close.",
+        "toastForbidden": "You do not have permission for this action.",
+        "toastUnknown": "Could not close. Please retry in a few seconds."
+      }
+    },
+    "facturas": {
+      "titulo": "Invoices",
+      "descripcion": "Pending invoicing and invoice history.",
+      "volver": "Back to invoices",
+      "tabs": {
+        "pendientes": "Pending invoicing",
+        "historial": "History"
+      },
+      "pendientes": {
+        "buscarPlaceholder": "Search by PO or supplier…",
+        "columnas": {
+          "oc": "PO",
+          "fechaEmision": "PO date",
+          "proveedor": "Supplier",
+          "estado": "Status",
+          "pendientes": "Pend. / Total",
+          "ultimaRecepcion": "Last reception"
+        },
+        "ultimaRecepcionInline": "Last recep. {fecha}",
+        "acciones": {
+          "crear": "Create invoice"
+        },
+        "vacio": {
+          "titulo": "No POs pending invoicing",
+          "descripcion": "When there are receptions without an associated invoice, they will appear here."
+        }
+      },
+      "nueva": "New invoice",
+      "nuevaTitulo": "New invoice",
+      "nuevaDescripcion": "Select the supplier and link the lines already received.",
+      "buscarPlaceholder": "Search by No. or supplier…",
+      "resultadosCount": "{count, plural, one {# invoice} other {# invoices}}",
+      "seleccionarProveedor": "Select supplier",
+      "seleccionarTodas": "Select all",
+      "campos": {
+        "proveedor": "Supplier",
+        "numero": "Invoice No.",
+        "fecha": "Date",
+        "usuario": "User",
+        "lineas": "Lines",
+        "total": "Total",
+        "tipo": "Type",
+        "puntoDeVenta": "Point of sale",
+        "notas": "Internal notes",
+        "notasPlaceholder": "Internal notes (optional)…"
+      },
+      "columnas": {
+        "remito": "Delivery note",
+        "oc": "PO",
+        "descripcion": "Description",
+        "cantidad": "Qty.",
+        "precioUnit": "Unit price",
+        "descuento": "Disc. %",
+        "discrepancia": "Diff.",
+        "total": "Total"
+      },
+      "filtros": {
+        "proveedor": "Supplier",
+        "todos": "All"
+      },
+      "kpi": {
+        "total": "Total invoices",
+        "totalCaption": "recorded in the system",
+        "delMes": "This month",
+        "delMesCaption": "{count, plural, =0 {No invoices in {mes}} one {# invoice · {mes}} other {# invoices · {mes}}}",
+        "montoMes": "Monthly billing",
+        "montoMesCaption": "net accumulated for {mes}",
+        "proveedoresMes": "Suppliers billing",
+        "proveedoresMesCaption": "distinct in {mes}"
+      },
+      "acciones": {
+        "guardar": "Save invoice",
+        "cancelar": "Cancel"
+      },
+      "faltan": {
+        "proveedor": "supplier",
+        "numero": "invoice No.",
+        "lineas": "at least one selected line",
+        "precio": "price on each selected line",
+        "titulo": "Missing"
+      },
+      "totales": {
+        "subtotal": "Subtotal",
+        "descuentoComercial": "Commercial disc.",
+        "descuentoFinanciero": "Financial disc.",
+        "recargo": "Surcharge",
+        "netoGravado": "Net taxable",
+        "ivaPorcentaje": "VAT %",
+        "ivaMonto": "VAT",
+        "total": "Total"
+      },
+      "discrepancia": {
+        "match": "Matches",
+        "soft": "Minor difference",
+        "hard": "Large difference",
+        "noReference": "No PO ref.",
+        "none": ""
+      },
+      "avisos": {
+        "vacio": "No invoices yet.",
+        "vacioFiltrado": "No invoices match the filters.",
+        "seleccionarProveedor": "Select a supplier to see their uninvoiced lines.",
+        "sinPendientes": "This supplier has no receptions pending invoicing.",
+        "creadaExitoso": "Invoice {numero} recorded.",
+        "duplicadoNumero": "An invoice with that number already exists.",
+        "yaFacturada": "Some line was invoiced by another user. Please refresh the page.",
+        "proveedorInvalido": "The selected lines do not belong to the chosen supplier."
+      }
+    }
+  },
+  "mantenimiento": {
+    "subnav": {
+      "mantenimientos": "Maintenances",
+      "plantillas": "Templates",
+      "horometros": "Hour meters"
+    },
+    "index": {
+      "titulo": "Maintenances",
+      "descripcion": "Corrective and preventive work on the fleet.",
+      "descripcionRica": "{activos, plural, =0 {No active orders} one {# active order} other {# active orders}} · {vencidas, plural, =0 {none overdue} one {# overdue} other {# overdue}} · {enTaller, plural, =0 {none in workshop} one {# in workshop} other {# in workshop}}",
+      "nuevo": "New maintenance",
+      "volver": "Back to maintenances",
+      "buscarPlaceholder": "Search by machine or assignee…",
+      "resultadosCount": "{count, plural, one {# maintenance} other {# maintenances}}"
+    },
+    "kpis": {
+      "vencidas": "Overdue",
+      "vencidasCaption": "{count, plural, =0 {Nothing overdue} one {# overdue order} other {# overdue orders}}",
+      "proximas": "Next 7 days",
+      "proximasCaption": "Upcoming scheduled orders",
+      "enCurso": "In progress",
+      "enCursoCaption": "In field or workshop",
+      "pendientes": "Pending",
+      "pendientesCaption": "To be started"
+    },
+    "lista": {
+      "vista": "List"
+    },
+    "tablero": {
+      "vista": "Board",
+      "laneVacia": "No maintenances in this column.",
+      "vence": "due {label}",
+      "vencidoHace": "overdue by {days}d",
+      "venceHoy": "due today",
+      "venceEn": "due in {days}d",
+      "sinFecha": "no date",
+      "tareas": "{done}/{total} tasks",
+      "prioridad": "Priority {nivel}"
+    },
+    "nuevo": {
+      "titulo": "New maintenance",
+      "descripcion": "Load a maintenance with machine, type of work, parts and assignment. It stays in Pending state until the assignee starts it.",
+      "crear": "Create maintenance",
+      "cancelar": "Cancel",
+      "dirty": "Unsaved changes",
+      "opcionesAvanzadas": "Advanced options",
+      "requerido": "required",
+      "opcional": "optional",
+      "secciones": {
+        "maquina": "Machine",
+        "tipo": "Type of work",
+        "descripcion": "Work description",
+        "repuestos": "Parts and supplies",
+        "asignacion": "Assignment and scheduling"
+      },
+      "hints": {
+        "repuestos": "reserved on creation · consumed on completion",
+        "asignacion": "Assign a person and set when the work will be done."
+      },
+      "plantilla": {
+        "label": "Checklist template",
+        "info": "optional · applied to preventive",
+        "placeholder": "— no template —",
+        "ayuda": "Select a template to preload suggested tasks and supplies."
+      },
+      "descripcionLabel": "Detailed description",
+      "descripcionPlaceholder": "Instructions, notes or relevant history for the technician…",
+      "volver": "Back to Maintenance"
+    },
+    "columnas": {
+      "numero": "No.",
+      "diasAbiertos": "Days open"
+    },
+    "campos": {
+      "maquina": "Machine",
+      "tipo": "Type",
+      "estado": "Status",
+      "descripcion": "Description",
+      "responsable": "Assignee",
+      "unidadProductiva": "Production unit",
+      "tallerAsignado": "Assigned workshop",
+      "prioridad": "Priority",
+      "fechaCreacion": "Created on",
+      "fechaProgramada": "Scheduled date",
+      "fechaInicio": "Start date",
+      "fechaFinalizacion": "End date",
+      "creado": "Created"
+    },
+    "estados": {
+      "Pendiente": "Pending",
+      "EnReparacionChacra": "In Repair · Field",
+      "EnReparacionTaller": "In Repair · Workshop",
+      "Finalizado": "Completed",
+      "Cancelado": "Cancelled"
+    },
+    "tipos": {
+      "correctivo": "Corrective",
+      "preventivo": "Preventive"
+    },
+    "filtros": {
+      "tipo": "Type",
+      "estado": "Status",
+      "responsable": "Assignee",
+      "todos": "All",
+      "incluirCerrados": "Include closed"
+    },
+    "acciones": {
+      "editar": "Edit",
+      "guardar": "Save",
+      "cancelarDialogo": "Cancel",
+      "confirmar": "Confirm",
+      "iniciarChacra": "Start in field",
+      "iniciarTaller": "Send to workshop",
+      "cambiarTaller": "Change workshop",
+      "finalizar": "Complete",
+      "cancelar": "Cancel maintenance"
+    },
+    "avisos": {
+      "vacio": "No maintenances recorded.",
+      "creadoExitoso": "Maintenance created.",
+      "guardadoExitoso": "Changes saved.",
+      "insumosGuardados": "Supplies saved.",
+      "tareasGuardadas": "Tasks saved.",
+      "errorGenerico": "Could not complete the action. Please retry.",
+      "estadoTerminal": "The maintenance is already closed.",
+      "cambioEstadoConflicto": "Another user changed the status. Please refresh and retry.",
+      "sinPermisos": "You do not have permission for this action.",
+      "transicionExitosa": "Status updated.",
+      "sinDescripcion": "No description.",
+      "cancelarTitulo": "Cancel the maintenance?",
+      "cancelarDescripcion": "This action closes the maintenance without completing it. No supplies are consumed.",
+      "editarDescripcion": "Update the maintenance data.",
+      "elegiTaller": "Choose the responsible workshop.",
+      "finalizarDescripcion": "On completion, supplies with used quantity > 0 will be deducted from stock."
+    },
+    "tareas": {
+      "titulo": "Tasks",
+      "sinTareas": "No tasks yet.",
+      "guardar": "Save tasks",
+      "agregar": "Add",
+      "placeholder": "Describe a task…",
+      "eliminarLinea": "Remove task"
+    },
+    "insumos": {
+      "titulo": "Supplies",
+      "guardar": "Save supplies",
+      "descripcionAyuda": "Deducted from stock on maintenance completion, based on the used quantity.",
+      "item": "Item",
+      "cantidadSugerida": "Suggested",
+      "cantidadUtilizada": "Used",
+      "costoUnitario": "Unit price",
+      "costoTotal": "Total",
+      "sinInsumos": "No supplies added.",
+      "sobreConsumoAviso": "Exceeds available stock.",
+      "itemRequerido": "Select an item or remove the line.",
+      "itemRequeridoToast": "Select the item on all lines or remove the empty ones.",
+      "agregar": "Add supply",
+      "eliminarLinea": "Remove supply"
+    },
+    "observaciones": {
+      "titulo": "Notes",
+      "placeholder": "Add a note…",
+      "agregar": "Record"
+    },
+    "revision": {
+      "titulo": "Scheduled review",
+      "programar": "Schedule next review",
+      "ayuda": "On completion, a pending maintenance is created for the chosen date.",
+      "fecha": "Date",
+      "descripcion": "Description",
+      "verRevision": "View review #{id} →",
+      "verRevisionCorta": "View review",
+      "creadaToast": "Maintenance completed. Review #{id} created."
+    },
+    "historial": {
+      "titulo": "History",
+      "sinEventos": "No events recorded."
+    },
+    "detalle": {
+      "datosGenerales": "General data",
+      "descripcionTitulo": "Description",
+      "checklist": "Checklist",
+      "repuestos": "Assigned parts",
+      "repuestosTotal": "Total parts",
+      "partes": "Work reports",
+      "archivos": "Attachments",
+      "acciones": "Actions",
+      "costos": "Costs",
+      "costoRepuestos": "Parts",
+      "costoManoObra": "Labor",
+      "costoTotal": "Total",
+      "bitacoraRapida": "Quick log",
+      "prioridadBaja": "Low priority",
+      "prioridadMedia": "Medium priority",
+      "prioridadAlta": "High priority",
+      "cambiarEstado": "Change status"
+    },
+    "plantillas": {
+      "titulo": "Maintenance templates",
+      "descripcion": "Recurring preventive jobs grouped by machine type.",
+      "nueva": "New template",
+      "nuevaTitulo": "New template",
+      "editarTitulo": "Edit template",
+      "volver": "Back to templates",
+      "formAyuda": "Define the recurrence, expected supplies and tasks to perform.",
+      "buscarPlaceholder": "Search by name or type…",
+      "resultadosCount": "{count, plural, one {# template} other {# templates}}",
+      "crear": "Create template",
+      "eliminar": "Delete template",
+      "aplicar": "Apply template",
+      "aplicarDescripcion": "Generate a new preventive maintenance from this template.",
+      "vacio": "No templates loaded.",
+      "columnas": {
+        "nombre": "Name",
+        "tipoMaquinaria": "Machine type",
+        "frecuencia": "Frequency",
+        "insumos": "Supplies",
+        "tareas": "Tasks",
+        "aplicaciones": "Applications"
+      },
+      "filtros": {
+        "tipoMaquinaria": "Machine type"
+      },
+      "campos": {
+        "nombre": "Name",
+        "tipoMaquinaria": "Machine type",
+        "prioridad": "Priority",
+        "frecuenciaValor": "Every",
+        "frecuenciaUnidad": "Unit",
+        "descripcion": "Description"
+      },
+      "frecuenciaUnidades": {
+        "horas": "Hours",
+        "dias": "Days",
+        "meses": "Months"
+      },
+      "insumos": {
+        "titulo": "Suggested supplies",
+        "ayuda": "Copied to the maintenance when the template is applied.",
+        "vacio": "No suggested supplies.",
+        "item": "Item",
+        "cantidadSugerida": "Quantity",
+        "agregar": "Add supply",
+        "eliminarLinea": "Remove supply"
+      },
+      "tareas": {
+        "titulo": "Tasks",
+        "vacio": "No tasks loaded.",
+        "placeholder": "Describe a task…",
+        "agregar": "Add",
+        "eliminarLinea": "Remove task"
+      },
+      "avisos": {
+        "creadaExitosa": "Template created.",
+        "eliminadaExitosa": "Template deleted.",
+        "enUso": "Cannot delete: there are maintenances referencing it.",
+        "eliminarTitulo": "Delete the template?",
+        "eliminarDescripcion": "This cannot be undone. Only deletable if it has no applications.",
+        "aplicadaExitosa": "Maintenance generated.",
+        "sinMaquinasDelTipo": "No active machines of this type."
+      }
+    },
+    "horometros": {
+      "titulo": "Hour meters",
+      "descripcion": "Record of accumulated hours per machine.",
+      "nuevo": "Record hours",
+      "nuevoTitulo": "Record hours",
+      "nuevoDescripcion": "Update the accumulated hours for a machine.",
+      "registrar": "Record",
+      "buscarPlaceholder": "Search by machine, user or notes…",
+      "resultadosCount": "{count, plural, one {# record} other {# records}}",
+      "vacio": "No hour meter records.",
+      "horasActuales": "Current hours: {valor}",
+      "columnas": {
+        "fecha": "Date",
+        "maquina": "Machine",
+        "horasAnterior": "Previous",
+        "horasNuevo": "New",
+        "diferencia": "Difference",
+        "usuario": "User",
+        "observaciones": "Notes"
+      },
+      "campos": {
+        "horasNuevo": "New hours",
+        "fechaRegistro": "Record date",
+        "observaciones": "Notes",
+        "observacionesPlaceholder": "Optional comments…"
+      },
+      "avisos": {
+        "creadoExitoso": "Record saved.",
+        "campoRequerido": "This field is required.",
+        "horasMenoresAnterior": "Must be greater than {valor} (current hours)."
+      }
+    }
+  },
+  "ordenesTrabajo": {
+    "titulo": "Work Orders",
+    "descripcion": "Specific jobs with supplies and traceability.",
+    "nueva": "New WO",
+    "nuevaTitulo": "New work order",
+    "editarTitulo": "Edit work order",
+    "detalleDescripcion": "Manage supplies and close the WO when complete.",
+    "formAyuda": "Fill in the general information for the WO.",
+    "buscarPlaceholder": "Search by title, No. or assignee…",
+    "resultadosCount": "{count, plural, one {# order} other {# orders}}",
+    "volver": "Back to work orders",
+    "editar": "Edit",
+    "guardar": "Save",
+    "crear": "Create WO",
+    "cerrar": "Close WO",
+    "cancelar": "Cancel",
+    "cancelarOt": "Cancel WO",
+    "columnas": {
+      "numero": "No.",
+      "titulo": "Title",
+      "fechaCreacion": "Date",
+      "responsable": "Assignee",
+      "prioridad": "Priority",
+      "estado": "Status",
+      "insumos": "Supplies"
+    },
+    "campos": {
+      "titulo": "Title",
+      "descripcionTrabajo": "Work description",
+      "solicitante": "Requester",
+      "responsable": "Assignee",
+      "localidad": "Location",
+      "unidadProductiva": "Production unit",
+      "prioridad": "Priority",
+      "estado": "Status",
+      "observaciones": "Notes",
+      "fechaCreacion": "Created on",
+      "fechaFinalizacion": "End date",
+      "creadoPor": "Created by"
+    },
+    "secciones": {
+      "responsables": "Assignees",
+      "trabajo": "Work"
+    },
+    "filtros": {
+      "estado": "Status",
+      "prioridad": "Priority",
+      "responsable": "Assignee",
+      "todos": "All",
+      "incluirCerradas": "Include closed"
+    },
+    "calendario": {
+      "descripcion": "{count, plural, =0 {No WOs created this week} one {# WO created this week} other {# WOs created this week}}",
+      "eventosCount": "{count, plural, one {# visible event} other {# visible events}}",
+      "nav": {
+        "anterior": "Previous week",
+        "siguiente": "Next week",
+        "hoy": "Today"
+      },
+      "filtros": {
+        "categorias": "Categories",
+        "responsable": "Assignee",
+        "maquina": "Machine",
+        "maquinaPlaceholder": "Search title…",
+        "todos": "All"
+      },
+      "proximas": {
+        "titulo": "Upcoming",
+        "subtitulo": "{count, plural, =0 {Nothing in queue} one {# upcoming WO} other {# upcoming WOs}}",
+        "vacio": "No WOs visible this week."
+      }
+    },
+    "insumos": {
+      "titulo": "Supplies",
+      "vacio": "No supplies loaded.",
+      "agregar": "Add supply",
+      "eliminar": "Remove",
+      "guardar": "Save supplies",
+      "item": "Item",
+      "cantidad": "Quantity",
+      "unidadMedida": "Unit",
+      "costoUnitario": "Unit cost",
+      "costoTotal": "Total",
+      "totalEstimado": "Estimated total",
+      "sobreConsumoAviso": "Exceeds available stock.",
+      "sobreConsumoAvisoFooter": "Some supply exceeds stock — please review before closing.",
+      "itemRequerido": "Select an item or remove the line.",
+      "itemRequeridoToast": "Select the item on all lines or remove the empty ones."
+    },
+    "avisos": {
+      "vacio": "No work orders recorded.",
+      "creadaExitosa": "Work order created.",
+      "actualizadaExitosa": "Changes saved.",
+      "insumosGuardados": "Supplies saved.",
+      "cerradaExitosa": "WO closed. Supplies were consumed from stock.",
+      "canceladaExitosa": "WO cancelled.",
+      "cerrada": "The WO can no longer be modified.",
+      "guardarInsumosAntes": "Save supplies before closing the WO.",
+      "sinDescripcion": "No description.",
+      "sinPermisos": "You do not have permission for this action.",
+      "errorGenerico": "Could not complete the action. Please retry.",
+      "campoRequerido": "This field is required.",
+      "cancelarTitulo": "Cancel the work order?",
+      "cancelarDescripcion": "The WO will be cancelled without consuming supplies from stock."
+    }
+  },
+  "listados": {
+    "index": {
+      "titulo": "Lists",
+      "descripcion": "Master data that feeds the rest of Agimav: people, suppliers, operational structure and units of measure.",
+      "exportar": "Export all (CSV)",
+      "importar": "Import",
+      "auditHint": "Lists are <strong>master data</strong>: the values you choose here appear in the selectors across Inventory, Purchasing, Machinery and Maintenance. Deactivate (instead of delete) to preserve history.",
+      "vistaCompleta": "full view"
+    },
+    "tiles": {
+      "grupos": {
+        "organizacion": "Organization",
+        "estructura": "Operational structure",
+        "unidades": "Units of measure"
+      },
+      "meta": {
+        "activosInactivos": "{activos} active · {inactivos} inactive"
+      },
+      "descripciones": {
+        "usuarios": "People with access to the system. Invite, assign roles and manage onboarding and offboarding.",
+        "roles": "Access profiles that group permissions for each area of the system.",
+        "proveedores": "Companies that supply parts, services and fuel. Used in purchasing and receptions.",
+        "localidades": "Cities and regions where Agimav operates. Used in suppliers and production units.",
+        "unidadesProductivas": "Sites and operational bases. Machines and WOs are associated with a unit.",
+        "tiposUnidad": "Classification of production units: road works, quarry, logistics base, etc.",
+        "unidadesMedida": "Units used by inventory items: liters, kilos, units, meters."
+      }
+    },
+    "common": {
+      "buscar": "Search…",
+      "crear": "New",
+      "editar": "Edit",
+      "ver": "View",
+      "guardar": "Save",
+      "guardando": "Saving…",
+      "cancelar": "Cancel",
+      "desactivar": "Deactivate",
+      "reactivar": "Reactivate",
+      "eliminar": "Delete",
+      "campoRequerido": "This field is required",
+      "resultados": "{count, plural, one {# result} other {# results}}",
+      "sinResultados": "No results for \"{query}\"",
+      "sinResultadosFiltrados": "No results with the current filters.",
+      "paginacion": {
+        "pagina": "Page {current} of {total}",
+        "anterior": "Previous",
+        "siguiente": "Next"
+      },
+      "vacio": "No {entidad} yet",
+      "vacioAdmin": "No {entidad} yet. Create the first one.",
+      "estadoActivo": "Active",
+      "estadoInactivo": "Inactive",
+      "filtroEstado": "Status",
+      "filtroActivos": "Active",
+      "filtroInactivos": "Inactive",
+      "filtroTodos": "All",
+      "descartarCambios": "Discard unsaved changes?",
+      "errorGuardar": "Could not save. Please retry in a few seconds.",
+      "errorForbidden": "You do not have permission for this action.",
+      "duplicado": "A record with that name already exists.",
+      "creadoExitoso": "{entidad} \"{nombre}\" created.",
+      "actualizadoExitoso": "{entidad} \"{nombre}\" updated.",
+      "desactivadoExitoso": "{entidad} \"{nombre}\" deactivated.",
+      "reactivadoExitoso": "{entidad} \"{nombre}\" reactivated.",
+      "eliminadoExitoso": "{entidad} \"{nombre}\" deleted."
+    },
+    "roles": {
+      "titulo": "Roles",
+      "descripcion": "System roles for permissions",
+      "singular": "Role",
+      "plural": "roles",
+      "nombre": "Name",
+      "usuariosCount": "Users",
+      "permisosCount": "Permissions",
+      "editarPermisos": "Edit permissions",
+      "buscarPlaceholder": "Search role…",
+      "eliminarPregunta": "Delete the role \"{nombre}\"?",
+      "eliminarAviso": "This cannot be undone.",
+      "eliminarEnUso": "Cannot delete \"{nombre}\": {count, plural, one {# user has} other {# users have}} this role. Reassign them first.",
+      "kpi": {
+        "total": "Total roles",
+        "totalCaption": "defined in the system",
+        "asignados": "With users",
+        "asignadosCaption": "at least one user assigned",
+        "sinUsuarios": "Without users",
+        "sinUsuariosCaption": "created but unassigned"
+      }
+    },
+    "unidadesMedida": {
+      "titulo": "Units of measure",
+      "descripcion": "Units used in inventory and purchasing",
+      "singular": "Unit",
+      "plural": "units of measure",
+      "nombre": "Name",
+      "abreviacion": "Abbreviation",
+      "buscarPlaceholder": "Search name or abbreviation…",
+      "eliminarPregunta": "Delete the unit \"{nombre}\"?",
+      "eliminarEnUso": "Cannot delete \"{nombre}\": there {count, plural, one {is # inventory item} other {are # inventory items}} using it.",
+      "kpi": {
+        "total": "Total units",
+        "totalCaption": "configured"
+      }
+    },
+    "tiposUnidad": {
+      "titulo": "Production unit types",
+      "descripcion": "Types to classify production units",
+      "singular": "Type",
+      "plural": "unit types",
+      "nombre": "Name",
+      "unidadesCount": "Units",
+      "buscarPlaceholder": "Search type…",
+      "eliminarPregunta": "Delete the type \"{nombre}\"?",
+      "eliminarEnUso": "Cannot delete \"{nombre}\": {count, plural, one {# production unit uses it} other {# production units use it}}.",
+      "kpi": {
+        "total": "Total types",
+        "totalCaption": "available",
+        "enUso": "In use",
+        "enUsoCaption": "classify units"
+      }
+    },
+    "localidades": {
+      "titulo": "Locations",
+      "descripcion": "Locations of suppliers and production units",
+      "singular": "Location",
+      "plural": "locations",
+      "nombre": "Name",
+      "referencias": "References",
+      "buscarPlaceholder": "Search location…",
+      "eliminarPregunta": "Delete the location \"{nombre}\"?",
+      "eliminarEnUso": "Cannot delete \"{nombre}\": {count, plural, one {# record references it} other {# records reference it}}.",
+      "kpi": {
+        "total": "Total locations",
+        "totalCaption": "loaded",
+        "enUso": "In use",
+        "enUsoCaption": "with references",
+        "sinUso": "Unused",
+        "sinUsoCaption": "could be deleted"
+      }
+    },
+    "usuarios": {
+      "titulo": "Users",
+      "descripcion": "System users and their roles",
+      "singular": "User",
+      "plural": "users",
+      "nombre": "Name",
+      "email": "Email",
+      "rol": "Role",
+      "estado": "Status",
+      "sinRol": "No role",
+      "buscarPlaceholder": "Search name, email or role…",
+      "kpi": {
+        "total": "Total users",
+        "totalCaption": "loaded in the system",
+        "activos": "Active",
+        "activosCaption": "can sign in",
+        "inactivos": "Inactive",
+        "inactivosCaption": "history preserved, no access",
+        "sinRol": "No role",
+        "sinRolCaption": "assign one"
+      },
+      "invitacion": {
+        "titulo": "Invitation link",
+        "ayudaNuevo": "Send this link to the user to set their password. Expires on {fecha}.",
+        "ayudaRegenerar": "New link generated. Expires on {fecha}. Previous links no longer work.",
+        "copiar": "Copy link",
+        "copiado": "Link copied to clipboard.",
+        "copiarError": "Could not copy. Copy manually.",
+        "regenerar": "Regenerate link",
+        "regenerado": "New link ready to copy.",
+        "cerrar": "Done",
+        "expiracion": "Expires on {fecha}",
+        "confirmarRegenerar": "Regenerate the link?",
+        "confirmarRegenerarDesc": "Previous links will stop working."
+      },
+      "errores": {
+        "noAutoBaja": "You cannot deactivate yourself.",
+        "ultimoAdmin": "You cannot deactivate the last administrator.",
+        "emailDuplicado": "A user with that email already exists."
+      }
+    },
+    "proveedores": {
+      "titulo": "Suppliers",
+      "descripcion": "List of suppliers with tax data",
+      "singular": "Supplier",
+      "plural": "suppliers",
+      "nombre": "Name",
+      "cuit": "CUIT",
+      "condicionIva": "VAT status",
+      "localidad": "Location",
+      "email": "Email",
+      "telefono": "Phone",
+      "direccion": "Address",
+      "direccionFiscal": "Tax address",
+      "contacto": "Contact",
+      "estado": "Status",
+      "cuitInvalido": "The CUIT format must be 30-12345678-9.",
+      "buscarPlaceholder": "Search name, CUIT, email or location…",
+      "kpi": {
+        "total": "Total suppliers",
+        "totalCaption": "loaded in the system",
+        "activos": "Active",
+        "activosCaption": "visible in purchasing selectors",
+        "inactivos": "Inactive",
+        "inactivosCaption": "history preserved, hidden from new records",
+        "nuevos": "New in last 30 days",
+        "nuevosCaption": "since {desde}"
+      }
+    },
+    "unidadesProductivas": {
+      "titulo": "Production units",
+      "descripcion": "Cervi production units by location and type",
+      "singular": "Production unit",
+      "plural": "production units",
+      "nombre": "Name",
+      "localidad": "Location",
+      "tipo": "Type",
+      "referencias": "References",
+      "buscarPlaceholder": "Search name, location or type…",
+      "eliminarPregunta": "Delete the unit \"{nombre}\"?",
+      "eliminarEnUso": "Cannot delete \"{nombre}\": there are records that reference it.",
+      "filtroLocalidadTodas": "All locations",
+      "filtroTipoTodos": "All types",
+      "kpi": {
+        "total": "Total units",
+        "totalCaption": "production units loaded",
+        "enUso": "In use",
+        "enUsoCaption": "with WOs or maintenances",
+        "sinLocalidad": "No location",
+        "sinLocalidadCaption": "assign one"
+      }
+    }
+  }
+}

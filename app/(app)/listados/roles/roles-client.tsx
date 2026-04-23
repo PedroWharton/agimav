@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useMemo, useState, useTransition } from "react";
 import { useTranslations } from "next-intl";
 import { format } from "date-fns";
@@ -40,6 +41,7 @@ export type RolRow = {
   id: number;
   nombre: string;
   usuariosCount: number;
+  permisosCount: number;
   createdAt: Date;
 };
 
@@ -171,6 +173,16 @@ export function RolesClient({
       ),
     },
     {
+      accessorKey: "permisosCount",
+      header: t("listados.roles.permisosCount"),
+      enableSorting: true,
+      cell: ({ row }) => (
+        <span className="tabular-nums text-muted-foreground">
+          {row.original.permisosCount}
+        </span>
+      ),
+    },
+    {
       id: "createdAt",
       header: "Creado",
       accessorFn: (row) => row.createdAt.getTime(),
@@ -193,6 +205,11 @@ export function RolesClient({
             <ActionsMenu>
               <DropdownMenuItem onClick={() => openEdit(rol)}>
                 {t("listados.common.editar")}
+              </DropdownMenuItem>
+              <DropdownMenuItem asChild>
+                <Link href={`/listados/roles/${rol.id}/permisos`}>
+                  {t("listados.roles.editarPermisos")}
+                </Link>
               </DropdownMenuItem>
               <DropdownMenuSeparator />
               <ConfirmDialog

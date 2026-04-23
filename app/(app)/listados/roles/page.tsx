@@ -13,7 +13,7 @@ export default async function RolesPage() {
       id: true,
       nombre: true,
       createdAt: true,
-      _count: { select: { usuarios: true } },
+      _count: { select: { usuarios: true, permisos: true } },
     },
     orderBy: { nombre: "asc" },
   });
@@ -22,6 +22,7 @@ export default async function RolesPage() {
     id: r.id,
     nombre: r.nombre,
     usuariosCount: r._count.usuarios,
+    permisosCount: r._count.permisos,
     createdAt: r.createdAt,
   }));
 

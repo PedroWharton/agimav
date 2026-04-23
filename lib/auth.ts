@@ -26,18 +26,27 @@ export const { auth, handlers, signIn, signOut } = NextAuth({
         const { email, password } = parsed.data;
         const user = await prisma.usuario.findUnique({
           where: { email },
-          include: { rol: true },
+          include: {
+            rol: {
+              include: {
+                permisos: { include: { permiso: { select: { codigo: true } } } },
+              },
+            },
+          },
         });
         if (!user || user.estado !== "activo" || !user.passwordHash) return null;
 
         const ok = await bcrypt.compare(password, user.passwordHash);
         if (!ok) return null;
 
+        const permisos = user.rol?.permisos.map((rp) => rp.permiso.codigo) ?? [];
+
         return {
           id: String(user.id),
           email: user.email,
           name: user.nombre,
           rol: user.rol?.nombre ?? null,
+          permisos,
         };
       },
     }),

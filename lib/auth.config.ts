@@ -24,6 +24,7 @@ export const authConfig = {
       if (user) {
         token.userId = (user as { id?: string }).id;
         token.rol = (user as { rol?: string | null }).rol ?? null;
+        token.permisos = (user as { permisos?: string[] }).permisos ?? [];
       }
       return token;
     },
@@ -32,6 +33,8 @@ export const authConfig = {
         (session.user as { id?: string }).id = token.userId as string;
         (session.user as { rol?: string | null }).rol =
           (token.rol as string | null) ?? null;
+        (session.user as { permisos?: string[] }).permisos =
+          (token.permisos as string[] | undefined) ?? [];
       }
       return session;
     },

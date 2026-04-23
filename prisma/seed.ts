@@ -2,6 +2,7 @@ import { PrismaPg } from "@prisma/adapter-pg";
 import bcrypt from "bcryptjs";
 
 import { PrismaClient } from "../lib/generated/prisma/client";
+import { seedPermisos } from "../lib/permisos/seed";
 
 const adapter = new PrismaPg({ connectionString: process.env.DATABASE_URL });
 const prisma = new PrismaClient({ adapter });
@@ -45,8 +46,14 @@ async function main() {
     },
   });
 
+  const { catalogUpserts, adminGrants, panoleroGrants } =
+    await seedPermisos(prisma);
+
   console.log(
     `Seeded ${roles.length} roles and 1 admin user (${email} / ${plainPassword})`,
+  );
+  console.log(
+    `Seeded ${catalogUpserts} permisos; +${adminGrants} admin grants, +${panoleroGrants} pañolero grants`,
   );
 }
 
