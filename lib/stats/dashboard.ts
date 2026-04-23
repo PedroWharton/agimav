@@ -415,19 +415,27 @@ export async function loadGastoPorRubro(
     1,
   );
 
+  // LEFT JOIN inventario so ad-hoc requisiciones (reqd.item_id NULL, or pointing
+  // at a missing inventario row) still appear, bucketed as "Sin categoría".
+  // Items that do link to inventario but have empty/null categoria stay under
+  // "Otros". The earlier joins stay strict — a factura without a linked OC
+  // legitimately doesn't belong on a por-rubro chart.
   const rows = await prisma.$queryRaw<
     { mes: string; categoria: string | null; total: number }[]
   >`
     SELECT
       to_char(date_trunc('month', f.fecha_factura), 'YYYY-MM') as mes,
-      COALESCE(NULLIF(TRIM(inv.categoria), ''), 'Otros') as categoria,
+      CASE
+        WHEN inv.id IS NULL THEN 'Sin categoría'
+        ELSE COALESCE(NULLIF(TRIM(inv.categoria), ''), 'Otros')
+      END as categoria,
       COALESCE(SUM(fd.total), 0)::float as total
     FROM facturas f
     JOIN factura_detalle fd ON fd.factura_id = f.id
     JOIN recepciones_detalle rd ON rd.id = fd.recepcion_detalle_id
     JOIN ordenes_compra_detalle ocd ON ocd.id = rd.oc_detalle_id
     JOIN requisiciones_detalle reqd ON reqd.id = ocd.requisicion_detalle_id
-    JOIN inventario inv ON inv.id = reqd.item_id
+    LEFT JOIN inventario inv ON inv.id = reqd.item_id
     WHERE f.fecha_factura >= ${since}
     GROUP BY mes, categoria
     ORDER BY mes ASC
@@ -435,23 +443,38 @@ export async function loadGastoPorRubro(
 
   if (rows.length === 0) return { data: [], order: [] };
 
-  // Rank categorías globally; bucket tail into "Otros".
+  const SIN_CAT = "Sin categoría";
+
+  // Rank real categorías globally, then pin "Sin categoría" (un-attributable
+  // spend) as its own sticky bucket — signal lives better there than lumped
+  // into a generic "Otros" tail.
   const catTotals = new Map<string, number>();
   for (const r of rows) {
     const key = r.categoria ?? "Otros";
     catTotals.set(key, (catTotals.get(key) ?? 0) + r.total);
   }
+  const sinCatTotal = catTotals.get(SIN_CAT) ?? 0;
+  catTotals.delete(SIN_CAT);
+
   const rankedAll = [...catTotals.entries()].sort((a, b) => b[1] - a[1]);
   const topKeys = rankedAll.slice(0, topCategorias).map(([k]) => k);
   const hasOverflow = rankedAll.length > topCategorias;
   const needsOtrosBucket = hasOverflow && !topKeys.includes("Otros");
-  const order = [...topKeys, ...(needsOtrosBucket ? ["Otros"] : [])];
+  const order = [
+    ...topKeys,
+    ...(needsOtrosBucket ? ["Otros"] : []),
+    ...(sinCatTotal > 0 ? [SIN_CAT] : []),
+  ];
 
-  // Pivot into per-month groups, collapsing tail into "Otros".
+  // Pivot into per-month groups. "Sin categoría" passes through; real
+  // categorías fall into top-N or collapse into "Otros".
   const byMes = new Map<string, Map<string, number>>();
   for (const r of rows) {
     const cat = r.categoria ?? "Otros";
-    const bucket = topKeys.includes(cat) ? cat : "Otros";
+    let bucket: string;
+    if (cat === SIN_CAT) bucket = SIN_CAT;
+    else if (topKeys.includes(cat)) bucket = cat;
+    else bucket = "Otros";
     if (!byMes.has(r.mes)) byMes.set(r.mes, new Map());
     const m = byMes.get(r.mes)!;
     m.set(bucket, (m.get(bucket) ?? 0) + r.total);
