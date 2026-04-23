@@ -1,20 +1,9 @@
 "use server";
 
 import { prisma } from "@/lib/db";
+import { rangeToGte } from "@/lib/stats/range";
 
 import type { MaqRange, MaqResult, MaqRow } from "./types";
-
-function rangeToGte(range: MaqRange): Date | null {
-  const now = new Date();
-  switch (range) {
-    case "90d":
-      return new Date(now.getTime() - 90 * 24 * 60 * 60 * 1000);
-    case "ytd":
-      return new Date(now.getFullYear(), 0, 1);
-    case "todo":
-      return null;
-  }
-}
 
 export async function computeMaqMetrics(
   range: MaqRange,

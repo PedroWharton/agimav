@@ -14,28 +14,13 @@ import {
 } from "@/components/stats/horizontal-bars";
 import { KpiCard } from "@/components/stats/kpi-card";
 import { RangeSelect } from "@/components/stats/range-select";
+import { formatCurrencyARS, formatCurrencyShort } from "@/lib/stats/format";
 
 import { computeMaqMetrics } from "./actions";
 import { MaquinariaStatsClient } from "./maquinaria-stats-client";
 import { MAQ_RANGES, type MaqRange } from "./types";
 
 export const dynamic = "force-dynamic";
-
-function formatCurrencyARS(n: number) {
-  return new Intl.NumberFormat("es-AR", {
-    style: "currency",
-    currency: "ARS",
-    maximumFractionDigits: 0,
-  }).format(n);
-}
-
-function formatCurrencyShort(n: number) {
-  if (!Number.isFinite(n) || n === 0) return "$0";
-  const abs = Math.abs(n);
-  if (abs >= 1_000_000) return `$${(n / 1_000_000).toFixed(1)}M`;
-  if (abs >= 1_000) return `$${Math.round(n / 1_000)}k`;
-  return `$${Math.round(n)}`;
-}
 
 export default async function MaquinariaStatsPage({
   searchParams,

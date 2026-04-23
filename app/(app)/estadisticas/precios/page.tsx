@@ -12,20 +12,13 @@ import { ChartCard } from "@/components/stats/chart-card";
 import { KpiCard } from "@/components/stats/kpi-card";
 import { PriceChart } from "@/components/stats/price-chart";
 import { RangeSelect } from "@/components/stats/range-select";
+import { formatCurrencyARS } from "@/lib/stats/format";
 
 import { getPriceSeries } from "./actions";
 import { PRECIOS_RANGES, type PreciosRange } from "./types";
 import { ItemPicker, type ItemOption } from "./item-picker";
 
 export const dynamic = "force-dynamic";
-
-function formatCurrencyARS(n: number) {
-  return new Intl.NumberFormat("es-AR", {
-    style: "currency",
-    currency: "ARS",
-    maximumFractionDigits: 2,
-  }).format(n);
-}
 
 function formatPercent(n: number) {
   const sign = n > 0 ? "+" : "";
@@ -196,7 +189,7 @@ export default async function PreciosPage({
             <KpiCard
               icon={DollarSign}
               label={t("precios.kpi.ultimoArs")}
-              value={last ? formatCurrencyARS(last.precioArs) : "—"}
+              value={last ? formatCurrencyARS(last.precioArs, 2) : "—"}
               caption={
                 last
                   ? t("precios.kpi.ultimoArsCaption", {
@@ -280,7 +273,7 @@ export default async function PreciosPage({
                               {p.fecha}
                             </td>
                             <td className="px-3 py-2 text-right tabular-nums">
-                              {formatCurrencyARS(p.precioArs)}
+                              {formatCurrencyARS(p.precioArs, 2)}
                             </td>
                             <td
                               className="px-3 py-2 text-right tabular-nums"

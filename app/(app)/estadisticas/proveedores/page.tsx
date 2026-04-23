@@ -4,6 +4,7 @@ import { getTranslations } from "next-intl/server";
 import { ArrowLeft, Building2, PieChart, Wallet } from "lucide-react";
 
 import { auth } from "@/lib/auth";
+import { isAdmin } from "@/lib/rbac";
 import { Button } from "@/components/ui/button";
 import { PageHeader } from "@/components/app/page-header";
 import { InlineState } from "@/components/app/states";
@@ -14,28 +15,13 @@ import {
 } from "@/components/stats/horizontal-bars";
 import { KpiCard } from "@/components/stats/kpi-card";
 import { RangeSelect } from "@/components/stats/range-select";
+import { formatCurrencyARS, formatCurrencyShort } from "@/lib/stats/format";
 
 import { computeProveedoresGasto } from "./actions";
 import { PROV_RANGES, type ProvRange } from "./types";
 import { ProveedoresExportButton } from "./proveedores-export-button";
 
 export const dynamic = "force-dynamic";
-
-function formatCurrencyARS(n: number) {
-  return new Intl.NumberFormat("es-AR", {
-    style: "currency",
-    currency: "ARS",
-    maximumFractionDigits: 0,
-  }).format(n);
-}
-
-function formatCurrencyShort(n: number) {
-  if (!Number.isFinite(n) || n === 0) return "$0";
-  const abs = Math.abs(n);
-  if (abs >= 1_000_000) return `$${(n / 1_000_000).toFixed(1)}M`;
-  if (abs >= 1_000) return `$${Math.round(n / 1_000)}k`;
-  return `$${Math.round(n)}`;
-}
 
 function formatDate(d: Date | null) {
   if (!d) return "—";
@@ -53,6 +39,7 @@ export default async function ProveedoresStatsPage({
 }) {
   const session = await auth();
   if (!session?.user) redirect("/login");
+  if (!isAdmin(session)) redirect("/estadisticas");
 
   const t = await getTranslations("estadisticas");
   const sp = await searchParams;

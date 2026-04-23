@@ -12,24 +12,13 @@ import { ChartCard } from "@/components/stats/chart-card";
 import { Donut, type DonutSlice } from "@/components/stats/donut";
 import { KpiCard } from "@/components/stats/kpi-card";
 import { RangeSelect } from "@/components/stats/range-select";
+import { formatCurrencyARS, formatNumber } from "@/lib/stats/format";
 
 import { computeAbc } from "./actions";
 import { ABC_RANGES, type AbcRange } from "./types";
 import { AbcExportButton } from "./abc-export-button";
 
 export const dynamic = "force-dynamic";
-
-function formatCurrencyARS(n: number) {
-  return new Intl.NumberFormat("es-AR", {
-    style: "currency",
-    currency: "ARS",
-    maximumFractionDigits: 0,
-  }).format(n);
-}
-
-function formatNumber(n: number) {
-  return new Intl.NumberFormat("es-AR", { maximumFractionDigits: 2 }).format(n);
-}
 
 export default async function AbcPage({
   searchParams,
@@ -184,7 +173,7 @@ export default async function AbcPage({
                             ) : null}
                           </td>
                           <td className="px-3 py-2 text-right tabular-nums">
-                            {formatNumber(r.cantidadConsumida)}
+                            {formatNumber(r.cantidadConsumida, 2)}
                           </td>
                           <td className="px-3 py-2 text-right tabular-nums">
                             {formatCurrencyARS(r.valorConsumido)}

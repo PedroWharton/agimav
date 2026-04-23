@@ -2,15 +2,18 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { getTranslations } from "next-intl/server";
 import {
+  AlertTriangle,
   BarChart3,
   Building2,
   ChevronRight,
+  ClipboardList,
   LineChart,
+  PackageOpen,
   Tractor,
 } from "lucide-react";
 
-import { StatsFilterBar } from "@/components/stats/stats-filter-bar";
 import { auth } from "@/lib/auth";
+import { isAdmin } from "@/lib/rbac";
 import {
   loadBacklogPorMaquina,
   loadGastoPorRubro,
@@ -34,41 +37,16 @@ import {
   type HorizontalBarTone,
 } from "@/components/stats/horizontal-bars";
 import { KpiCard } from "@/components/stats/kpi-card";
+import { SparkLine } from "@/components/stats/spark-line";
 import { StackedBars } from "@/components/stats/stacked-bars";
+import {
+  formatCurrencyARS,
+  formatCurrencyShort,
+  formatMonthShort,
+  formatMonthYear,
+} from "@/lib/stats/format";
 
 export const dynamic = "force-dynamic";
-
-// ─── formatters ───────────────────────────────────────────────────────────
-
-function formatCurrencyARS(n: number) {
-  return new Intl.NumberFormat("es-AR", {
-    style: "currency",
-    currency: "ARS",
-    maximumFractionDigits: 0,
-  }).format(n);
-}
-
-function formatCurrencyShort(n: number) {
-  if (!Number.isFinite(n) || n === 0) return "$0";
-  const abs = Math.abs(n);
-  if (abs >= 1_000_000) return `$${(n / 1_000_000).toFixed(1)}M`;
-  if (abs >= 1_000) return `$${Math.round(n / 1_000)}k`;
-  return `$${Math.round(n)}`;
-}
-
-function formatMonthShort(ymKey: string) {
-  const [y, m] = ymKey.split("-").map((s) => Number(s));
-  if (!y || !m) return ymKey;
-  const d = new Date(y, m - 1, 1);
-  return d.toLocaleString("es-AR", { month: "short" });
-}
-
-function formatMonthYear(ymKey: string) {
-  const [y, m] = ymKey.split("-").map((s) => Number(s));
-  if (!y || !m) return ymKey;
-  const d = new Date(y, m - 1, 1);
-  return d.toLocaleString("es-AR", { month: "short", year: "2-digit" });
-}
 
 // ─── local helpers ────────────────────────────────────────────────────────
 
@@ -664,6 +642,7 @@ function HeatmapCard({
 export default async function EstadisticasPage() {
   const session = await auth();
   if (!session?.user) redirect("/login");
+  const admin = isAdmin(session);
 
   const t = await getTranslations("estadisticas");
   const tRoot = (key: string, values?: Record<string, string | number>) =>
@@ -696,37 +675,15 @@ export default async function EstadisticasPage() {
     year: "numeric",
   });
 
-  const hoy = new Date();
-  const lookbackDias = 90;
-  const desde = new Date(hoy.getTime() - lookbackDias * 24 * 60 * 60 * 1000);
-  const fmtDia = (d: Date) =>
-    d.toLocaleDateString("es-AR", { day: "numeric", month: "short" });
-  const fmtDiaAnio = (d: Date) =>
-    d.toLocaleDateString("es-AR", {
-      day: "numeric",
-      month: "short",
-      year: "numeric",
-    });
-  const rangeLabel = `${fmtDia(desde)} — ${fmtDiaAnio(hoy)} · ${lookbackDias}d`;
-
   return (
     <div className="flex flex-col gap-6 p-6">
       <PageHeader
         title={t("titulo")}
-        description={
-          <>
-            {t("dashboard.subtitulo")} ·{" "}
-            <span className="font-medium text-foreground">
-              {t("dashboard.subtituloPeriodo")}
-            </span>
-          </>
-        }
+        description={t("dashboard.subtitulo")}
       />
 
-      <StatsFilterBar rangeLabel={rangeLabel} />
-
-      {/* KPI strip — 4 cards */}
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+      {/* KPI strip */}
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-6">
         <KpiCard
           size="lg"
           tone={kpis.disponibilidadPct >= 85 ? "ok" : "warn"}
@@ -740,6 +697,30 @@ export default async function EstadisticasPage() {
         />
         <KpiCard
           size="lg"
+          icon={PackageOpen}
+          tone={kpis.bajoStock > 0 ? "warn" : "neutral"}
+          label={t("dashboard.kpi.bajoStock")}
+          value={kpis.bajoStock.toLocaleString("es-AR")}
+          caption={t("dashboard.kpi.bajoStockCaption", {
+            count: kpis.bajoStock,
+            total: kpis.inventarioTotales,
+          })}
+          href="/inventario?filter=bajoStock"
+        />
+        <KpiCard
+          size="lg"
+          icon={ClipboardList}
+          tone="info"
+          label={t("dashboard.kpi.ocsAbiertas")}
+          value={kpis.ocsAbiertas.toLocaleString("es-AR")}
+          caption={t("dashboard.kpi.ocsAbiertasCaption", {
+            count: kpis.ocsAbiertas,
+          })}
+          href="/compras/oc?estado=abiertas"
+        />
+        <KpiCard
+          size="lg"
+          icon={AlertTriangle}
           tone={kpis.mantPendientes > 10 ? "warn" : "neutral"}
           label={t("dashboard.kpi.mantPendientes")}
           value={kpis.mantPendientes.toLocaleString("es-AR")}
@@ -763,7 +744,13 @@ export default async function EstadisticasPage() {
             mes: mesActual,
           })}
           href="/compras/facturas"
-        />
+        >
+          <SparkLine
+            values={kpis.facturacionMesSerie.map((p) => p.total)}
+            labels={kpis.facturacionMesSerie.map((p) => formatMonthYear(p.mes))}
+            height={36}
+          />
+        </KpiCard>
       </div>
 
       {/* 12-col chart grid */}
@@ -833,12 +820,14 @@ export default async function EstadisticasPage() {
             title={t("lentes.maquinaria")}
             description={t("lentes.maquinariaDesc")}
           />
-          <SubRouteCard
-            href="/estadisticas/proveedores"
-            icon={<Building2 className="size-5 text-muted-foreground" />}
-            title={t("lentes.proveedores")}
-            description={t("lentes.proveedoresDesc")}
-          />
+          {admin ? (
+            <SubRouteCard
+              href="/estadisticas/proveedores"
+              icon={<Building2 className="size-5 text-muted-foreground" />}
+              title={t("lentes.proveedores")}
+              description={t("lentes.proveedoresDesc")}
+            />
+          ) : null}
         </div>
       </div>
 

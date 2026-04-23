@@ -4,6 +4,8 @@ import * as XLSX from "xlsx";
 
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/db";
+import { requireAdmin } from "@/lib/rbac";
+import { rangeToGte } from "@/lib/stats/range";
 
 import type {
   ExportResult,
@@ -12,23 +14,12 @@ import type {
   ProvRow,
 } from "./types";
 
-function rangeToGte(range: ProvRange): Date | null {
-  const now = new Date();
-  switch (range) {
-    case "30d":
-      return new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
-    case "90d":
-      return new Date(now.getTime() - 90 * 24 * 60 * 60 * 1000);
-    case "ytd":
-      return new Date(now.getFullYear(), 0, 1);
-    case "todo":
-      return null;
-  }
-}
-
 export async function computeProveedoresGasto(
   range: ProvRange,
 ): Promise<ProvResult> {
+  const session = await auth();
+  requireAdmin(session);
+
   const gte = rangeToGte(range);
 
   const grouped = await prisma.factura.groupBy({
@@ -81,7 +72,7 @@ export async function exportarProveedores(
   range: ProvRange,
 ): Promise<ExportResult> {
   const session = await auth();
-  if (!session?.user) throw new Error("unauthenticated");
+  requireAdmin(session);
 
   const result = await computeProveedoresGasto(range);
 

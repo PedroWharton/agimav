@@ -4,8 +4,8 @@ import * as XLSX from "xlsx";
 
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/db";
+import { rangeToGte } from "@/lib/stats/range";
 
-import { rangeToGte } from "./types";
 import type { AbcRange, AbcResult, AbcRow, ExportResult } from "./types";
 
 export async function computeAbc(range: AbcRange): Promise<AbcResult> {

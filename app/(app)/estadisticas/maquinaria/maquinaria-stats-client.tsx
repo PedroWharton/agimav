@@ -12,22 +12,9 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { formatCurrencyARS, formatNumber } from "@/lib/stats/format";
 
 import { MIN_FILTROS, type MaqRow, type MinFiltro } from "./types";
-
-function formatCurrencyARS(n: number) {
-  return new Intl.NumberFormat("es-AR", {
-    style: "currency",
-    currency: "ARS",
-    maximumFractionDigits: 0,
-  }).format(n);
-}
-
-function formatNumber(n: number, digits = 1) {
-  return new Intl.NumberFormat("es-AR", {
-    maximumFractionDigits: digits,
-  }).format(n);
-}
 
 export function MaquinariaStatsClient({ rows }: { rows: MaqRow[] }) {
   const t = useTranslations("estadisticas");

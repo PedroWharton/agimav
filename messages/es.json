@@ -520,9 +520,6 @@
     "configurarKpis": "Configurar KPIs",
     "exportarError": "No se pudo exportar. Probá de nuevo.",
     "actualizadoHace": "actualizado hace {mins} min",
-    "filtros": {
-      "alcance": "Alcance del reporte"
-    },
     "rangos": {
       "7d": "Últimos 7 días",
       "30d": "Últimos 30 días",
@@ -557,10 +554,13 @@
     },
     "dashboard": {
       "subtitulo": "Indicadores operativos de flota, taller y abastecimiento",
-      "subtituloPeriodo": "últimos 90 días",
       "kpi": {
         "disponibilidad": "Disponibilidad flota",
         "disponibilidadCaption": "{activas} activas de {total}",
+        "bajoStock": "Bajo stock",
+        "bajoStockCaption": "{count, plural, =0 {Sin ítems bajo stock} one {# ítem bajo mínimo} other {# ítems bajo mínimo}} · de {total}",
+        "ocsAbiertas": "OCs abiertas",
+        "ocsAbiertasCaption": "{count, plural, =0 {Sin OCs abiertas} one {# OC pendiente de recepción} other {# OCs pendientes de recepción}}",
         "mantPendientes": "Mantenimientos pendientes",
         "mantPendientesCaption": "sin asignar o sin empezar",
         "otEnCurso": "OT en curso",

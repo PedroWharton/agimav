@@ -49,6 +49,10 @@ export type DashboardKpis = {
   maquinasActivas: number;
   mantPendientes: number;
   otEnCurso: number;
+  bajoStock: number;
+  inventarioTotales: number;
+  ocsAbiertas: number;
+  ocsTotales: number;
   facturacionMesTotal: number;
   facturacionMesCount: number;
   facturacionMesSerie: { mes: string; total: number }[];
@@ -70,6 +74,10 @@ export async function loadKpis(): Promise<DashboardKpis> {
     maquinasTotales,
     mantPendientes,
     otEnCurso,
+    bajoStock,
+    inventarioTotales,
+    ocsAbiertas,
+    ocsTotales,
     facturasMes,
     facturasSerie,
     mantenimientos90d,
@@ -78,6 +86,16 @@ export async function loadKpis(): Promise<DashboardKpis> {
     prisma.maquinaria.count(),
     prisma.mantenimiento.count({ where: { estado: "Pendiente" } }),
     prisma.ordenTrabajo.count({ where: { estado: "En Curso" } }),
+    prisma.$queryRaw<{ count: bigint }[]>`
+      SELECT COUNT(*)::bigint as count
+      FROM inventario
+      WHERE stock_minimo > 0 AND stock < stock_minimo
+    `.then((r) => Number(r[0]?.count ?? 0)),
+    prisma.inventario.count(),
+    prisma.ordenCompra.count({
+      where: { estado: { in: ["Emitida", "Parcialmente Recibida"] } },
+    }),
+    prisma.ordenCompra.count(),
     prisma.factura.aggregate({
       where: { fechaFactura: { gte: monthStart } },
       _sum: { total: true },
@@ -111,6 +129,10 @@ export async function loadKpis(): Promise<DashboardKpis> {
     maquinasActivas,
     mantPendientes,
     otEnCurso,
+    bajoStock,
+    inventarioTotales,
+    ocsAbiertas,
+    ocsTotales,
     facturacionMesTotal: facturasMes._sum.total ?? 0,
     facturacionMesCount: facturasMes._count,
     facturacionMesSerie: serie,
