@@ -86,13 +86,13 @@ Each item has a **When** field: `immediately` (first 30 days), `next quarter`, o
 
 ### Filter bar on `/estadisticas` (date range / comparar / obra / categoría / granularidad)
 **When:** next quarter — or earlier if Cervi asks to slice the dashboard by obra or wants a week/day view.
-**Shape:** `components/stats/stats-filter-bar.tsx` ships today as a **visual shell** — all controls are `aria-disabled` with "Próximamente" tooltips. To wire:
-- **Date range picker:** replace the pill with a calendar popover; push the selected range as search params (`?desde=YYYY-MM-DD&hasta=YYYY-MM-DD`) and thread through every `loadKpis` / `loadMezclaOt` / … function in `lib/stats/dashboard.ts` (they currently take no args — all hardcoded to 90d).
-- **Comparar con:** same — add an optional `compareRange` that returns a secondary set of KPIs; KPI cards render trend delta from the comparison.
+**Shape:** the home page has **no filter bar** today. The placeholder `StatsFilterBar` chip was deleted 2026-04-23 because it looked interactive but wasn't. Each card's subtitle states its own window ("últimos 90 días", "últimos 6 meses", "últimas 12 semanas"). To wire a real filter:
+- **Date range picker:** add a URL-synced `RangeSelect` (or calendar popover) above the KPI strip, push selection as `?range=...` or `?desde=YYYY-MM-DD&hasta=YYYY-MM-DD`, and thread an optional `{ since?: Date }` into every `load*` function in `lib/stats/dashboard.ts`. Today they take `limit` / `months` / `weeks` / `topMachines` but no date range — the 90d / 6mo / 12w windows are computed inline. KPI strip stays snapshot (range is meaningless for "máquinas activas ahora").
+- **Comparar con:** add an optional `compareRange` that returns a secondary set of KPIs; cards render trend delta from the comparison.
 - **Obra filter:** scope every query to a specific `Obra.id`. Requires adding `obraId` joins across `Mantenimiento`, `OrdenTrabajo`, `OrdenCompra`, `Factura`. Cervi uses obras as the primary business axis, so this unlocks real drilldown.
 - **Categoría filter:** scope to `Inventario.categoria` for spend/backlog charts.
-- **Granularidad (Día/Semana/Mes):** currently hardcoded to monthly buckets in `loadTallerTrend` and `loadGastoPorRubro`. Switching to week/day means rewriting the SQL date_trunc expressions per query.
-**Why deferred:** the dashboard ships with a fixed 90-day window that covers the cutover QA need. Wiring filters is a multi-function refactor that isn't a launch blocker. Typography + layout match the design today; the interactions can land iteratively post-cutover.
+- **Granularidad (Día/Semana/Mes):** currently hardcoded to monthly buckets in `loadTallerTrend` and `loadGastoPorRubro`. Switching to week/day means rewriting the SQL `date_trunc` expressions per query.
+**Why deferred:** 2026-04-23 review explicitly chose to defer — touching 6+ loaders days before cutover risks regressions during QA that aren't worth it. Revisit once Cervi has a stable baseline and actually asks for a slice they can't currently get.
 
 ### "Configurar KPIs" button on `/estadisticas`
 **When:** when triggered — once a second KPI-set emerges, or a Cervi user asks to hide cards they don't use.
