@@ -31,3 +31,8 @@ export const OC_ESTADO_META: Record<OcEstado, OcEstadoMeta> = {
 export function isOcEstado(value: string): value is OcEstado {
   return (OC_ESTADOS as readonly string[]).includes(value);
 }
+
+/** OC estados considered "abiertas" — pending reception activity. Completada
+ * and Cancelada are terminal. Used by stats dashboards and the OC listing
+ * `?estado=abiertas` quick filter. */
+export const OC_ESTADOS_ABIERTAS: OcEstado[] = ["Emitida", "Parcialmente Recibida"];

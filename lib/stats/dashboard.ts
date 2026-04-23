@@ -1,4 +1,10 @@
 import { prisma } from "@/lib/db";
+import {
+  MANT_ESTADOS_ACTIVOS,
+  MANT_ESTADO_PENDIENTE,
+} from "@/lib/mantenimiento/estado";
+import { OC_ESTADOS_ABIERTAS } from "@/lib/compras/oc-estado";
+import { OT_ESTADO_EN_CURSO } from "@/app/(app)/ordenes-trabajo/types";
 
 /**
  * Data helpers for the /estadisticas dashboard (R8-04).
@@ -82,10 +88,13 @@ export async function loadKpis(): Promise<DashboardKpis> {
     facturasSerie,
     mantenimientos90d,
   ] = await Promise.all([
+    // Maquinaria.estado is lowercase ("activo") while mantenimiento/OT/OC
+    // estados are title-case. Legacy data carries these exact strings — do not
+    // normalize without a schema-wide migration. See post-cutover-backlog.
     prisma.maquinaria.count({ where: { estado: "activo" } }),
     prisma.maquinaria.count(),
-    prisma.mantenimiento.count({ where: { estado: "Pendiente" } }),
-    prisma.ordenTrabajo.count({ where: { estado: "En Curso" } }),
+    prisma.mantenimiento.count({ where: { estado: MANT_ESTADO_PENDIENTE } }),
+    prisma.ordenTrabajo.count({ where: { estado: OT_ESTADO_EN_CURSO } }),
     prisma.$queryRaw<{ count: bigint }[]>`
       SELECT COUNT(*)::bigint as count
       FROM inventario
@@ -93,7 +102,7 @@ export async function loadKpis(): Promise<DashboardKpis> {
     `.then((r) => Number(r[0]?.count ?? 0)),
     prisma.inventario.count(),
     prisma.ordenCompra.count({
-      where: { estado: { in: ["Emitida", "Parcialmente Recibida"] } },
+      where: { estado: { in: OC_ESTADOS_ABIERTAS } },
     }),
     prisma.ordenCompra.count(),
     prisma.factura.aggregate({
@@ -212,9 +221,12 @@ export type BacklogRow = {
 export async function loadBacklogPorMaquina(
   limit = 10,
 ): Promise<BacklogRow[]> {
+  // Backlog = every active mantenimiento (pendiente + en reparación).
+  // Pre-2026-04-23 this filtered on "En Proceso", which is not a valid
+  // mantenimiento estado — so the card silently hid all in-repair rows.
   const grouped = await prisma.mantenimiento.groupBy({
     by: ["maquinariaId"],
-    where: { estado: { in: ["Pendiente", "En Proceso"] } },
+    where: { estado: { in: MANT_ESTADOS_ACTIVOS } },
     _count: { _all: true },
     orderBy: { _count: { maquinariaId: "desc" } },
     take: limit,

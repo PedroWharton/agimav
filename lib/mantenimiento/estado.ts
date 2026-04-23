@@ -19,6 +19,10 @@ export const MANT_ESTADOS_TERMINALES: MantEstado[] = [
   "Cancelado",
 ];
 
+/** Canonical reference for the "pendiente" state — used by queries that need
+ * only the starting state, not the whole active set. */
+export const MANT_ESTADO_PENDIENTE: MantEstado = "Pendiente";
+
 export const MANT_ESTADO_I18N_KEY: Record<MantEstado, string> = {
   Pendiente: "Pendiente",
   "En Reparación - Chacra": "EnReparacionChacra",

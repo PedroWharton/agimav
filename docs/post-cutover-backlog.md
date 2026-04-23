@@ -34,9 +34,23 @@ Each item has a **When** field: `immediately` (first 30 days), `next quarter`, o
 ## Tech debt baked in during builds
 
 ### `Mantenimiento.horasAcumuladas` snapshot column
-**When:** immediately (first 30 days).
-**Shape:** add column, backfill on `fechaInicio` close via `RegistroHorasMaquinaria`, switch Slice D MTBF from date-based to hours-based (matches legacy semantics).
-**Why deferred:** spec called for it, Phase 6 shipped without it to stay on budget.
+**When:** ~~immediately (first 30 days)~~ — **shipped 2026-04-23** as commit `cd34f52`, pre-cutover.
+**Shape:** added nullable `horas_acumuladas_snapshot` column, wrote snapshot in all 3 mantenimiento.create paths (manual form, plantilla aplicar, revisión programada child), and upgraded MTBF compute to prefer hour-based when every consecutive-pair of correctivos has snapshots.
+
+### Estado string normalization + Prisma enum conversion
+**When:** post-cutover, days 30–60 — treat as a scheduled data migration, not a casual edit.
+**Shape:** three inconsistencies live in the data today:
+- `Maquinaria.estado` is lowercase (`"activo"`).
+- `Mantenimiento.estado`, `OrdenTrabajo.estado`, `OrdenCompra.estado`, `Requisicion.estado` are title-case with spaces (`"Pendiente"`, `"En Curso"`, `"Emitida"`, `"Parcialmente Recibida"`, `"En Reparación - Chacra"`, etc.).
+- `Usuario.estado` is lowercase.
+The string constants are now centralized (`lib/mantenimiento/estado.ts`, `lib/compras/oc-estado.ts`, `app/(app)/ordenes-trabajo/types.ts`) — `grep -n '"Pendiente"\|"En Curso"\|"Emitida"'` finds stragglers. Full migration requires:
+1. Prisma schema: change `estado String` to a Prisma enum per model (e.g., `MantenimientoEstado`).
+2. SQL migration: `UPDATE` to normalize casing (decide on canonical: all-lowercase-underscored is cleanest — `pendiente`, `en_reparacion_chacra`, `emitida`, `parcialmente_recibida`).
+3. Update `scripts/migrate-from-sqlite.ts` to write the canonical form during the flota7.db import (otherwise the legacy strings return on the next migration-day re-run).
+4. Update every callsite (helpers `isTerminal`, `isActivo`, etc., plus all query filters).
+5. Full regression QA against a cloned prod branch before merging.
+**Why deferred:** touches Compras/Mantenimiento/OT/Maquinaria/Estadísticas simultaneously; any missed callsite silently breaks a filter. Zero user-visible benefit today beyond code cleanliness. Doing it post-cutover means the SQLite→Postgres import runs first with legacy casing preserved, we validate the app works, *then* normalize — less coupled failure modes.
+**Detected bug during 2026-04-23 review:** `loadBacklogPorMaquina` was filtering on `estado IN ("Pendiente", "En Proceso")` — but `"En Proceso"` is not a valid mantenimiento estado. Fixed in the same commit that centralized the constants. This is exactly the class of bug constants prevent.
 
 ### Evolución de precios — thin data
 **When:** re-evaluate 90 days post-cutover (≈ 2026-07-19).
