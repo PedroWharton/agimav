@@ -348,6 +348,10 @@ export async function aplicarPlantilla(
 
   try {
     const id = await prisma.$transaction(async (tx) => {
+      const maq = await tx.maquinaria.findUnique({
+        where: { id: data.maquinariaId },
+        select: { horasAcumuladas: true },
+      });
       const mant = await tx.mantenimiento.create({
         data: {
           tipo: "preventivo",
@@ -362,6 +366,7 @@ export async function aplicarPlantilla(
           frecuenciaValor: plantilla.frecuenciaValor,
           frecuenciaUnidad: plantilla.frecuenciaUnidad,
           creadoPor: userName,
+          horasAcumuladasSnapshot: maq?.horasAcumuladas ?? null,
         },
       });
       if (plantilla.insumos.length > 0) {

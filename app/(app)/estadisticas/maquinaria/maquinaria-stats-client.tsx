@@ -76,7 +76,7 @@ export function MaquinariaStatsClient({ rows }: { rows: MaqRow[] }) {
                   <th scope="col" className="px-3 py-2 text-right">
                     {t("maquinaria.columnas.preventivos")}
                   </th>
-                  <th scope="col" className="px-3 py-2 text-right">
+                  <th scope="col" className="px-3 py-2 text-right" title={t("maquinaria.mtbfTooltip")}>
                     {t("maquinaria.columnas.mtbf")}
                   </th>
                   <th scope="col" className="px-3 py-2 text-right">
@@ -121,7 +121,16 @@ export function MaquinariaStatsClient({ rows }: { rows: MaqRow[] }) {
                       {r.preventivos}
                     </td>
                     <td className="px-3 py-2 text-right tabular-nums text-muted-foreground">
-                      {r.mtbfDias !== null ? formatNumber(r.mtbfDias) : "—"}
+                      {r.mtbf !== null ? (
+                        <span title={t(`maquinaria.mtbfUnidad.${r.mtbfSource}`)}>
+                          {formatNumber(r.mtbf, r.mtbfSource === "horas" ? 0 : 1)}
+                          <span className="ml-1 text-[10px] uppercase">
+                            {t(`maquinaria.mtbfSufijo.${r.mtbfSource}`)}
+                          </span>
+                        </span>
+                      ) : (
+                        "—"
+                      )}
                     </td>
                     <td className="px-3 py-2 text-right tabular-nums text-muted-foreground">
                       {r.horasOperadas !== null

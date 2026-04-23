@@ -129,6 +129,10 @@ export async function createMantenimiento(
 
   try {
     const id = await prisma.$transaction(async (tx) => {
+      const maq = await tx.maquinaria.findUnique({
+        where: { id: data.maquinariaId },
+        select: { horasAcumuladas: true },
+      });
       const mant = await tx.mantenimiento.create({
         data: {
           tipo: plantilla ? "preventivo" : data.tipo,
@@ -143,6 +147,7 @@ export async function createMantenimiento(
           plantillaId: plantilla?.id ?? null,
           frecuenciaValor: plantilla?.frecuenciaValor ?? null,
           frecuenciaUnidad: plantilla?.frecuenciaUnidad ?? null,
+          horasAcumuladasSnapshot: maq?.horasAcumuladas ?? null,
         },
       });
       if (plantilla && plantilla.tareas.length > 0) {
@@ -433,6 +438,10 @@ export async function transitionEstado(
         await commitInsumosConsumption(tx, id, userName);
 
         if (parsed.data.programarRevision && parsed.data.fechaProximaRevision) {
+          const maqForChild = await tx.maquinaria.findUnique({
+            where: { id: existing.maquinariaId },
+            select: { horasAcumuladas: true },
+          });
           const child = await tx.mantenimiento.create({
             data: {
               tipo: "correctivo",
@@ -444,6 +453,7 @@ export async function transitionEstado(
               fechaProgramada: parsed.data.fechaProximaRevision,
               creadoPor: userName,
               revisionDeId: id,
+              horasAcumuladasSnapshot: maqForChild?.horasAcumuladas ?? null,
             },
           });
           await tx.mantenimientoHistorial.create({

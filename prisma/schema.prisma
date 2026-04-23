@@ -676,6 +676,11 @@ model Mantenimiento {
   unidadEstimacion     String?  @map("unidad_estimacion")
   metodoCalculo        String?  @map("metodo_calculo")
 
+  /// Snapshot of maquinaria.horas_acumuladas at creation time. Nullable because
+  /// legacy rows imported from flota7.db have no snapshot (fall back to
+  /// date-based MTBF when missing).
+  horasAcumuladasSnapshot Float? @map("horas_acumuladas_snapshot")
+
   revisionDeId     Int?            @map("revision_de_id")
   revisionDe       Mantenimiento?  @relation("MantenimientoRevision", fields: [revisionDeId], references: [id], onDelete: SetNull)
   revisionesHijas  Mantenimiento[] @relation("MantenimientoRevision")

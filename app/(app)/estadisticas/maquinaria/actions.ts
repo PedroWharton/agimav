@@ -46,17 +46,23 @@ export async function computeMaqMetrics(
       maquinariaId: true,
       tipo: true,
       fechaCreacion: true,
+      horasAcumuladasSnapshot: true,
     },
     orderBy: { fechaCreacion: "asc" },
   });
 
   const mantByMaq = new Map<
     number,
-    { id: number; tipo: string; fecha: Date }[]
+    { id: number; tipo: string; fecha: Date; horas: number | null }[]
   >();
   for (const m of mantenimientos) {
     const arr = mantByMaq.get(m.maquinariaId) ?? [];
-    arr.push({ id: m.id, tipo: m.tipo, fecha: m.fechaCreacion });
+    arr.push({
+      id: m.id,
+      tipo: m.tipo,
+      fecha: m.fechaCreacion,
+      horas: m.horasAcumuladasSnapshot,
+    });
     mantByMaq.set(m.maquinariaId, arr);
   }
 
@@ -99,16 +105,37 @@ export async function computeMaqMetrics(
     const correctivosArr = mants.filter((x) => x.tipo === "correctivo");
     const preventivosArr = mants.filter((x) => x.tipo === "preventivo");
 
-    let mtbfDias: number | null = null;
+    // MTBF: prefer hour-based if every consecutive pair has snapshots on both
+    // ends (industry-standard semantics — delta between horas_acumuladas at
+    // successive correctivos). Fall back to date-based when any pair is
+    // missing a snapshot, which is typical for legacy rows imported from
+    // flota7.db. Mixed coverage (some pairs hourly, others date) still falls
+    // back to date-based — rather than averaging two different units, keep
+    // one consistent unit per row.
+    let mtbf: number | null = null;
+    let mtbfSource: MaqRow["mtbfSource"] = null;
     if (correctivosArr.length >= 2) {
-      let total = 0;
-      for (let i = 1; i < correctivosArr.length; i++) {
-        const diff =
-          correctivosArr[i]!.fecha.getTime() -
-          correctivosArr[i - 1]!.fecha.getTime();
-        total += diff / (1000 * 60 * 60 * 24);
+      const allHaveHoras = correctivosArr.every((c) => c.horas !== null);
+      if (allHaveHoras) {
+        let totalHoras = 0;
+        for (let i = 1; i < correctivosArr.length; i++) {
+          totalHoras +=
+            (correctivosArr[i]!.horas as number) -
+            (correctivosArr[i - 1]!.horas as number);
+        }
+        mtbf = totalHoras / (correctivosArr.length - 1);
+        mtbfSource = "horas";
+      } else {
+        let totalDias = 0;
+        for (let i = 1; i < correctivosArr.length; i++) {
+          totalDias +=
+            (correctivosArr[i]!.fecha.getTime() -
+              correctivosArr[i - 1]!.fecha.getTime()) /
+            (1000 * 60 * 60 * 24);
+        }
+        mtbf = totalDias / (correctivosArr.length - 1);
+        mtbfSource = "dias";
       }
-      mtbfDias = total / (correctivosArr.length - 1);
     }
 
     const horasArr = registrosByMaq.get(m.id) ?? [];
@@ -135,7 +162,8 @@ export async function computeMaqMetrics(
       tipoNombre: m.tipo?.nombre ?? null,
       correctivos: correctivosArr.length,
       preventivos: preventivosArr.length,
-      mtbfDias,
+      mtbf,
+      mtbfSource,
       horasOperadas,
       costoTotal,
     };

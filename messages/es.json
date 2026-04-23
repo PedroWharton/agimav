@@ -680,7 +680,16 @@
     },
     "maquinaria": {
       "titulo": "Métricas por máquina",
-      "descripcion": "Ranking por costo total de mantenimiento. MTBF estimado por fechas.",
+      "descripcion": "Ranking por costo total de mantenimiento. MTBF en horas cuando hay horómetro registrado al crear el mantenimiento; caso contrario, estimado por fechas.",
+      "mtbfTooltip": "Tiempo medio entre fallos. En horas si los correctivos tienen horómetro al crearse; caso contrario en días.",
+      "mtbfSufijo": {
+        "horas": "h",
+        "dias": "d"
+      },
+      "mtbfUnidad": {
+        "horas": "Horas entre correctivos",
+        "dias": "Días entre correctivos"
+      },
       "volver": "Volver a Estadísticas",
       "vacio": "No hay máquinas que cumplan el filtro seleccionado.",
       "sinHistorial": "{count, plural, =0 {Todas las máquinas tienen historial.} one {# máquina sin historial en el período.} other {# máquinas sin historial en el período.}}",
@@ -707,7 +716,7 @@
         "tipo": "Tipo",
         "correctivos": "Correctivos",
         "preventivos": "Preventivos",
-        "mtbf": "MTBF (días)",
+        "mtbf": "MTBF",
         "horas": "Horas operadas",
         "costo": "Costo total"
       }
