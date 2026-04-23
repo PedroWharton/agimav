@@ -2,13 +2,13 @@ import { cn } from "@/lib/utils";
 
 export function SparkLine({
   values,
-  labels,
+  ariaLabel = "Tendencia",
   width = 240,
   height = 48,
   className,
 }: {
   values: number[];
-  labels?: string[];
+  ariaLabel?: string;
   width?: number;
   height?: number;
   className?: string;
@@ -35,7 +35,7 @@ export function SparkLine({
   const points = values.map((v, i) => {
     const x = pad + i * step;
     const y = pad + innerH - ((v - min) / range) * innerH;
-    return { x, y, v };
+    return { x, y };
   });
 
   const polyline = points.map((p) => `${p.x},${p.y}`).join(" ");
@@ -44,7 +44,7 @@ export function SparkLine({
   return (
     <svg
       role="img"
-      aria-label="Tendencia"
+      aria-label={ariaLabel}
       width="100%"
       height={height}
       viewBox={`0 0 ${width} ${height}`}
@@ -60,13 +60,6 @@ export function SparkLine({
         points={polyline}
       />
       <circle cx={last.x} cy={last.y} r={2.5} fill="currentColor" />
-      {labels
-        ? points.map((p, i) => (
-            <title key={i}>
-              {labels[i] ?? ""}: {p.v.toLocaleString("es-AR")}
-            </title>
-          ))
-        : null}
     </svg>
   );
 }

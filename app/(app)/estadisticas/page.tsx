@@ -13,7 +13,7 @@ import {
 } from "lucide-react";
 
 import { auth } from "@/lib/auth";
-import { isAdmin } from "@/lib/rbac";
+import { hasPermission } from "@/lib/rbac";
 import {
   loadBacklogPorMaquina,
   loadGastoPorRubro,
@@ -642,7 +642,7 @@ function HeatmapCard({
 export default async function EstadisticasPage() {
   const session = await auth();
   if (!session?.user) redirect("/login");
-  const admin = isAdmin(session);
+  const canViewProveedores = hasPermission(session, "estadisticas.proveedores.view");
 
   const t = await getTranslations("estadisticas");
   const tRoot = (key: string, values?: Record<string, string | number>) =>
@@ -747,7 +747,7 @@ export default async function EstadisticasPage() {
         >
           <SparkLine
             values={kpis.facturacionMesSerie.map((p) => p.total)}
-            labels={kpis.facturacionMesSerie.map((p) => formatMonthYear(p.mes))}
+            ariaLabel={t("dashboard.kpi.facturacionMes")}
             height={36}
           />
         </KpiCard>
@@ -820,7 +820,7 @@ export default async function EstadisticasPage() {
             title={t("lentes.maquinaria")}
             description={t("lentes.maquinariaDesc")}
           />
-          {admin ? (
+          {canViewProveedores ? (
             <SubRouteCard
               href="/estadisticas/proveedores"
               icon={<Building2 className="size-5 text-muted-foreground" />}
