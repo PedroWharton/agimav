@@ -432,23 +432,33 @@ export async function loadGastoPorRubro(
   // Items that do link to inventario but have empty/null categoria stay under
   // "Otros". The earlier joins stay strict — a factura without a linked OC
   // legitimately doesn't belong on a por-rubro chart.
+  //
+  // Row-level categoria lives in an inner subquery because Postgres won't
+  // resolve `inv.id` in the outer SELECT's CASE through the GROUP BY alias —
+  // it enforces functional dependency at the column level, not the expression.
   const rows = await prisma.$queryRaw<
     { mes: string; categoria: string | null; total: number }[]
   >`
     SELECT
-      to_char(date_trunc('month', f.fecha_factura), 'YYYY-MM') as mes,
-      CASE
-        WHEN inv.id IS NULL THEN 'Sin categoría'
-        ELSE COALESCE(NULLIF(TRIM(inv.categoria), ''), 'Otros')
-      END as categoria,
-      COALESCE(SUM(fd.total), 0)::float as total
-    FROM facturas f
-    JOIN factura_detalle fd ON fd.factura_id = f.id
-    JOIN recepciones_detalle rd ON rd.id = fd.recepcion_detalle_id
-    JOIN ordenes_compra_detalle ocd ON ocd.id = rd.oc_detalle_id
-    JOIN requisiciones_detalle reqd ON reqd.id = ocd.requisicion_detalle_id
-    LEFT JOIN inventario inv ON inv.id = reqd.item_id
-    WHERE f.fecha_factura >= ${since}
+      mes,
+      categoria,
+      COALESCE(SUM(total), 0)::float as total
+    FROM (
+      SELECT
+        to_char(date_trunc('month', f.fecha_factura), 'YYYY-MM') as mes,
+        CASE
+          WHEN inv.id IS NULL THEN 'Sin categoría'
+          ELSE COALESCE(NULLIF(TRIM(inv.categoria), ''), 'Otros')
+        END as categoria,
+        fd.total as total
+      FROM facturas f
+      JOIN factura_detalle fd ON fd.factura_id = f.id
+      JOIN recepciones_detalle rd ON rd.id = fd.recepcion_detalle_id
+      JOIN ordenes_compra_detalle ocd ON ocd.id = rd.oc_detalle_id
+      JOIN requisiciones_detalle reqd ON reqd.id = ocd.requisicion_detalle_id
+      LEFT JOIN inventario inv ON inv.id = reqd.item_id
+      WHERE f.fecha_factura >= ${since}
+    ) s
     GROUP BY mes, categoria
     ORDER BY mes ASC
   `;
