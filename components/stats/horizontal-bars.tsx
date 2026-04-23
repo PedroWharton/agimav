@@ -50,6 +50,7 @@ export function HorizontalBars({
   formatValue,
   showValueLabels = true,
   variant = "default",
+  ariaLabel,
   className,
 }: {
   data: HorizontalBarRow[];
@@ -57,6 +58,7 @@ export function HorizontalBars({
   formatValue?: (n: number) => string;
   showValueLabels?: boolean;
   variant?: "default" | "mini";
+  ariaLabel?: string;
   className?: string;
 }) {
   const fmt = formatValue ?? ((n: number) => n.toLocaleString("es-AR"));
@@ -99,7 +101,7 @@ export function HorizontalBars({
   return (
     <svg
       role="img"
-      aria-label="Barras horizontales"
+      aria-label={ariaLabel ?? "Barras horizontales"}
       viewBox={`0 0 ${w} ${h}`}
       preserveAspectRatio="xMidYMid meet"
       width="100%"

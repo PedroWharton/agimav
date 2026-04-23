@@ -251,3 +251,42 @@ function fieldErrorsFromZod(err: z.ZodError): Record<string, string> {
   return out;
 }
 
+export type MaquinaMantenimientoRow = {
+  id: number;
+  tipo: string;
+  estado: string;
+  descripcion: string | null;
+  fechaCreacion: string;
+  fechaFinalizacion: string | null;
+  responsable: string;
+};
+
+export async function getMantenimientosForMaquina(
+  maquinariaId: number,
+  limit = 20,
+): Promise<MaquinaMantenimientoRow[]> {
+  const rows = await prisma.mantenimiento.findMany({
+    where: { maquinariaId },
+    select: {
+      id: true,
+      tipo: true,
+      estado: true,
+      descripcion: true,
+      fechaCreacion: true,
+      fechaFinalizacion: true,
+      responsable: { select: { nombre: true } },
+    },
+    orderBy: { id: "desc" },
+    take: limit,
+  });
+  return rows.map((m) => ({
+    id: m.id,
+    tipo: m.tipo,
+    estado: m.estado,
+    descripcion: m.descripcion,
+    fechaCreacion: m.fechaCreacion.toISOString(),
+    fechaFinalizacion: m.fechaFinalizacion?.toISOString() ?? null,
+    responsable: m.responsable.nombre,
+  }));
+}
+

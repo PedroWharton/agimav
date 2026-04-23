@@ -4,7 +4,8 @@ import type { JSX } from "react";
 import { Plus, Trash2 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
+import { CurrencyInput } from "@/components/app/currency-input";
+import { NumberInput } from "@/components/app/number-input";
 import { cn } from "@/lib/utils";
 
 import { IvaPicker } from "./iva-picker";
@@ -133,18 +134,16 @@ export function FacturaLinesTable({
                     qtyDiff && "bg-warn-weak/40 text-warn",
                   )}
                 >
-                  <Input
-                    type="number"
-                    inputMode="decimal"
+                  <NumberInput
                     value={Number.isFinite(line.cantidad) ? line.cantidad : 0}
                     min={0}
-                    step="1"
-                    onChange={(e) =>
+                    step={1}
+                    onChange={(v) =>
                       onChange(line.id, {
-                        cantidad: Math.max(0, Number(e.target.value) || 0),
+                        cantidad: Math.max(0, v === "" ? 0 : v),
                       })
                     }
-                    className="h-7 text-right font-mono text-[12.5px] tabular-nums"
+                    className="h-7 font-mono text-[12.5px]"
                     aria-label={`Cantidad ${line.nombre}`}
                   />
                   {qtyDiff ? (
@@ -160,25 +159,18 @@ export function FacturaLinesTable({
                     priceDiff && "bg-warn-weak/40 text-warn",
                   )}
                 >
-                  <Input
-                    type="number"
-                    inputMode="decimal"
+                  <CurrencyInput
                     value={
                       Number.isFinite(line.precioUnitario)
                         ? line.precioUnitario
                         : 0
                     }
-                    min={0}
-                    step="0.01"
-                    onChange={(e) =>
+                    onChange={(v) =>
                       onChange(line.id, {
-                        precioUnitario: Math.max(
-                          0,
-                          Number(e.target.value) || 0,
-                        ),
+                        precioUnitario: Math.max(0, v === "" ? 0 : v),
                       })
                     }
-                    className="h-7 text-right font-mono text-[12.5px] tabular-nums"
+                    className="h-7 font-mono text-[12.5px]"
                     aria-label={`Precio unitario ${line.nombre}`}
                   />
                   {priceDiff ? (

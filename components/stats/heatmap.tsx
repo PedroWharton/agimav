@@ -33,6 +33,7 @@ export function Heatmap({
   formatValue,
   cellSize = 28,
   labelCol = 80,
+  ariaLabel,
   className,
 }: {
   rows: string[];
@@ -44,6 +45,7 @@ export function Heatmap({
   cellSize?: number;
   /** Row-label column width in px. Default 80. */
   labelCol?: number;
+  ariaLabel?: string;
   className?: string;
 }) {
   const scale = colorScale ?? defaultColorScale;
@@ -79,7 +81,7 @@ export function Heatmap({
   return (
     <svg
       role="img"
-      aria-label="Mapa de calor"
+      aria-label={ariaLabel ?? "Mapa de calor"}
       viewBox={`0 0 ${w} ${h}`}
       preserveAspectRatio="xMidYMid meet"
       width="100%"

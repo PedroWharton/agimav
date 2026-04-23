@@ -2,6 +2,7 @@
 
 import { useRouter, useSearchParams } from "next/navigation";
 import { useTransition } from "react";
+import { useTranslations } from "next-intl";
 
 import { Combobox } from "@/components/app/combobox";
 
@@ -22,12 +23,13 @@ export function ItemPicker({
   const router = useRouter();
   const searchParams = useSearchParams();
   const [pending, start] = useTransition();
+  const t = useTranslations("estadisticas.precios.picker");
 
   const options = items.map((i) => ({
     value: String(i.id),
     label:
       i.codigo && i.descripcion
-        ? `${i.codigo} — ${i.descripcion}${i.graficable ? "" : " · 1 solo precio"}`
+        ? `${i.codigo} — ${i.descripcion}${i.graficable ? "" : ` · ${t("unSoloPrecio")}`}`
         : (i.descripcion ?? i.codigo ?? `#${i.id}`),
   }));
 
@@ -43,8 +45,8 @@ export function ItemPicker({
       value={current ? String(current) : ""}
       onChange={onChange}
       options={options}
-      placeholder="Elegí un ítem"
-      searchPlaceholder="Buscar ítem…"
+      placeholder={t("placeholder")}
+      searchPlaceholder={t("buscar")}
       allowCreate={false}
       disabled={pending}
       className="w-[320px]"

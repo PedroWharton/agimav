@@ -46,6 +46,8 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Combobox } from "@/components/app/combobox";
 import { ConfirmDialog } from "@/components/app/confirm-dialog";
+import { CurrencyInput } from "@/components/app/currency-input";
+import { NumberInput } from "@/components/app/number-input";
 import {
   FilesGrid,
   KVGrid,
@@ -648,15 +650,13 @@ export function OtDetailClient({
                             )}
                           </td>
                           <td className="py-2 pr-2">
-                            <Input
-                              type="number"
-                              inputMode="decimal"
-                              step="0.01"
-                              min="0"
+                            <NumberInput
+                              step={0.01}
+                              min={0}
                               value={row.cantidad}
-                              onChange={(e) =>
+                              onChange={(v) =>
                                 updateInsumo(index, {
-                                  cantidad: Number(e.target.value) || 0,
+                                  cantidad: v === "" ? 0 : v,
                                 })
                               }
                               disabled={terminal}
@@ -674,19 +674,15 @@ export function OtDetailClient({
                             </span>
                           </td>
                           <td className="py-2 pr-2">
-                            <Input
-                              type="number"
-                              inputMode="decimal"
-                              step="0.01"
-                              min="0"
+                            <CurrencyInput
                               value={row.costoUnitario}
-                              onChange={(e) =>
+                              onChange={(v) =>
                                 updateInsumo(index, {
-                                  costoUnitario: Number(e.target.value) || 0,
+                                  costoUnitario: v === "" ? 0 : v,
                                 })
                               }
                               disabled={terminal}
-                              className="w-28"
+                              className="w-32"
                             />
                           </td>
                           <td className="py-2 pr-2 font-mono tabular-nums">

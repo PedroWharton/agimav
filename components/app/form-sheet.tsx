@@ -22,6 +22,17 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+import { cn } from "@/lib/utils";
+
+export type FormSheetSize = "sm" | "md" | "lg" | "xl" | "2xl";
+
+const SIZE_CLASSES: Record<FormSheetSize, string> = {
+  sm: "sm:max-w-md",
+  md: "sm:max-w-lg",
+  lg: "sm:max-w-[640px]",
+  xl: "sm:max-w-[820px]",
+  "2xl": "sm:max-w-[960px]",
+};
 
 export type FormSheetProps = {
   open: boolean;
@@ -33,6 +44,7 @@ export type FormSheetProps = {
   readOnly?: boolean;
   submitLabel?: string;
   cancelLabel?: string;
+  size?: FormSheetSize;
   onSubmit?: () => void;
   children: ReactNode;
 };
@@ -47,6 +59,7 @@ export function FormSheet({
   readOnly,
   submitLabel,
   cancelLabel,
+  size = "md",
   onSubmit,
   children,
 }: FormSheetProps) {
@@ -64,7 +77,7 @@ export function FormSheet({
   return (
     <>
       <Sheet open={open} onOpenChange={attemptClose}>
-        <SheetContent className="sm:max-w-lg flex flex-col">
+        <SheetContent className={cn("flex flex-col", SIZE_CLASSES[size])}>
           <SheetHeader>
             <SheetTitle>{title}</SheetTitle>
             {description ? <SheetDescription>{description}</SheetDescription> : null}

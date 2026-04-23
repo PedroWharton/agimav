@@ -4,7 +4,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useMemo, useState, useTransition } from "react";
 import { toast } from "sonner";
-import { ArrowLeft, Sparkles, Wrench } from "lucide-react";
+import { ArrowLeft, Sparkles, Wrench, X } from "lucide-react";
 import { useTranslations } from "next-intl";
 
 import { Button } from "@/components/ui/button";
@@ -33,7 +33,27 @@ import { createMantenimiento, saveInsumos } from "../actions";
 
 type UsuarioOpt = { id: number; nombre: string };
 type UpOpt = { id: number; nombre: string; localidad: string | null };
-type PlantillaOpt = { id: number; nombre: string; tipoMaquinaria: string };
+type PlantillaInsumoOpt = {
+  itemInventarioId: number;
+  sku: string;
+  nombre: string;
+  stock: number;
+  unidadMedida: string;
+  unitCost: number;
+  cantidadSugerida: number;
+};
+type PlantillaOpt = {
+  id: number;
+  nombre: string;
+  tipoMaquinariaId: number;
+  tipoMaquinaria: string;
+  descripcion: string | null;
+  prioridad: string;
+  frecuenciaValor: number;
+  frecuenciaUnidad: string;
+  tareasCount: number;
+  insumos: PlantillaInsumoOpt[];
+};
 type InsumoOpt = InsumoPickerOption & { unidadMedida: string };
 
 type ServerPrioridad = (typeof MANT_PRIORIDADES)[number];
@@ -45,25 +65,69 @@ const PRIORIDAD_TO_SERVER: Record<Prioridad, ServerPrioridad> = {
   alta: "Alta",
 };
 
+function serverToPrioridad(p: string): Prioridad {
+  const k = p.toLowerCase();
+  if (k === "alta") return "alta";
+  if (k === "baja") return "baja";
+  return "media";
+}
+
+function addFrecuencia(
+  from: Date,
+  valor: number,
+  unidad: string,
+): Date {
+  const d = new Date(from);
+  const u = unidad.toLowerCase();
+  if (u.startsWith("hor")) {
+    // "horas" mapped to days: a preventivo every 250 horas ≈ run-hours on the
+    // machine, not wall-clock. Default to adding the numeric value as days so
+    // the user sees a reasonable placeholder; they can edit.
+    d.setDate(d.getDate() + Math.ceil(valor));
+  } else if (u.startsWith("dia") || u.startsWith("día")) {
+    d.setDate(d.getDate() + Math.ceil(valor));
+  } else if (u.startsWith("mes")) {
+    d.setMonth(d.getMonth() + Math.ceil(valor));
+  } else {
+    d.setDate(d.getDate() + Math.ceil(valor));
+  }
+  return d;
+}
+
+function toISODate(d: Date): string {
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+}
+
+function nextLineId(): string {
+  if (typeof crypto !== "undefined" && "randomUUID" in crypto) {
+    return crypto.randomUUID();
+  }
+  return `line-${Math.random().toString(36).slice(2, 10)}`;
+}
+
 export function MantenimientoFormClient({
   maquinarias,
   usuarios,
   unidadesProductivas,
   plantillas,
   insumos,
+  initialMaquinariaId,
 }: {
   maquinarias: MaquinariaOption[];
   usuarios: UsuarioOpt[];
   unidadesProductivas: UpOpt[];
   plantillas: PlantillaOpt[];
   insumos: InsumoOpt[];
+  initialMaquinariaId?: number | null;
 }) {
   const tM = useTranslations("mantenimiento");
   const tTipos = useTranslations("mantenimiento.tipos");
   const router = useRouter();
   const [pending, start] = useTransition();
 
-  const [maquinariaId, setMaquinariaId] = useState<number | null>(null);
+  const [maquinariaId, setMaquinariaId] = useState<number | null>(
+    initialMaquinariaId ?? null,
+  );
   const [tipo, setTipo] = useState<ServerTipo>("correctivo");
   const [plantillaId, setPlantillaId] = useState<number | null>(null);
   const [descripcion, setDescripcion] = useState("");
@@ -84,7 +148,76 @@ export function MantenimientoFormClient({
     return map;
   }, [maquinarias]);
 
+  const plantillaById = useMemo(() => {
+    const map = new Map<number, PlantillaOpt>();
+    for (const p of plantillas) map.set(p.id, p);
+    return map;
+  }, [plantillas]);
+
+  const selectedPlantilla =
+    plantillaId != null ? plantillaById.get(plantillaId) : undefined;
+
   const selectedMaquina = maquinariaId != null ? maquinaById.get(maquinariaId) : undefined;
+
+  // When a plantilla is active, restrict the máquina picker to the plantilla's
+  // tipo so users can't spawn an incompatible mantenimiento.
+  const maquinariasForPicker = useMemo(() => {
+    if (!selectedPlantilla) return maquinarias;
+    return maquinarias.filter(
+      (m) => m.tipoId === selectedPlantilla.tipoMaquinariaId,
+    );
+  }, [maquinarias, selectedPlantilla]);
+
+  const applyPlantilla = (p: PlantillaOpt | null) => {
+    setPlantillaId(p?.id ?? null);
+    if (!p) return;
+
+    // Force preventivo — plantillas only apply to preventive flow.
+    setTipo("preventivo");
+
+    // Prefill descripcion only if the user hasn't typed anything yet.
+    if (!descripcion.trim() && p.descripcion) {
+      setDescripcion(p.descripcion);
+    }
+
+    // Prioridad: apply plantilla's value.
+    setPrioridad(serverToPrioridad(p.prioridad));
+
+    // Fecha programada: default to today + frecuencia, only if empty.
+    if (!fechaProgramada) {
+      setFechaProgramada(
+        toISODate(addFrecuencia(new Date(), p.frecuenciaValor, p.frecuenciaUnidad)),
+      );
+    }
+
+    // Clear máquina if its tipo doesn't match the plantilla.
+    if (
+      selectedMaquina &&
+      selectedMaquina.tipoId !== p.tipoMaquinariaId
+    ) {
+      setMaquinariaId(null);
+    }
+
+    // Seed repuestos from plantilla.insumos (replaces empty state; appends
+    // when the user has already added some).
+    setRepuestos((prev) => {
+      const existingIds = new Set(
+        prev.map((l) => l.insumoId).filter((v): v is number => v != null),
+      );
+      const seeded: RepuestoLine[] = p.insumos
+        .filter((i) => !existingIds.has(i.itemInventarioId))
+        .map((i) => ({
+          id: nextLineId(),
+          insumoId: i.itemInventarioId,
+          sku: i.sku,
+          nombre: i.nombre,
+          stockDisponible: i.stock,
+          qty: Math.max(1, Math.ceil(i.cantidadSugerida || 1)),
+          unitCost: i.unitCost,
+        }));
+      return [...prev, ...seeded];
+    });
+  };
 
   const typeOptions: TypeOption[] = [
     {
@@ -112,6 +245,7 @@ export function MantenimientoFormClient({
         unidadProductivaId,
         fechaProgramada,
         prioridad: PRIORIDAD_TO_SERVER[prioridad],
+        plantillaId,
       });
       if (!res.ok) {
         if (res.error === "invalid" && res.fieldErrors) {
@@ -200,9 +334,18 @@ export function MantenimientoFormClient({
                     }
                   : null
               }
-              options={maquinarias}
+              options={maquinariasForPicker}
               onChange={(id) => setMaquinariaId(id)}
             />
+            {selectedPlantilla ? (
+              <p className="text-[11px] text-subtle-foreground">
+                Filtrado a máquinas tipo{" "}
+                <span className="font-medium text-foreground">
+                  {selectedPlantilla.tipoMaquinaria}
+                </span>{" "}
+                ({maquinariasForPicker.length})
+              </p>
+            ) : null}
             {errors.maquinariaId ? (
               <span className="text-xs text-destructive">{errors.maquinariaId}</span>
             ) : null}
@@ -217,7 +360,13 @@ export function MantenimientoFormClient({
             <TypeChooser<ServerTipo>
               options={typeOptions}
               value={tipo}
-              onChange={(v) => setTipo(v)}
+              onChange={(v) => {
+                setTipo(v);
+                // Switching away from preventivo clears the plantilla.
+                if (v !== "preventivo" && plantillaId != null) {
+                  setPlantillaId(null);
+                }
+              }}
             />
             {showPlantillaPicker ? (
               <div className="flex flex-col gap-1.5">
@@ -229,7 +378,12 @@ export function MantenimientoFormClient({
                 </div>
                 <Combobox
                   value={plantillaId ? String(plantillaId) : ""}
-                  onChange={(v) => setPlantillaId(v ? Number(v) : null)}
+                  onChange={(v) => {
+                    const next = v ? Number(v) : null;
+                    applyPlantilla(
+                      next != null ? (plantillaById.get(next) ?? null) : null,
+                    );
+                  }}
                   options={[
                     { value: "", label: tM("nuevo.plantilla.placeholder") },
                     ...plantillas.map((p) => ({
@@ -240,9 +394,41 @@ export function MantenimientoFormClient({
                   placeholder={tM("nuevo.plantilla.placeholder")}
                   allowCreate={false}
                 />
-                <p className="text-xs text-subtle-foreground">
-                  {tM("nuevo.plantilla.ayuda")}
-                </p>
+                {selectedPlantilla ? (
+                  <div className="mt-1 flex items-start gap-3 rounded-lg border border-brand/30 bg-brand-weak/60 px-3 py-2.5 text-xs">
+                    <Sparkles className="mt-0.5 size-3.5 shrink-0 text-brand" />
+                    <div className="flex-1 leading-relaxed">
+                      <div className="font-medium text-foreground">
+                        Usando plantilla «{selectedPlantilla.nombre}»
+                      </div>
+                      <div className="mt-0.5 text-subtle-foreground">
+                        {selectedPlantilla.tipoMaquinaria} · cada{" "}
+                        {selectedPlantilla.frecuenciaValor}{" "}
+                        {selectedPlantilla.frecuenciaUnidad.toLowerCase()} ·{" "}
+                        {selectedPlantilla.insumos.length} repuesto
+                        {selectedPlantilla.insumos.length === 1 ? "" : "s"} ·{" "}
+                        {selectedPlantilla.tareasCount} tarea
+                        {selectedPlantilla.tareasCount === 1 ? "" : "s"}
+                      </div>
+                    </div>
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="icon-xs"
+                      onClick={() => {
+                        setPlantillaId(null);
+                      }}
+                      aria-label="Quitar plantilla"
+                      className="shrink-0 text-subtle-foreground hover:text-foreground"
+                    >
+                      <X />
+                    </Button>
+                  </div>
+                ) : (
+                  <p className="text-xs text-subtle-foreground">
+                    {tM("nuevo.plantilla.ayuda")}
+                  </p>
+                )}
               </div>
             ) : null}
           </FormCard>

@@ -57,12 +57,14 @@ export function Donut({
   innerRatio = 0.62,
   centerLabel,
   size = 180,
+  ariaLabel,
   className,
 }: {
   data: DonutSlice[];
   innerRatio?: number;
   centerLabel?: ReactNode;
   size?: number;
+  ariaLabel?: string;
   className?: string;
 }) {
   const total = data.reduce((acc, s) => acc + Math.max(0, s.value), 0);
@@ -90,7 +92,7 @@ export function Donut({
     return (
       <svg
         role="img"
-        aria-label="Sin datos"
+        aria-label={ariaLabel ?? "Sin datos"}
         width={size}
         height={size}
         viewBox={`0 0 ${size} ${size}`}
@@ -199,7 +201,7 @@ export function Donut({
   return (
     <svg
       role="img"
-      aria-label="Distribución"
+      aria-label={ariaLabel ?? "Distribución"}
       width={size}
       height={size}
       viewBox={`0 0 ${size} ${size}`}

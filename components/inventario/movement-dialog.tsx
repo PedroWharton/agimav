@@ -28,9 +28,10 @@ import {
   FormLabel,
   FormMessage,
 } from "@/components/ui/form";
-import { ArrowDown, ArrowUp, SlidersHorizontal, AlertTriangle } from "lucide-react";
+import { PlusCircle, MinusCircle, SlidersHorizontal, AlertTriangle } from "lucide-react";
 
 import { CurrencyInput } from "@/components/app/currency-input";
+import { NumberInput } from "@/components/app/number-input";
 import { StockBadge } from "@/components/inventario/stock-badge";
 import { formatARS, formatNumber } from "@/lib/format";
 
@@ -173,15 +174,28 @@ export function MovementDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-lg">
+      <DialogContent className="sm:max-w-2xl">
         <DialogHeader>
-          <DialogTitle>
-            {t("registrar")} — {target.descripcion}
+          <DialogTitle className="leading-tight">
+            {t("registrar")}
           </DialogTitle>
-          <DialogDescription className="flex flex-wrap items-center gap-2 text-xs">
-            <span className="font-mono">{target.codigo}</span>
-            <span>·</span>
-            <span>{t("avisos.stockActual", { stock: formatNumber(target.stock) })}{unit ? ` ${unit}` : ""}</span>
+          <DialogDescription asChild>
+            <div className="flex flex-wrap items-center gap-x-2 gap-y-0.5 text-sm">
+              <span className="font-medium text-foreground">
+                {target.descripcion}
+              </span>
+              <span className="text-muted-foreground">·</span>
+              <span className="font-mono text-xs text-muted-foreground">
+                {target.codigo}
+              </span>
+              <span className="text-muted-foreground">·</span>
+              <span className="text-xs text-muted-foreground">
+                {t("avisos.stockActual", {
+                  stock: formatNumber(target.stock),
+                })}
+                {unit ? ` ${unit}` : ""}
+              </span>
+            </div>
           </DialogDescription>
         </DialogHeader>
 
@@ -214,7 +228,7 @@ export function MovementDialog({
                         label={t("tipos.entrada")}
                         hint="Aumenta stock, recalcula costo"
                         tone="ok"
-                        icon={<ArrowDown className="size-3.5" />}
+                        icon={<PlusCircle className="size-4" />}
                         selected={field.value === "entrada"}
                       />
                       <TipoOption
@@ -222,7 +236,7 @@ export function MovementDialog({
                         label={t("tipos.salida")}
                         hint="Consumo manual"
                         tone="danger"
-                        icon={<ArrowUp className="size-3.5" />}
+                        icon={<MinusCircle className="size-4" />}
                         selected={field.value === "salida"}
                       />
                       <TipoOption
@@ -230,7 +244,7 @@ export function MovementDialog({
                         label={t("tipos.ajustePrecio")}
                         hint="Solo cambia precio"
                         tone="info"
-                        icon={<SlidersHorizontal className="size-3.5" />}
+                        icon={<SlidersHorizontal className="size-4" />}
                         selected={field.value === "ajuste_precio"}
                       />
                     </RadioGroup>
@@ -247,27 +261,15 @@ export function MovementDialog({
                   name="cantidad"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>
-                        {t("campos.cantidad")} *
-                        {unit ? (
-                          <span className="ml-1 text-xs text-muted-foreground">
-                            ({unit})
-                          </span>
-                        ) : null}
-                      </FormLabel>
+                      <FormLabel>{t("campos.cantidad")} *</FormLabel>
                       <FormControl>
-                        <Input
-                          type="number"
-                          inputMode="decimal"
-                          step="0.01"
+                        <NumberInput
+                          step={0.01}
                           min={0}
-                          className="tabular-nums"
-                          value={field.value}
-                          onChange={(e) => {
-                            const raw = e.target.value;
-                            field.onChange(raw === "" ? 0 : Number(raw));
-                          }}
+                          suffix={unit || undefined}
                           autoFocus
+                          value={field.value}
+                          onChange={(v) => field.onChange(v === "" ? 0 : v)}
                         />
                       </FormControl>
                       <FormMessage />
@@ -322,30 +324,40 @@ export function MovementDialog({
               />
             )}
 
-            {tipo === "entrada" ? (
-              <div className="flex items-center justify-between rounded-lg border border-border bg-muted-2/60 px-3 py-2 text-sm">
-                <span className="text-muted-foreground">
-                  {t("campos.total")}
-                </span>
-                <span className="tabular-nums font-medium">
-                  {formatARS(totalEntrada)}
-                </span>
-              </div>
-            ) : null}
-
             {tipo !== "ajuste_precio" ? (
-              <div className="flex items-center justify-between rounded-lg border border-border bg-card px-3 py-2 text-sm">
-                <div className="flex items-center gap-2 text-muted-foreground">
-                  <span className="tabular-nums">
-                    {formatNumber(target.stock)}
-                  </span>
-                  <span aria-hidden>→</span>
+              <div
+                className={
+                  tipo === "entrada"
+                    ? "grid gap-3 sm:grid-cols-2"
+                    : "grid gap-3"
+                }
+              >
+                {tipo === "entrada" ? (
+                  <div className="flex items-center justify-between rounded-lg border border-border bg-muted-2/60 px-3 py-2 text-sm">
+                    <span className="text-muted-foreground">
+                      {t("campos.total")}
+                    </span>
+                    <span className="tabular-nums font-medium">
+                      {formatARS(totalEntrada)}
+                    </span>
+                  </div>
+                ) : null}
+                <div className="flex items-center justify-between gap-3 rounded-lg border border-border bg-card px-3 py-2 text-sm">
+                  <div className="flex flex-col">
+                    <span className="text-[10.5px] font-medium uppercase tracking-wide text-muted-foreground">
+                      Stock resultante
+                    </span>
+                    <span className="font-mono tabular-nums text-xs text-muted-foreground">
+                      {formatNumber(target.stock)}
+                      {unit ? ` ${unit}` : ""} →
+                    </span>
+                  </div>
+                  <StockBadge
+                    stock={stockResultante}
+                    stockMinimo={target.stockMinimo}
+                    unidad={target.unidadMedida}
+                  />
                 </div>
-                <StockBadge
-                  stock={stockResultante}
-                  stockMinimo={target.stockMinimo}
-                  unidad={target.unidadMedida}
-                />
               </div>
             ) : null}
 

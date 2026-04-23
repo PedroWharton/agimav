@@ -51,9 +51,9 @@ import { PageHeader } from "@/components/app/page-header";
 import { Toolbar } from "@/components/app/toolbar";
 import { Combobox } from "@/components/app/combobox";
 import { CurrencyInput } from "@/components/app/currency-input";
+import { NumberInput } from "@/components/app/number-input";
 import { DetailDrawer } from "@/components/app/detail-drawer";
 import { StatusChip, type ChipTone } from "@/components/app/status-chip";
-import { EmptyState } from "@/components/app/states";
 import { KpiCard } from "@/components/stats/kpi-card";
 import { StockBadge } from "@/components/inventario/stock-badge";
 import {
@@ -71,9 +71,15 @@ import {
   updateItem,
   deleteItem,
   getRecentMovimientos,
+  getPorLlegar,
+  getHistorialCompras,
   exportarInventario,
 } from "./actions";
-import type { RecentMovimiento } from "./types";
+import type {
+  HistorialCompraRow,
+  PorLlegarRow,
+  RecentMovimiento,
+} from "./types";
 
 export type InventarioRow = {
   id: number;
@@ -226,6 +232,10 @@ export function InventarioClient({
     useState<MovementDialogTarget | null>(null);
   const [recentMovs, setRecentMovs] = useState<RecentMovimiento[] | null>(null);
   const [recentLoading, setRecentLoading] = useState(false);
+  const [porLlegar, setPorLlegar] = useState<PorLlegarRow[] | null>(null);
+  const [porLlegarLoading, setPorLlegarLoading] = useState(false);
+  const [historial, setHistorial] = useState<HistorialCompraRow[] | null>(null);
+  const [historialLoading, setHistorialLoading] = useState(false);
 
   const [search, setSearch] = useState("");
   const [categoriaFilter, setCategoriaFilter] = useState<string>(CATEGORIA_ALL);
@@ -285,6 +295,10 @@ export function InventarioClient({
     setDetail(row);
     setRecentMovs(null);
     setRecentLoading(true);
+    setPorLlegar(null);
+    setPorLlegarLoading(true);
+    setHistorial(null);
+    setHistorialLoading(true);
     setDetailOpen(true);
   }
 
@@ -324,6 +338,26 @@ export function InventarioClient({
       })
       .catch(() => {
         if (!cancelled) setRecentLoading(false);
+      });
+    getPorLlegar(detail.id)
+      .then((data) => {
+        if (!cancelled) {
+          setPorLlegar(data);
+          setPorLlegarLoading(false);
+        }
+      })
+      .catch(() => {
+        if (!cancelled) setPorLlegarLoading(false);
+      });
+    getHistorialCompras(detail.id, 20)
+      .then((data) => {
+        if (!cancelled) {
+          setHistorial(data);
+          setHistorialLoading(false);
+        }
+      })
+      .catch(() => {
+        if (!cancelled) setHistorialLoading(false);
       });
     return () => {
       cancelled = true;
@@ -716,172 +750,188 @@ export function InventarioClient({
         open={editOpen}
         onOpenChange={setEditOpen}
         title={title}
+        size="lg"
         isDirty={form.formState.isDirty}
         isSubmitting={isSubmitting}
         onSubmit={submit}
       >
         <Form {...form}>
-          <div className="grid grid-cols-2 gap-3">
-            <FormField
-              control={form.control}
-              name="codigo"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>{t("inventario.campos.codigo")} *</FormLabel>
-                  <FormControl>
-                    <Input {...field} autoFocus className="font-mono" />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            <FormField
-              control={form.control}
-              name="unidadMedida"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>{t("inventario.campos.unidadMedida")}</FormLabel>
-                  <FormControl>
-                    <Combobox
-                      value={field.value ?? ""}
-                      onChange={field.onChange}
-                      options={unidadesMedidaOptions}
-                      placeholder="—"
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-          </div>
-          <FormField
-            control={form.control}
-            name="descripcion"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>{t("inventario.campos.descripcion")} *</FormLabel>
-                <FormControl>
-                  <Input {...field} />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-          <div className="grid grid-cols-2 gap-3">
-            <FormField
-              control={form.control}
-              name="categoria"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>{t("inventario.campos.categoria")}</FormLabel>
-                  <FormControl>
-                    <Combobox
-                      value={field.value ?? ""}
-                      onChange={field.onChange}
-                      options={categoriaOptions}
-                      placeholder="—"
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            <FormField
-              control={form.control}
-              name="localidad"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>{t("inventario.campos.localidad")}</FormLabel>
-                  <FormControl>
-                    <Combobox
-                      value={field.value ?? ""}
-                      onChange={field.onChange}
-                      options={localidadOptions}
-                      placeholder="—"
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-          </div>
-          <FormField
-            control={form.control}
-            name="unidadProductiva"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>
-                  {t("inventario.campos.unidadProductiva")}
-                </FormLabel>
-                <FormControl>
-                  <Combobox
-                    value={field.value ?? ""}
-                    onChange={field.onChange}
-                    options={unidadesProductivasOptions}
-                    placeholder="—"
-                  />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-          <div className="grid grid-cols-2 gap-3">
-            <FormField
-              control={form.control}
-              name="stockMinimo"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>{t("inventario.campos.stockMinimo")}</FormLabel>
-                  <FormControl>
-                    <Input
-                      type="number"
-                      inputMode="decimal"
-                      step="0.01"
-                      min={0}
-                      className="tabular-nums"
-                      value={field.value}
-                      onChange={(e) => {
-                        const raw = e.target.value;
-                        field.onChange(raw === "" ? 0 : Number(raw));
-                      }}
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            <FormField
-              control={form.control}
-              name="valorUnitario"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>{t("inventario.campos.valorUnitario")}</FormLabel>
-                  <FormControl>
-                    <CurrencyInput
-                      value={field.value}
-                      onChange={(v) => field.onChange(v === "" ? 0 : v)}
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-          </div>
+          <FormSection
+            title={t("inventario.formSecciones.identificacion")}
+            hint={t("inventario.formSecciones.identificacionHint")}
+          >
+            <div className="grid gap-3 sm:grid-cols-[180px_1fr_160px]">
+              <FormField
+                control={form.control}
+                name="codigo"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>{t("inventario.campos.codigo")} *</FormLabel>
+                    <FormControl>
+                      <Input {...field} autoFocus className="font-mono" />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="descripcion"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>{t("inventario.campos.descripcion")} *</FormLabel>
+                    <FormControl>
+                      <Input {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="unidadMedida"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>{t("inventario.campos.unidadMedida")}</FormLabel>
+                    <FormControl>
+                      <Combobox
+                        value={field.value ?? ""}
+                        onChange={field.onChange}
+                        options={unidadesMedidaOptions}
+                        placeholder="—"
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </div>
+          </FormSection>
+
+          <FormSection
+            title={t("inventario.formSecciones.clasificacion")}
+            hint={t("inventario.formSecciones.clasificacionHint")}
+          >
+            <div className="grid gap-3 sm:grid-cols-3">
+              <FormField
+                control={form.control}
+                name="categoria"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>{t("inventario.campos.categoria")}</FormLabel>
+                    <FormControl>
+                      <Combobox
+                        value={field.value ?? ""}
+                        onChange={field.onChange}
+                        options={categoriaOptions}
+                        placeholder="—"
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="localidad"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>{t("inventario.campos.localidad")}</FormLabel>
+                    <FormControl>
+                      <Combobox
+                        value={field.value ?? ""}
+                        onChange={field.onChange}
+                        options={localidadOptions}
+                        placeholder="—"
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="unidadProductiva"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>
+                      {t("inventario.campos.unidadProductiva")}
+                    </FormLabel>
+                    <FormControl>
+                      <Combobox
+                        value={field.value ?? ""}
+                        onChange={field.onChange}
+                        options={unidadesProductivasOptions}
+                        placeholder="—"
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </div>
+          </FormSection>
+
+          <FormSection
+            title={t("inventario.formSecciones.economicos")}
+            hint={t("inventario.formSecciones.economicosHint")}
+          >
+            <div className="grid gap-3 sm:grid-cols-2">
+              <FormField
+                control={form.control}
+                name="stockMinimo"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>{t("inventario.campos.stockMinimo")}</FormLabel>
+                    <FormControl>
+                      <NumberInput
+                        step={0.01}
+                        min={0}
+                        suffix={form.watch("unidadMedida") || undefined}
+                        value={field.value}
+                        onChange={(v) => field.onChange(v === "" ? 0 : v)}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="valorUnitario"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>{t("inventario.campos.valorUnitario")}</FormLabel>
+                    <FormControl>
+                      <CurrencyInput
+                        value={field.value}
+                        onChange={(v) => field.onChange(v === "" ? 0 : v)}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </div>
+          </FormSection>
+
           {editing ? (
-            <div className="rounded-md border border-border bg-muted/40 p-3 text-sm">
-              <div className="flex items-center justify-between">
-                <span className="text-muted-foreground">
-                  {t("inventario.campos.stock")}
-                </span>
+            <div className="rounded-lg border border-border bg-muted/40 px-4 py-3 text-sm">
+              <div className="flex items-center justify-between gap-4">
+                <div className="flex flex-col">
+                  <span className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
+                    {t("inventario.campos.stock")}
+                  </span>
+                  <span className="mt-0.5 text-xs text-muted-foreground">
+                    {t("inventario.avisos.stockSoloMovimientos")}
+                  </span>
+                </div>
                 <StockBadge
                   stock={editing.stock}
                   stockMinimo={editing.stockMinimo}
                   unidad={editing.unidadMedida}
                 />
               </div>
-              <p className="mt-2 text-xs text-muted-foreground">
-                {t("inventario.avisos.stockSoloMovimientos")}
-              </p>
             </div>
           ) : null}
         </Form>
@@ -1020,15 +1070,22 @@ export function InventarioClient({
                   ),
                 },
                 {
-                  id: "facturas",
-                  label: t("inventario.tabs.facturas"),
+                  id: "porLlegar",
+                  label: t("inventario.tabs.porLlegar"),
                   content: (
-                    <EmptyState
-                      variant="empty-tab"
-                      title={t("inventario.avisosDetail.facturasNoDisponible")}
-                      description={t(
-                        "inventario.avisosDetail.facturasPronto",
-                      )}
+                    <PorLlegarList
+                      loading={porLlegarLoading}
+                      rows={porLlegar}
+                    />
+                  ),
+                },
+                {
+                  id: "historial",
+                  label: t("inventario.tabs.historial"),
+                  content: (
+                    <HistorialCompraList
+                      loading={historialLoading}
+                      rows={historial}
                     />
                   ),
                 },
@@ -1114,6 +1171,30 @@ function MiniKpi({
   );
 }
 
+function FormSection({
+  title,
+  hint,
+  children,
+}: {
+  title: string;
+  hint?: string;
+  children: React.ReactNode;
+}) {
+  return (
+    <section className="flex flex-col gap-3">
+      <div className="flex flex-col gap-0.5 border-b border-border pb-1.5">
+        <h3 className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+          {title}
+        </h3>
+        {hint ? (
+          <p className="text-xs text-subtle-foreground">{hint}</p>
+        ) : null}
+      </div>
+      {children}
+    </section>
+  );
+}
+
 function RecentMovimientosList({
   loading,
   movimientos,
@@ -1190,6 +1271,125 @@ function RecentMovimientosList({
           </li>
         );
       })}
+    </ul>
+  );
+}
+
+function PorLlegarList({
+  loading,
+  rows,
+}: {
+  loading: boolean;
+  rows: PorLlegarRow[] | null;
+}) {
+  const t = useTranslations();
+  if (loading && !rows) {
+    return (
+      <div className="rounded-lg border border-border p-4 text-sm text-muted-foreground">
+        {t("inventario.compras.cargando")}
+      </div>
+    );
+  }
+  if (!rows || rows.length === 0) {
+    return (
+      <div className="rounded-lg border border-border bg-muted-2/40 p-4 text-sm text-muted-foreground">
+        {t("inventario.compras.sinPorLlegar")}
+      </div>
+    );
+  }
+  return (
+    <ul className="divide-y divide-border rounded-lg border border-border">
+      {rows.map((r) => {
+        const label = r.ocNumero ? `OC ${r.ocNumero}` : `OC #${r.ocId}`;
+        return (
+          <li
+            key={`${r.ocId}-${r.precioUnitario}`}
+            className="flex items-center justify-between gap-3 px-3 py-2 text-sm"
+          >
+            <div className="min-w-0">
+              <div className="flex items-center gap-2">
+                <Link
+                  href={`/compras/oc/${r.ocId}`}
+                  className="font-medium text-sky-700 hover:underline dark:text-sky-300"
+                >
+                  {label}
+                </Link>
+                <span className="text-xs text-muted-foreground tabular-nums font-mono">
+                  {format(r.fechaEmision, "yyyy-MM-dd", { locale: es })}
+                </span>
+                <span className="text-[10.5px] font-semibold uppercase tracking-wide text-muted-foreground">
+                  {r.ocEstado}
+                </span>
+              </div>
+              <div className="truncate text-xs text-muted-foreground">
+                {r.proveedor}
+              </div>
+            </div>
+            <div className="flex items-center gap-3 text-xs tabular-nums">
+              <span className="font-medium text-sky-700 dark:text-sky-300">
+                +{formatNumber(r.pendiente)}
+                {r.unidadMedida ? ` ${r.unidadMedida}` : ""}
+              </span>
+              <span className="text-muted-foreground">
+                {formatARS(r.precioUnitario)}
+              </span>
+            </div>
+          </li>
+        );
+      })}
+    </ul>
+  );
+}
+
+function HistorialCompraList({
+  loading,
+  rows,
+}: {
+  loading: boolean;
+  rows: HistorialCompraRow[] | null;
+}) {
+  const t = useTranslations();
+  if (loading && !rows) {
+    return (
+      <div className="rounded-lg border border-border p-4 text-sm text-muted-foreground">
+        {t("inventario.compras.cargando")}
+      </div>
+    );
+  }
+  if (!rows || rows.length === 0) {
+    return (
+      <div className="rounded-lg border border-border bg-muted-2/40 p-4 text-sm text-muted-foreground">
+        {t("inventario.compras.sinHistorial")}
+      </div>
+    );
+  }
+  return (
+    <ul className="divide-y divide-border rounded-lg border border-border">
+      {rows.map((r) => (
+        <li
+          key={r.id}
+          className="flex items-center justify-between gap-3 px-3 py-2 text-sm"
+        >
+          <div className="min-w-0">
+            <div className="flex items-center gap-2">
+              <span className="text-xs text-muted-foreground tabular-nums font-mono">
+                {format(r.fecha, "yyyy-MM-dd", { locale: es })}
+              </span>
+              {r.numeroDocumento ? (
+                <span className="text-xs text-muted-foreground">
+                  · {r.numeroDocumento}
+                </span>
+              ) : null}
+            </div>
+            <div className="truncate text-xs text-muted-foreground">
+              {r.proveedor}
+            </div>
+          </div>
+          <div className="flex items-center gap-3 text-xs tabular-nums">
+            <span className="font-medium">{formatARS(r.precioArs)}</span>
+          </div>
+        </li>
+      ))}
     </ul>
   );
 }

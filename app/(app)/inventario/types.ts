@@ -20,6 +20,26 @@ export type RecentMovimiento = {
   usuario: string;
 };
 
+export type PorLlegarRow = {
+  ocId: number;
+  ocNumero: string | null;
+  ocEstado: string;
+  fechaEmision: Date;
+  proveedor: string;
+  pendiente: number;
+  unidadMedida: string | null;
+  precioUnitario: number;
+};
+
+export type HistorialCompraRow = {
+  id: number;
+  fecha: Date;
+  proveedor: string;
+  precioArs: number;
+  fuente: string | null;
+  numeroDocumento: string | null;
+};
+
 export type ExportResult = { base64: string; filename: string };
 
 export type MovimientoExportFilter = {

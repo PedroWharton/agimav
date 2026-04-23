@@ -233,6 +233,7 @@ export default async function AbcPage({
                 <Donut
                   data={donutSlices}
                   size={160}
+                  ariaLabel={t("abc.distribucion")}
                   centerLabel={
                     <div className="flex flex-col items-center gap-0.5">
                       <span className="font-mono text-sm font-semibold text-foreground">

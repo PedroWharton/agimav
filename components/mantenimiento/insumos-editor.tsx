@@ -4,8 +4,8 @@ import { Trash2, Plus } from "lucide-react";
 import { useTranslations } from "next-intl";
 
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { Combobox } from "@/components/app/combobox";
+import { NumberInput } from "@/components/app/number-input";
 
 export type InventarioOption = {
   id: number;
@@ -148,7 +148,7 @@ export function InsumosEditor({
                           {t("itemRequerido")}
                         </div>
                       ) : overConsumption ? (
-                        <div className="mt-1 text-xs text-amber-700 dark:text-amber-300">
+                        <div className="mt-1 text-xs text-warn">
                           {t("sobreConsumoAviso")}
                         </div>
                       ) : null}
@@ -159,22 +159,21 @@ export function InsumosEditor({
                       </td>
                     ) : null}
                     <td className="px-2 py-2">
-                      <Input
-                        type="number"
-                        step="0.01"
-                        min="0"
+                      <NumberInput
+                        step={0.01}
+                        min={0}
+                        suffix={line.unidadMedida || undefined}
+                        disabled={disabled}
                         value={line.cantidadUtilizada || ""}
-                        onChange={(e) =>
+                        onChange={(v) =>
                           updateLine(idx, {
-                            cantidadUtilizada: Number(e.target.value) || 0,
+                            cantidadUtilizada: v === "" ? 0 : v,
                           })
                         }
-                        disabled={disabled}
-                        className="h-8 text-right tabular-nums"
+                        className="h-8"
                       />
-                      <div className="mt-0.5 flex justify-end gap-1 text-right text-xs text-muted-foreground tabular-nums">
-                        {line.unidadMedida ? <span>{line.unidadMedida}</span> : null}
-                        <span>@ {formatARS(line.costoUnitario)}</span>
+                      <div className="mt-0.5 text-right text-xs text-muted-foreground tabular-nums">
+                        @ {formatARS(line.costoUnitario)}
                       </div>
                     </td>
                     <td className="px-2 py-2 text-right font-medium tabular-nums">

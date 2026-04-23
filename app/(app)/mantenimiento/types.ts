@@ -1,5 +1,5 @@
 export type MantActionResult =
-  | { ok: true; id: number }
+  | { ok: true; id: number; childId?: number }
   | {
       ok: false;
       error:

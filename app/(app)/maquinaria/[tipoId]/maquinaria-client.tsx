@@ -61,6 +61,7 @@ import { ActionsMenu } from "@/components/app/actions-menu";
 import { ConfirmDialog } from "@/components/app/confirm-dialog";
 import { PageHeader } from "@/components/app/page-header";
 import { Combobox, type ComboboxOption } from "@/components/app/combobox";
+import { NumberInput } from "@/components/app/number-input";
 import { Toolbar } from "@/components/app/toolbar";
 import { KpiCard } from "@/components/stats/kpi-card";
 import { StatusChip } from "@/components/app/status-chip";
@@ -72,6 +73,7 @@ import {
 import {
   MaquinariaDetailDrawer,
   type MaquinariaDetailData,
+  type MantenimientoHistoryRow,
 } from "@/components/maquinaria/maquinaria-detail-drawer";
 import { statusChip as statusChipMap } from "@/components/maquinaria/helpers";
 import { cn } from "@/lib/utils";
@@ -80,6 +82,7 @@ import {
   createMaquinaria,
   updateMaquinaria,
   deleteMaquinaria,
+  getMantenimientosForMaquina,
 } from "./actions";
 import { saveColumnConfig } from "./column-actions";
 
@@ -315,6 +318,11 @@ export function MaquinariaClient({
   const [searchQuery, setSearchQuery] = useState("");
   const [detailId, setDetailId] = useState<number | null>(null);
   const [detailOpen, setDetailOpen] = useState(false);
+  const [detailMantenimientos, setDetailMantenimientos] = useState<
+    MantenimientoHistoryRow[] | null
+  >(null);
+  const [detailMantenimientosLoading, setDetailMantenimientosLoading] =
+    useState(false);
 
   useEffect(() => {
     if (typeof window === "undefined") return;
@@ -630,6 +638,18 @@ export function MaquinariaClient({
   function openDetail(row: MaquinaRow) {
     setDetailId(row.id);
     setDetailOpen(true);
+    setDetailMantenimientos(null);
+    setDetailMantenimientosLoading(true);
+    void getMantenimientosForMaquina(row.id)
+      .then((rows) => {
+        setDetailMantenimientos(rows);
+      })
+      .catch(() => {
+        setDetailMantenimientos([]);
+      })
+      .finally(() => {
+        setDetailMantenimientosLoading(false);
+      });
   }
 
   function cardDataFor(row: MaquinaRow): MaquinariaCardData {
@@ -668,32 +688,6 @@ export function MaquinariaClient({
   function detailDataFor(row: MaquinaRow): MaquinariaDetailData {
     const principal = principalValue(row);
     const title = principal || row.nroSerie || `#${row.id}`;
-    const summary = [
-      {
-        label: t("maquinaria.detalle.resumen.estado"),
-        value: (() => {
-          const c = statusChipMap(row.estado);
-          return <StatusChip tone={c.tone} dot label={c.label} />;
-        })(),
-      },
-      {
-        label: t("maquinaria.detalle.resumen.horometro"),
-        value: (
-          <span className="tabular-nums">
-            {row.horasAcumuladas.toLocaleString("es-AR")}
-            {tipo.abrevUnidad ? ` ${tipo.abrevUnidad}` : " hs"}
-          </span>
-        ),
-      },
-      {
-        label: t("maquinaria.detalle.resumen.nroSerie"),
-        value: row.nroSerie ? (
-          <span className="font-mono text-sm">{row.nroSerie}</span>
-        ) : (
-          ""
-        ),
-      },
-    ];
 
     const byNivel = new Map(
       row.niveles.map((n) => [
@@ -717,13 +711,11 @@ export function MaquinariaClient({
       id: row.id,
       title,
       codigo: row.nroSerie,
-      subtitle: null,
       tipoNombre: tipo.nombre,
       estado: row.estado,
       horasAcumuladas: row.horasAcumuladas,
       unidadAbrev: tipo.abrevUnidad,
       createdAt: dateFormatter.format(new Date(row.createdAt)),
-      summary,
       sections,
     };
   }
@@ -964,9 +956,15 @@ export function MaquinariaClient({
         open={detailOpen}
         onOpenChange={(next) => {
           setDetailOpen(next);
-          if (!next) setDetailId(null);
+          if (!next) {
+            setDetailId(null);
+            setDetailMantenimientos(null);
+            setDetailMantenimientosLoading(false);
+          }
         }}
         data={detailData}
+        mantenimientos={detailMantenimientos}
+        mantenimientosLoading={detailMantenimientosLoading}
         footer={
           admin && detailRow ? (
             <Button
@@ -1043,7 +1041,21 @@ export function MaquinariaClient({
                     : t("maquinaria.maquinas.horometro")}
                 </FormLabel>
                 <FormControl>
-                  <Input type="number" step="any" min="0" {...field} />
+                  <NumberInput
+                    step="any"
+                    min={0}
+                    suffix={tipo.unidadMedicion || undefined}
+                    value={
+                      field.value === "" || field.value == null
+                        ? ""
+                        : Number(field.value)
+                    }
+                    onChange={(v) =>
+                      field.onChange(v === "" ? "" : String(v))
+                    }
+                    onBlur={field.onBlur}
+                    name={field.name}
+                  />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -1206,7 +1218,18 @@ function renderControl(
 ) {
   switch (atributo.dataType) {
     case "number":
-      return <Input type="number" step="any" {...field} disabled={disabled} />;
+      return (
+        <NumberInput
+          step="any"
+          value={
+            field.value === "" || field.value == null ? "" : Number(field.value)
+          }
+          onChange={(v) => field.onChange(v === "" ? "" : String(v))}
+          onBlur={field.onBlur}
+          name={field.name}
+          disabled={disabled}
+        />
+      );
     case "date":
       return <Input type="date" {...field} disabled={disabled} />;
     case "list": {

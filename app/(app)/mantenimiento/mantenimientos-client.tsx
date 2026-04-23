@@ -60,39 +60,23 @@ type ViewMode = "lista" | "tablero";
 type LaneDef = {
   key: string;
   estado: string;
-  tone: "neutral" | "info" | "warn" | "ok";
-  active: boolean;
+  tone: "info" | "warn";
 };
 
 const LANES: LaneDef[] = [
-  { key: "pendiente", estado: "Pendiente", tone: "info", active: true },
-  {
-    key: "chacra",
-    estado: "En Reparación - Chacra",
-    tone: "warn",
-    active: true,
-  },
-  {
-    key: "taller",
-    estado: "En Reparación - Taller",
-    tone: "warn",
-    active: true,
-  },
-  { key: "finalizado", estado: "Finalizado", tone: "ok", active: false },
+  { key: "pendiente", estado: "Pendiente", tone: "info" },
+  { key: "chacra", estado: "En Reparación - Chacra", tone: "warn" },
+  { key: "taller", estado: "En Reparación - Taller", tone: "warn" },
 ];
 
 const LANE_HEADER_TONE: Record<LaneDef["tone"], string> = {
-  neutral: "text-muted-foreground",
   info: "text-info",
   warn: "text-warn",
-  ok: "text-success",
 };
 
 const LANE_COUNTER_TONE: Record<LaneDef["tone"], string> = {
-  neutral: "bg-card text-foreground",
   info: "bg-info-weak text-info",
   warn: "bg-warn-weak text-warn",
-  ok: "bg-success-weak text-success",
 };
 
 function normalizeView(raw: string | null): ViewMode {
@@ -442,7 +426,7 @@ function KanbanBoard({
   }, [rows]);
 
   return (
-    <div className="grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-4">
+    <div className="grid grid-cols-1 gap-3 md:grid-cols-3">
       {LANES.map((lane) => {
         const items = byLane[lane.key] ?? [];
         const label = tEstados(
@@ -485,7 +469,6 @@ function KanbanBoard({
                     responsable={row.responsable}
                     prioridad={row.prioridad}
                     dueDate={row.fechaProgramada ?? row.fechaInicio}
-                    showDueRelative={lane.active}
                     tareasTotal={row.tareasTotal}
                     tareasRealizadas={row.tareasRealizadas}
                   />

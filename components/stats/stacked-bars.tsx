@@ -38,11 +38,13 @@ export function StackedBars({
   data,
   segmentOrder,
   formatValue,
+  ariaLabel,
   className,
 }: {
   data: StackedBarGroup[];
   segmentOrder?: string[];
   formatValue?: (n: number) => string;
+  ariaLabel?: string;
   className?: string;
 }) {
   const fmt = formatValue ?? ((n: number) => n.toLocaleString("es-AR"));
@@ -113,7 +115,7 @@ export function StackedBars({
   return (
     <svg
       role="img"
-      aria-label="Barras apiladas"
+      aria-label={ariaLabel ?? "Barras apiladas"}
       viewBox={`0 0 ${w} ${h}`}
       preserveAspectRatio="xMidYMid meet"
       width="100%"

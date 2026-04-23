@@ -12,6 +12,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Combobox } from "@/components/app/combobox";
+import { NumberInput } from "@/components/app/number-input";
 import { PageHeader } from "@/components/app/page-header";
 import { ConfirmDialog } from "@/components/app/confirm-dialog";
 import {
@@ -305,16 +306,11 @@ export function PlantillaForm({
 
         <div className="flex flex-col gap-1.5">
           <Label>{tP("campos.frecuenciaValor")} *</Label>
-          <Input
-            type="number"
-            step="0.5"
-            min="0"
+          <NumberInput
+            step={0.5}
+            min={0}
             value={frecuenciaValor}
-            onChange={(e) =>
-              setFrecuenciaValor(
-                e.target.value === "" ? "" : Number(e.target.value),
-              )
-            }
+            onChange={setFrecuenciaValor}
           />
           {errors.frecuenciaValor ? (
             <span className="text-xs text-destructive">
@@ -399,23 +395,18 @@ export function PlantillaForm({
                       />
                     </td>
                     <td className="px-2 py-2">
-                      <Input
-                        type="number"
-                        step="0.01"
-                        min="0"
+                      <NumberInput
+                        step={0.01}
+                        min={0}
+                        suffix={ins.unidadMedida || undefined}
                         value={ins.cantidadSugerida || ""}
-                        onChange={(e) =>
+                        onChange={(v) =>
                           updateInsumo(idx, {
-                            cantidadSugerida: Number(e.target.value) || 0,
+                            cantidadSugerida: v === "" ? 0 : v,
                           })
                         }
-                        className="h-8 text-right tabular-nums"
+                        className="h-8"
                       />
-                      {ins.unidadMedida ? (
-                        <div className="mt-0.5 text-right text-xs text-muted-foreground">
-                          {ins.unidadMedida}
-                        </div>
-                      ) : null}
                     </td>
                     <td className="px-2 py-2 text-right">
                       <Button

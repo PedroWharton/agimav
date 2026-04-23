@@ -27,13 +27,15 @@ export type DetailDrawerProps = {
   defaultTab?: string;
   footer?: ReactNode;
   children?: ReactNode;
-  width?: "sm" | "md" | "lg";
+  width?: "sm" | "md" | "lg" | "xl" | "2xl";
 };
 
 const WIDTH_CLASSES: Record<NonNullable<DetailDrawerProps["width"]>, string> = {
-  sm: "sm:max-w-none sm:w-[400px] max-sm:w-full",
-  md: "sm:max-w-none sm:w-[480px] max-sm:w-full",
-  lg: "sm:max-w-none sm:w-[640px] max-sm:w-full",
+  sm: "sm:max-w-[400px]",
+  md: "sm:max-w-[480px]",
+  lg: "sm:max-w-[640px]",
+  xl: "sm:max-w-[820px]",
+  "2xl": "sm:max-w-[960px]",
 };
 
 export function DetailDrawer({

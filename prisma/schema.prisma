@@ -676,6 +676,10 @@ model Mantenimiento {
   unidadEstimacion     String?  @map("unidad_estimacion")
   metodoCalculo        String?  @map("metodo_calculo")
 
+  revisionDeId     Int?            @map("revision_de_id")
+  revisionDe       Mantenimiento?  @relation("MantenimientoRevision", fields: [revisionDeId], references: [id], onDelete: SetNull)
+  revisionesHijas  Mantenimiento[] @relation("MantenimientoRevision")
+
   insumos   MantenimientoInsumo[]
   tareas    MantenimientoTarea[]
   historial MantenimientoHistorial[]
@@ -687,6 +691,7 @@ model Mantenimiento {
   @@index([responsableId])
   @@index([fechaProgramada])
   @@index([estado, tipo])
+  @@index([revisionDeId])
   @@map("mantenimientos")
 }
 

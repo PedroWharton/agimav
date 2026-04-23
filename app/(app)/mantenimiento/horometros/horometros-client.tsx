@@ -27,6 +27,7 @@ import {
 import { Combobox } from "@/components/app/combobox";
 import { DataTable } from "@/components/app/data-table";
 import { FormSheet } from "@/components/app/form-sheet";
+import { NumberInput } from "@/components/app/number-input";
 import { PageHeader } from "@/components/app/page-header";
 import { Toolbar } from "@/components/app/toolbar";
 
@@ -108,6 +109,9 @@ export function HorometrosClient({
     defaultValues: emptyForm,
   });
 
+  const watchedMaquinariaId = form.watch("maquinariaId");
+  const watchedHorasNuevo = form.watch("horasNuevo");
+
   const maquinariaOpts = useMemo(
     () => maquinarias.map((m) => ({ value: String(m.id), label: m.label })),
     [maquinarias],
@@ -118,6 +122,17 @@ export function HorometrosClient({
     for (const m of maquinarias) map.set(m.id, m);
     return map;
   }, [maquinarias]);
+
+  const selectedMaquinaria = watchedMaquinariaId
+    ? (maquinariaById.get(Number(watchedMaquinariaId)) ?? null)
+    : null;
+
+  const horasNuevoInvalid = (() => {
+    if (!selectedMaquinaria) return false;
+    const parsed = Number(watchedHorasNuevo);
+    if (!watchedHorasNuevo || !Number.isFinite(parsed)) return false;
+    return parsed <= selectedMaquinaria.horasAcumuladas;
+  })();
 
   const filtered = useMemo(() => {
     let out = rows;
@@ -143,6 +158,14 @@ export function HorometrosClient({
   }
 
   function submit() {
+    if (horasNuevoInvalid) {
+      form.setError("horasNuevo", {
+        message: tH("avisos.horasMenoresAnterior", {
+          valor: selectedMaquinaria?.horasAcumuladas ?? 0,
+        }),
+      });
+      return;
+    }
     form.handleSubmit((values) => {
       start(async () => {
         const res = await createRegistroHoras({
@@ -298,33 +321,28 @@ export function HorometrosClient({
           <FormField
             control={form.control}
             name="maquinariaId"
-            render={({ field }) => {
-              const selected = field.value
-                ? (maquinariaById.get(Number(field.value)) ?? null)
-                : null;
-              return (
-                <FormItem>
-                  <FormLabel>{tM("campos.maquina")} *</FormLabel>
-                  <FormControl>
-                    <Combobox
-                      value={field.value}
-                      onChange={(v) => field.onChange(v)}
-                      options={maquinariaOpts}
-                      placeholder={tM("campos.maquina")}
-                      allowCreate={false}
-                    />
-                  </FormControl>
-                  {selected ? (
-                    <span className="text-xs text-muted-foreground">
-                      {tH("horasActuales", {
-                        valor: selected.horasAcumuladas,
-                      })}
-                    </span>
-                  ) : null}
-                  <FormMessage />
-                </FormItem>
-              );
-            }}
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>{tM("campos.maquina")} *</FormLabel>
+                <FormControl>
+                  <Combobox
+                    value={field.value}
+                    onChange={(v) => field.onChange(v)}
+                    options={maquinariaOpts}
+                    placeholder={tM("campos.maquina")}
+                    allowCreate={false}
+                  />
+                </FormControl>
+                {selectedMaquinaria ? (
+                  <span className="text-xs text-muted-foreground">
+                    {tH("horasActuales", {
+                      valor: selectedMaquinaria.horasAcumuladas,
+                    })}
+                  </span>
+                ) : null}
+                <FormMessage />
+              </FormItem>
+            )}
           />
           <div className="grid grid-cols-2 gap-3">
             <FormField
@@ -334,15 +352,26 @@ export function HorometrosClient({
                 <FormItem>
                   <FormLabel>{tH("campos.horasNuevo")} *</FormLabel>
                   <FormControl>
-                    <Input
-                      {...field}
-                      type="number"
-                      inputMode="decimal"
-                      step="0.01"
-                      min="0"
-                      className="tabular-nums"
+                    <NumberInput
+                      step={0.01}
+                      min={0}
+                      suffix="hs"
+                      value={field.value === "" ? "" : Number(field.value)}
+                      onChange={(v) =>
+                        field.onChange(v === "" ? "" : String(v))
+                      }
+                      onBlur={field.onBlur}
+                      name={field.name}
+                      aria-invalid={horasNuevoInvalid || undefined}
                     />
                   </FormControl>
+                  {horasNuevoInvalid && selectedMaquinaria ? (
+                    <span className="text-xs text-danger">
+                      {tH("avisos.horasMenoresAnterior", {
+                        valor: selectedMaquinaria.horasAcumuladas,
+                      })}
+                    </span>
+                  ) : null}
                   <FormMessage />
                 </FormItem>
               )}

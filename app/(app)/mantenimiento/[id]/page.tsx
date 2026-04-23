@@ -67,6 +67,15 @@ export default async function MantenimientoDetailPage({
       historial: {
         orderBy: { fechaCambio: "desc" },
       },
+      revisionesHijas: {
+        orderBy: { fechaCreacion: "desc" },
+        take: 1,
+        select: {
+          id: true,
+          estado: true,
+          fechaProgramada: true,
+        },
+      },
     },
   });
   if (!mant) notFound();
@@ -147,6 +156,14 @@ export default async function MantenimientoDetailPage({
       descripcion: t.descripcion,
       realizada: t.realizada,
     })),
+    revisionHija: mant.revisionesHijas[0]
+      ? {
+          id: mant.revisionesHijas[0].id,
+          estado: mant.revisionesHijas[0].estado,
+          fechaProgramada:
+            mant.revisionesHijas[0].fechaProgramada?.toISOString() ?? null,
+        }
+      : null,
     historial: mant.historial.map((h) => ({
       id: h.id,
       tipoCambio: h.tipoCambio,

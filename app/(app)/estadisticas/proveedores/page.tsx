@@ -224,6 +224,7 @@ export default async function ProveedoresStatsPage({
               <HorizontalBars
                 data={top10}
                 formatValue={formatCurrencyShort}
+                ariaLabel={t("proveedores.top")}
               />
               <p className="mt-3 text-[11px] text-muted-foreground">
                 {t("proveedores.resumen", {

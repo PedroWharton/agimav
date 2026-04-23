@@ -49,6 +49,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { MantEstadoChip } from "@/components/mantenimiento/estado-chip";
 import { HistorialTimeline } from "@/components/mantenimiento/historial-timeline";
 import {
   InsumosEditor,
@@ -56,11 +57,9 @@ import {
   type InventarioOption,
 } from "@/components/mantenimiento/insumos-editor";
 import {
-  FilesGrid,
   KVGrid,
   MantenimientoStatusMeter,
   OTHero,
-  PartesTable,
   type KVPair,
 } from "@/components/mantenimiento/detail";
 import {
@@ -129,6 +128,11 @@ export type MantenimientoDetailData = {
     fechaCambio: string;
     usuario: string;
   }>;
+  revisionHija: {
+    id: number;
+    estado: string;
+    fechaProgramada: string | null;
+  } | null;
 };
 
 type TareaDraft = {
@@ -379,7 +383,19 @@ export function MantenimientoDetailClient({
         }
         return;
       }
-      toast.success(tM("avisos.transicionExitosa"));
+      if (res.childId) {
+        toast.success(
+          tM("revision.creadaToast", { id: res.childId }),
+          {
+            action: {
+              label: tM("revision.verRevisionCorta"),
+              onClick: () => router.push(`/mantenimiento/${res.childId}`),
+            },
+          },
+        );
+      } else {
+        toast.success(tM("avisos.transicionExitosa"));
+      }
       setTallerDialog(null);
       setFinalizarDialog(null);
       router.refresh();
@@ -524,12 +540,6 @@ export function MantenimientoDetailClient({
     locale: es,
   })}${data.creadoPor ? ` · ${data.creadoPor}` : ""}`;
 
-  // Q15: plantilla is not surfaced to the detail data today and 0/129 legacy
-  // mantenimientos reference one, so the Checklist section is omitted
-  // entirely. Re-enable once page.tsx starts returning plantillaId + items.
-  const plantillaId: number | null = null;
-  const showChecklist = plantillaId !== null;
-
   return (
     <div className="flex flex-col gap-6 p-6">
       <div>
@@ -639,9 +649,6 @@ export function MantenimientoDetailClient({
               </p>
             )}
           </Card>
-
-          {/* Checklist — hidden when no plantilla is applied (Q15) */}
-          {showChecklist ? null : null}
 
           {/* Repuestos asignados (insumos editor) */}
           <Card className="gap-3 p-5">
@@ -776,22 +783,10 @@ export function MantenimientoDetailClient({
             ) : null}
           </Card>
 
-          {/* Partes de trabajo (empty in v1 — model not yet wired) */}
-          <Card className="gap-3 p-5">
-            <h2 className="text-sm font-semibold">{tD("partes")}</h2>
-            <PartesTable rows={[]} />
-          </Card>
-
           {/* Bitácora (historial) */}
           <Card className="gap-3 p-5">
             <h2 className="text-sm font-semibold">{tM("historial.titulo")}</h2>
             <HistorialTimeline rows={data.historial} />
-          </Card>
-
-          {/* Archivos adjuntos — always empty in v1 (Q13) */}
-          <Card className="gap-3 p-5">
-            <h2 className="text-sm font-semibold">{tD("archivos")}</h2>
-            <FilesGrid files={[]} />
           </Card>
         </div>
 
@@ -882,25 +877,13 @@ export function MantenimientoDetailClient({
           {/* Costos */}
           <Card className="gap-2 p-4">
             <h3 className="text-xs font-semibold uppercase tracking-wide text-subtle-foreground">
-              {tD("costos")}
+              {tD("costoRepuestos")}
             </h3>
-            <div className="flex items-baseline justify-between text-sm">
-              <span className="text-subtle-foreground">
-                {tD("costoRepuestos")}
-              </span>
-              <span className="font-mono font-medium">
-                {formatARS(totalRepuestos)}
-              </span>
-            </div>
-            <div className="flex items-baseline justify-between text-sm">
-              <span className="text-subtle-foreground">
-                {tD("costoManoObra")}
-              </span>
-              <span className="font-mono text-subtle-foreground">—</span>
-            </div>
-            <div className="mt-1 flex items-baseline justify-between border-t border-border pt-2">
-              <span className="text-sm font-semibold">
-                {tD("costoTotal")}
+            <div className="flex items-baseline justify-between">
+              <span className="text-sm text-subtle-foreground">
+                {insumos.length === 0
+                  ? tM("insumos.sinInsumos")
+                  : tM("insumos.titulo")}
               </span>
               <span className="font-mono text-base font-semibold">
                 {formatARS(totalRepuestos)}
@@ -934,7 +917,7 @@ export function MantenimientoDetailClient({
 
           {/* Revisión programada (if any) */}
           {data.programarRevision && data.fechaProximaRevision ? (
-            <Card className="gap-1 p-4">
+            <Card className="gap-2 p-4">
               <h3 className="text-xs font-semibold uppercase tracking-wide text-subtle-foreground">
                 {tM("revision.titulo")}
               </h3>
@@ -947,6 +930,19 @@ export function MantenimientoDetailClient({
                 <p className="text-xs text-subtle-foreground">
                   {data.descripcionRevision}
                 </p>
+              ) : null}
+              {data.revisionHija ? (
+                <div className="flex items-center justify-between gap-2 border-t border-border pt-2">
+                  <MantEstadoChip estado={data.revisionHija.estado} />
+                  <Link
+                    href={`/mantenimiento/${data.revisionHija.id}`}
+                    className="text-xs font-medium text-sky-700 hover:underline dark:text-sky-300"
+                  >
+                    {tM("revision.verRevision", {
+                      id: data.revisionHija.id,
+                    })}
+                  </Link>
+                </div>
               ) : null}
             </Card>
           ) : null}

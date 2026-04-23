@@ -44,7 +44,7 @@ export function TypeChooser<T extends string>({
             data-selected={selected ? "true" : "false"}
             onClick={() => onChange(opt.value as T)}
             className={cn(
-              "relative flex flex-col items-start gap-2 rounded-lg border border-border bg-card p-3 text-left transition-colors",
+              "relative flex cursor-pointer flex-col items-start gap-2 rounded-lg border border-border bg-card p-3 text-left transition-colors",
               "hover:border-border-strong",
               "focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/50",
               selected && "bg-brand-weak ring-2 ring-brand",

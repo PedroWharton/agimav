@@ -62,6 +62,13 @@ const createSchema = z.object({
     .transform((v) => v ?? null),
   fechaProgramada: optionalDate,
   prioridad: z.enum(MANT_PRIORIDADES).default("Media"),
+  plantillaId: z.coerce
+    .number()
+    .int()
+    .positive()
+    .optional()
+    .nullable()
+    .transform((v) => v ?? null),
 });
 
 const insumoSchema = z.object({
@@ -108,11 +115,23 @@ export async function createMantenimiento(
   const data = parsed.data;
   const userName = userNameFromSession(session);
 
+  const plantilla = data.plantillaId
+    ? await prisma.plantillaMantenimiento.findUnique({
+        where: { id: data.plantillaId },
+        include: {
+          tareas: { orderBy: [{ orden: "asc" }, { id: "asc" }] },
+        },
+      })
+    : null;
+  if (data.plantillaId && !plantilla) {
+    return { ok: false, error: "not_found" };
+  }
+
   try {
     const id = await prisma.$transaction(async (tx) => {
       const mant = await tx.mantenimiento.create({
         data: {
-          tipo: data.tipo,
+          tipo: plantilla ? "preventivo" : data.tipo,
           maquinariaId: data.maquinariaId,
           prioridad: data.prioridad,
           descripcion: data.descripcion,
@@ -121,8 +140,22 @@ export async function createMantenimiento(
           estado: "Pendiente",
           fechaProgramada: data.fechaProgramada,
           creadoPor: userName,
+          plantillaId: plantilla?.id ?? null,
+          frecuenciaValor: plantilla?.frecuenciaValor ?? null,
+          frecuenciaUnidad: plantilla?.frecuenciaUnidad ?? null,
         },
       });
+      if (plantilla && plantilla.tareas.length > 0) {
+        await tx.mantenimientoTarea.createMany({
+          data: plantilla.tareas.map((t, idx) => ({
+            mantenimientoId: mant.id,
+            descripcion: t.descripcion,
+            realizada: false,
+            orden: idx,
+            esDePlantilla: true,
+          })),
+        });
+      }
       await tx.mantenimientoHistorial.create({
         data: {
           mantenimientoId: mant.id,
@@ -130,6 +163,9 @@ export async function createMantenimiento(
           valorAnterior: null,
           valorNuevo: "Pendiente",
           usuario: userName ?? "—",
+          detalle: plantilla
+            ? `Generado desde plantilla "${plantilla.nombre}"`
+            : null,
         },
       });
       return mant.id;
@@ -355,7 +391,7 @@ export async function transitionEstado(
       updateData.descripcionRevision = parsed.data.descripcionRevision;
     }
 
-    await prisma.$transaction(async (tx) => {
+    const childId = await prisma.$transaction(async (tx) => {
       const guard = await tx.mantenimiento.updateMany({
         where: {
           id,
@@ -407,6 +443,7 @@ export async function transitionEstado(
               estado: "Pendiente",
               fechaProgramada: parsed.data.fechaProximaRevision,
               creadoPor: userName,
+              revisionDeId: id,
             },
           });
           await tx.mantenimientoHistorial.create({
@@ -419,12 +456,14 @@ export async function transitionEstado(
               detalle: `Revisión programada desde mantenimiento #${id}`,
             },
           });
+          return child.id;
         }
       }
+      return undefined;
     });
     revalidatePath("/mantenimiento");
     revalidatePath(`/mantenimiento/${id}`);
-    return { ok: true, id };
+    return childId !== undefined ? { ok: true, id, childId } : { ok: true, id };
   } catch (err) {
     if (err instanceof Error && err.message === "wrong_estado") {
       return { ok: false, error: "wrong_estado" };

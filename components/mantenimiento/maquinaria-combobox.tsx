@@ -6,6 +6,7 @@ import { Combobox } from "@/components/app/combobox";
 
 export type MaquinariaOption = {
   id: number;
+  tipoId?: number;
   tipoNombre: string;
   nroSerie: string;
   principal: string | null;

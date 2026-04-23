@@ -138,11 +138,17 @@
     "tabs": {
       "resumen": "Resumen",
       "movimientos": "Movimientos",
-      "facturas": "Facturas"
+      "porLlegar": "Por llegar",
+      "historial": "Facturas"
     },
     "avisosDetail": {
       "facturasNoDisponible": "No disponible",
       "facturasPronto": "La integración con facturas llegará en una próxima versión."
+    },
+    "compras": {
+      "cargando": "Cargando…",
+      "sinPorLlegar": "Sin órdenes de compra pendientes de recibir.",
+      "sinHistorial": "Sin historial de compras registrado."
     },
     "campos": {
       "codigo": "Código",
@@ -156,6 +162,14 @@
       "stockMinimo": "Stock mínimo",
       "valorUnitario": "Valor unitario",
       "valorTotal": "Valor total"
+    },
+    "formSecciones": {
+      "identificacion": "Identificación",
+      "identificacionHint": "Código único, descripción y unidad en que se mide.",
+      "clasificacion": "Clasificación",
+      "clasificacionHint": "Cómo se agrupa y dónde vive el item.",
+      "economicos": "Datos económicos",
+      "economicosHint": "Valor unitario y umbral de alerta de stock."
     },
     "avisos": {
       "stockSoloMovimientos": "Para ajustar stock, usá \"Registrar movimiento\" desde la fila.",
@@ -335,27 +349,28 @@
       }
     },
     "detalle": {
-      "tabs": {
-        "resumen": "Resumen",
-        "historial": "Historial",
-        "checklists": "Checklists",
-        "documentos": "Documentos"
-      },
       "abrir": "Abrir ficha",
       "editar": "Editar",
-      "sinDatosSeccion": "(sin datos)",
       "altaEl": "Alta: {fecha}",
-      "historial": {
-        "titulo": "Historial no disponible",
-        "descripcion": "El historial de intervenciones todavía no está expuesto desde el backend. Vas a verlo acá cuando se habilite."
+      "sinAtributos": "Esta máquina todavía no tiene atributos cargados.",
+      "hero": {
+        "horometro": "Horómetro"
       },
-      "checklists": {
-        "titulo": "Checklists no disponibles",
-        "descripcion": "Esta sección todavía no está conectada. Va a listar los checklists ejecutados sobre la máquina."
+      "tabs": {
+        "resumen": "Resumen",
+        "mantenimientos": "Mantenimientos"
       },
-      "documentos": {
-        "titulo": "Documentos no disponibles",
-        "descripcion": "Esta sección todavía no está conectada. Va a mostrar manuales, seguros y documentación adjunta."
+      "mantenimientos": {
+        "titulo": "Historial de mantenimientos",
+        "resumen": "{count, plural, =0 {Sin mantenimientos registrados} one {# mantenimiento} other {# mantenimientos}}",
+        "iniciar": "Iniciar mantenimiento",
+        "cargando": "Cargando…",
+        "sinDescripcion": "Sin descripción.",
+        "cerradoEl": "Cerrado {fecha}",
+        "vacio": {
+          "titulo": "Sin mantenimientos",
+          "descripcion": "Esta máquina no tiene mantenimientos registrados todavía."
+        }
       }
     },
     "tipos": {
@@ -506,19 +521,7 @@
     "exportarError": "No se pudo exportar. Probá de nuevo.",
     "actualizadoHace": "actualizado hace {mins} min",
     "filtros": {
-      "proximamente": "Próximamente",
-      "rangoSufijo": "{dias}d",
-      "compararCon": "Comparar con",
-      "compararValor": "90 días previos",
-      "obra": "Obra",
-      "obraValor": "Todas",
-      "categoria": "Categoría",
-      "categoriaValor": "Todas",
-      "granularidad": {
-        "dia": "Día",
-        "semana": "Semana",
-        "mes": "Mes"
-      }
+      "alcance": "Alcance del reporte"
     },
     "rangos": {
       "7d": "Últimos 7 días",
@@ -641,6 +644,11 @@
         "ars": "Precio ARS",
         "usd": "Precio USD",
         "proveedor": "Proveedor"
+      },
+      "picker": {
+        "placeholder": "Elegí un ítem…",
+        "buscar": "Buscar ítem…",
+        "unSoloPrecio": "1 solo precio"
       }
     },
     "proveedores": {
@@ -1313,9 +1321,9 @@
       "prioridad": "Prioridad {nivel}"
     },
     "nuevo": {
-      "titulo": "Nueva orden de trabajo",
-      "descripcion": "Creá una OT de mantenimiento con máquina, tipo de trabajo, repuestos y asignación. Se generará con estado Pendiente hasta que el técnico la inicie.",
-      "crear": "Crear OT",
+      "titulo": "Nuevo mantenimiento",
+      "descripcion": "Cargá un mantenimiento con máquina, tipo de trabajo, repuestos y asignación. Queda en estado Pendiente hasta que el responsable lo inicie.",
+      "crear": "Crear mantenimiento",
       "cancelar": "Cancelar",
       "dirty": "Cambios sin guardar",
       "opcionesAvanzadas": "Opciones avanzadas",
@@ -1442,7 +1450,10 @@
       "programar": "Programar próxima revisión",
       "ayuda": "Al finalizar, se crea un mantenimiento pendiente para la fecha elegida.",
       "fecha": "Fecha",
-      "descripcion": "Descripción"
+      "descripcion": "Descripción",
+      "verRevision": "Ver revisión #{id} →",
+      "verRevisionCorta": "Ver revisión",
+      "creadaToast": "Mantenimiento finalizado. Revisión #{id} creada."
     },
     "historial": {
       "titulo": "Historial",
@@ -1560,7 +1571,8 @@
       },
       "avisos": {
         "creadoExitoso": "Registro guardado.",
-        "campoRequerido": "Este campo es obligatorio."
+        "campoRequerido": "Este campo es obligatorio.",
+        "horasMenoresAnterior": "Debe ser mayor que {valor} (horas actuales)."
       }
     }
   },

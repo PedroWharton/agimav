@@ -13,11 +13,13 @@ import { ITEM_HEADERS } from "@/lib/xlsx-headers";
 
 import type {
   ExportResult,
+  HistorialCompraRow,
   ImportPreview,
   ImportPreviewRow,
   ImportRow,
   InventarioActionResult,
   MovimientoExportFilter,
+  PorLlegarRow,
   RecentMovimiento,
 } from "./types";
 
@@ -138,6 +140,74 @@ export async function updateItem(
     }
     return { ok: false, error: "unknown" };
   }
+}
+
+export async function getPorLlegar(itemId: number): Promise<PorLlegarRow[]> {
+  const session = await auth();
+  if (!session?.user) return [];
+  const rows = await prisma.ordenCompraDetalle.findMany({
+    where: {
+      requisicionDetalle: { itemId },
+      oc: { estado: { in: ["Emitida", "Parcialmente Recibida"] } },
+    },
+    select: {
+      cantidadSolicitada: true,
+      cantidadRecibida: true,
+      precioUnitario: true,
+      oc: {
+        select: {
+          id: true,
+          numeroOc: true,
+          estado: true,
+          fechaEmision: true,
+          proveedor: { select: { nombre: true } },
+        },
+      },
+      requisicionDetalle: { select: { item: { select: { unidadMedida: true } } } },
+    },
+    orderBy: { oc: { fechaEmision: "desc" } },
+  });
+  return rows
+    .map((r) => ({
+      ocId: r.oc.id,
+      ocNumero: r.oc.numeroOc,
+      ocEstado: r.oc.estado,
+      fechaEmision: r.oc.fechaEmision,
+      proveedor: r.oc.proveedor.nombre,
+      pendiente: Math.max(0, r.cantidadSolicitada - r.cantidadRecibida),
+      unidadMedida: r.requisicionDetalle.item.unidadMedida,
+      precioUnitario: r.precioUnitario,
+    }))
+    .filter((r) => r.pendiente > 0);
+}
+
+export async function getHistorialCompras(
+  itemId: number,
+  take = 20,
+): Promise<HistorialCompraRow[]> {
+  const session = await auth();
+  if (!session?.user) return [];
+  const rows = await prisma.precioHistorico.findMany({
+    where: { itemId },
+    orderBy: [{ fecha: "desc" }, { id: "desc" }],
+    take,
+    select: {
+      id: true,
+      fecha: true,
+      precioArs: true,
+      fuente: true,
+      numeroDocumento: true,
+      proveedor: { select: { nombre: true } },
+    },
+  });
+  return rows.map((r) => ({
+    id: r.id,
+    fecha: r.fecha,
+    proveedor: r.proveedor.nombre,
+    precioArs: r.precioArs,
+    fuente: r.fuente,
+    numeroDocumento: r.numeroDocumento,
+  }));
 }
 
 export async function getRecentMovimientos(

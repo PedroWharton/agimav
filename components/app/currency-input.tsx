@@ -36,7 +36,12 @@ export const CurrencyInput = forwardRef<HTMLInputElement, CurrencyInputProps>(
             const n = Number(raw);
             onChange(Number.isFinite(n) ? n : "");
           }}
-          className={cn("pl-7 tabular-nums", className)}
+          onWheel={(e) => e.currentTarget.blur()}
+          className={cn(
+            "pl-7 text-right tabular-nums",
+            "[appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none",
+            className,
+          )}
           {...rest}
         />
       </div>

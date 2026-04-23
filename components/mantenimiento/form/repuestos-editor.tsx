@@ -1,6 +1,6 @@
 "use client";
 
-import { Info, Minus, Plus, X } from "lucide-react";
+import { Info, Plus, X } from "lucide-react";
 import { useMemo, useState } from "react";
 
 import { Button } from "@/components/ui/button";
@@ -12,12 +12,12 @@ import {
   CommandItem,
   CommandList,
 } from "@/components/ui/command";
-import { Input } from "@/components/ui/input";
 import {
   Popover,
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
+import { NumberInput } from "@/components/app/number-input";
 import { cn } from "@/lib/utils";
 
 export type RepuestoLine = {
@@ -102,11 +102,7 @@ export function RepuestosEditor({
     setPickerOpen(false);
   };
 
-  const adjustQty = (line: RepuestoLine, delta: number) => {
-    const max = line.stockDisponible ?? Number.POSITIVE_INFINITY;
-    const next = Math.max(1, Math.min(max, line.qty + delta));
-    patchLine(line.id, { qty: next });
-  };
+  const clampQty = (value: number) => Math.max(1, value);
 
   return (
     <div className={cn("flex flex-col gap-3", className)}>
@@ -157,47 +153,24 @@ export function RepuestosEditor({
                         : "—"}
                     </td>
                     <td className="px-3 py-2">
-                      <div className="inline-flex items-center gap-1">
-                        <Button
-                          type="button"
-                          variant="outline"
-                          size="icon-xs"
-                          aria-label="Disminuir"
-                          onClick={() => adjustQty(line, -1)}
-                          disabled={line.qty <= 1}
-                        >
-                          <Minus />
-                        </Button>
-                        <Input
-                          type="number"
-                          min={1}
-                          max={line.stockDisponible}
-                          value={line.qty}
-                          onChange={(e) => {
-                            const n = Number(e.target.value);
-                            if (!Number.isFinite(n)) return;
-                            const max =
-                              line.stockDisponible ?? Number.POSITIVE_INFINITY;
-                            patchLine(line.id, {
-                              qty: Math.max(1, Math.min(max, Math.floor(n))),
-                            });
-                          }}
-                          className="h-7 w-14 text-center font-mono text-xs"
-                        />
-                        <Button
-                          type="button"
-                          variant="outline"
-                          size="icon-xs"
-                          aria-label="Aumentar"
-                          onClick={() => adjustQty(line, 1)}
-                          disabled={
-                            line.stockDisponible != null &&
-                            line.qty >= line.stockDisponible
-                          }
-                        >
-                          <Plus />
-                        </Button>
-                      </div>
+                      <NumberInput
+                        steppers
+                        stepAmount={1}
+                        min={1}
+                        value={line.qty}
+                        onChange={(v) =>
+                          patchLine(line.id, {
+                            qty: clampQty(v === "" ? 1 : v),
+                          })
+                        }
+                        className="h-8 w-[130px] font-mono text-xs"
+                      />
+                      {line.stockDisponible != null &&
+                      line.qty > line.stockDisponible ? (
+                        <div className="mt-1 text-[10.5px] font-medium text-warn">
+                          Supera stock ({line.stockDisponible} disp.)
+                        </div>
+                      ) : null}
                     </td>
                     <td className="px-3 py-2 text-right font-mono text-xs font-medium">
                       {subtotal != null ? ARS.format(subtotal) : "—"}

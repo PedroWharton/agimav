@@ -4,22 +4,21 @@ import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 import { MANT_ESTADO_I18N_KEY, type MantEstado } from "@/lib/mantenimiento/estado";
 
-type Tone = "muted" | "sky" | "green" | "destructive";
+type Tone = "muted" | "info" | "success" | "danger";
 
 const TONE_BY_ESTADO: Record<MantEstado, Tone> = {
   Pendiente: "muted",
-  "En Reparación - Chacra": "sky",
-  "En Reparación - Taller": "sky",
-  Finalizado: "green",
-  Cancelado: "destructive",
+  "En Reparación - Chacra": "info",
+  "En Reparación - Taller": "info",
+  Finalizado: "success",
+  Cancelado: "danger",
 };
 
 const TONE_CLASS: Record<Tone, string> = {
   muted: "bg-muted text-muted-foreground",
-  sky: "bg-sky-100 text-sky-900 dark:bg-sky-950/40 dark:text-sky-200",
-  green:
-    "bg-emerald-100 text-emerald-900 dark:bg-emerald-950/40 dark:text-emerald-200",
-  destructive: "bg-destructive/10 text-destructive",
+  info: "bg-info-weak text-info",
+  success: "bg-success-weak text-success",
+  danger: "bg-danger-weak text-danger",
 };
 
 export function MantEstadoChip({

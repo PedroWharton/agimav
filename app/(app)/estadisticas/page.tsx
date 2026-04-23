@@ -159,6 +159,7 @@ function MezclaCard({
           <Donut
             data={slices}
             size={140}
+            ariaLabel={t("dashboard.mezcla.titulo")}
             centerLabel={
               <div className="flex flex-col items-center gap-0.5">
                 <span className="font-mono text-lg font-semibold text-foreground">
@@ -287,7 +288,11 @@ function BacklogCard({
           <InlineState>{t("dashboard.sinDatos")}</InlineState>
         </div>
       ) : (
-        <HorizontalBars data={rows} formatValue={(n) => `${n}`} />
+        <HorizontalBars
+          data={rows}
+          formatValue={(n) => `${n}`}
+          ariaLabel={t("dashboard.backlog.titulo")}
+        />
       )}
     </ChartCard>
   );
@@ -333,6 +338,7 @@ function OtifCard({
             data={rows}
             maxValue={100}
             formatValue={(n) => `${Math.round(n)}%`}
+            ariaLabel={t("dashboard.otif.titulo")}
           />
           <div className="mt-1 flex justify-end">
             <span className="text-[10.5px] text-muted-foreground">
@@ -368,7 +374,11 @@ function TecnicosCard({
           <InlineState>{t("dashboard.sinDatos")}</InlineState>
         </div>
       ) : (
-        <HorizontalBars data={rows} formatValue={(n) => `${n}`} />
+        <HorizontalBars
+          data={rows}
+          formatValue={(n) => `${n}`}
+          ariaLabel={t("dashboard.tecnicos.titulo")}
+        />
       )}
     </ChartCard>
   );
@@ -583,6 +593,7 @@ function GastoRubroCard({
             }))}
             segmentOrder={data.order}
             formatValue={formatCurrencyShort}
+            ariaLabel={t("dashboard.gasto.titulo")}
           />
         </div>
       )}
@@ -625,6 +636,7 @@ function HeatmapCard({
               data={data.cells}
               cellSize={32}
               labelCol={88}
+              ariaLabel={t("dashboard.heatmap.titulo")}
             />
           </div>
           <div className="flex items-center justify-end gap-2 text-[10.5px] text-muted-foreground">
@@ -711,7 +723,7 @@ export default async function EstadisticasPage() {
         }
       />
 
-      <StatsFilterBar rangeLabel={rangeLabel} granularity="mes" />
+      <StatsFilterBar rangeLabel={rangeLabel} />
 
       {/* KPI strip — 4 cards */}
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">

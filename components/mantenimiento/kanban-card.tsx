@@ -15,8 +15,6 @@ export type KanbanCardProps = {
   prioridad?: string | null;
   /** ISO date string — fechaProgramada or fechaInicio. */
   dueDate?: string | null;
-  /** If true, card is in an active lane and we show due-date coloring. */
-  showDueRelative?: boolean;
   tareasTotal?: number;
   tareasRealizadas?: number;
 };
@@ -59,7 +57,6 @@ export function KanbanCard({
   responsable,
   prioridad,
   dueDate,
-  showDueRelative = true,
   tareasTotal = 0,
   tareasRealizadas = 0,
 }: KanbanCardProps) {
@@ -75,7 +72,7 @@ export function KanbanCard({
       : tipo;
 
   let dueText: string | null = null;
-  if (due && showDueRelative) {
+  if (due) {
     if (due.diffDays < 0) {
       dueText = t("vencidoHace", { days: -due.diffDays });
     } else if (due.diffDays === 0) {
@@ -83,13 +80,7 @@ export function KanbanCard({
     } else {
       dueText = t("venceEn", { days: due.diffDays });
     }
-  } else if (dueDate) {
-    dueText = new Date(dueDate).toLocaleDateString("es-AR", {
-      day: "2-digit",
-      month: "2-digit",
-      year: "numeric",
-    });
-  } else if (showDueRelative) {
+  } else {
     dueText = t("sinFecha");
   }
 

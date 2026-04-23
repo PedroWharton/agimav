@@ -24,6 +24,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 
 import { Combobox } from "@/components/app/combobox";
+import { NumberInput } from "@/components/app/number-input";
 import { EmptyState } from "@/components/app/states";
 import { Toolbar } from "@/components/app/toolbar";
 import { EstadoChip } from "@/components/compras/estado-chip";
@@ -209,9 +210,9 @@ export function RecepcionesPendientesClient({
                           className={cn(
                             "h-full rounded-full transition-all",
                             pct >= 99.99
-                              ? "bg-emerald-500"
+                              ? "bg-success"
                               : pct > 0
-                                ? "bg-sky-500"
+                                ? "bg-brand"
                                 : "bg-muted",
                           )}
                           style={{
@@ -255,7 +256,7 @@ export function RecepcionesPendientesClient({
           if (!next) setActiveOcId(null);
         }}
       >
-        <DialogContent className="max-w-3xl">
+        <DialogContent className="flex max-h-[85vh] w-[min(92vw,1080px)] flex-col gap-0 p-0 sm:max-w-none">
           {activeOc ? (
             <RecibirModalContent
               key={activeOc.id}
@@ -364,172 +365,212 @@ function RecibirModalContent({
     });
   };
 
+  const lineasConCantidad = Object.values(qtyById).filter((q) => q > 0).length;
+  const lineasTotal = oc.lineas.length;
+
   return (
     <>
-      <DialogHeader>
-        <DialogTitle>
+      <DialogHeader className="border-b border-border px-6 py-4">
+        <DialogTitle className="text-base font-semibold">
           {tRec("pendientes.modal.titulo", {
             numero: oc.numeroOc,
             proveedor: oc.proveedor,
           })}
         </DialogTitle>
-        <DialogDescription>
+        <DialogDescription className="text-xs">
           {tRec("pendientes.modal.descripcion")}
         </DialogDescription>
-            </DialogHeader>
-            <div className="grid grid-cols-1 gap-3 md:grid-cols-3">
-              <div className="flex flex-col gap-1">
-                <Label htmlFor="modal-remito">{tRec("campos.remito")}</Label>
-                <Input
-                  id="modal-remito"
-                  value={numeroRemito}
-                  onChange={(e) => setNumeroRemito(e.target.value)}
-                  disabled={isSaving}
-                />
-              </div>
-              <div className="flex flex-col gap-1">
-                <Label htmlFor="modal-fecha">{tRec("campos.fecha")}</Label>
-                <Input
-                  id="modal-fecha"
-                  type="date"
-                  value={fecha}
-                  onChange={(e) => setFecha(e.target.value)}
-                  disabled={isSaving}
-                />
-              </div>
-              <div className="flex flex-col gap-1">
-                <Label htmlFor="modal-recibidoPor">
-                  {tRec("campos.recibidoPor")}
-                </Label>
-                <Input
-                  id="modal-recibidoPor"
-                  value={recibidoPor}
-                  onChange={(e) => setRecibidoPor(e.target.value)}
-                  disabled={isSaving}
-                />
-              </div>
-            </div>
+      </DialogHeader>
 
-            <div className="flex items-center justify-between">
-              <p className="text-xs text-muted-foreground">
-                {tRec("pendientes.modal.ayudaCantidad")}
-              </p>
-              <Button
-                type="button"
-                variant="ghost"
-                size="sm"
-                onClick={recibirTodo}
-                disabled={isSaving}
-              >
-                {tRec("acciones.recibirTodo")}
-              </Button>
-            </div>
-
-            <div className="max-h-[360px] overflow-y-auto rounded-md border border-border">
-              <table className="w-full text-sm">
-                <thead className="sticky top-0 bg-muted/40 text-xs uppercase tracking-wide text-muted-foreground">
-                  <tr>
-                    <th className="px-2 py-2 text-left font-medium w-24">
-                      {tRec("columnas.codigo")}
-                    </th>
-                    <th className="px-2 py-2 text-left font-medium">
-                      {tRec("columnas.descripcion")}
-                    </th>
-                    <th className="px-2 py-2 text-right font-medium w-20">
-                      {tRec("columnas.pendiente")}
-                    </th>
-                    <th className="px-2 py-2 text-right font-medium w-28">
-                      {tRec("columnas.recibirAhora")}
-                    </th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {oc.lineas.map((l) => {
-                    const qty = qtyById[l.ocDetalleId] ?? 0;
-                    const over = qty > l.pendiente + 1e-9;
-                    return (
-                      <tr key={l.ocDetalleId} className="border-t border-border">
-                        <td className="px-2 py-2 font-mono text-xs">
-                          {l.itemCodigo || "—"}
-                        </td>
-                        <td className="px-2 py-2">
-                          {l.itemDescripcion || "—"}
-                          {l.unidadMedida ? (
-                            <span className="ml-1 text-[11px] text-muted-foreground">
-                              · {l.unidadMedida}
-                            </span>
-                          ) : null}
-                        </td>
-                        <td className="px-2 py-2 text-right tabular-nums text-muted-foreground">
-                          {l.pendiente}
-                        </td>
-                        <td className="px-2 py-2 text-right">
-                          <Input
-                            type="number"
-                            min={0}
-                            max={l.pendiente}
-                            step="any"
-                            value={qty}
-                            onChange={(e) =>
-                              updateQty(
-                                l.ocDetalleId,
-                                Number(e.target.value) || 0,
-                              )
-                            }
-                            disabled={isSaving}
-                            aria-invalid={over || undefined}
-                            className="h-8 w-24 text-right"
-                          />
-                        </td>
-                      </tr>
-                    );
-                  })}
-                </tbody>
-              </table>
-            </div>
-
-            <div className="flex flex-col gap-1">
-              <Label htmlFor="modal-notas">
-                {tRec("resumenSidebar.notas")}
+      <div className="flex min-h-0 flex-1 flex-col gap-4 overflow-y-auto px-6 pt-5 pb-6">
+        {/* Metadata block — remito / fecha / recibidoPor */}
+        <section className="rounded-lg border border-border bg-muted/30 p-4">
+          <div className="grid grid-cols-1 gap-3 md:grid-cols-3">
+            <div className="flex flex-col gap-1.5">
+              <Label htmlFor="modal-remito" className="text-xs font-medium">
+                {tRec("campos.remito")} *
               </Label>
-              <Textarea
-                id="modal-notas"
-                rows={3}
-                value={notas}
-                onChange={(e) => setNotas(e.target.value)}
+              <Input
+                id="modal-remito"
+                value={numeroRemito}
+                onChange={(e) => setNumeroRemito(e.target.value)}
                 disabled={isSaving}
-                placeholder={tRec("resumenSidebar.notasPlaceholder")}
+                placeholder="R-0001"
               />
             </div>
+            <div className="flex flex-col gap-1.5">
+              <Label htmlFor="modal-fecha" className="text-xs font-medium">
+                {tRec("campos.fecha")}
+              </Label>
+              <Input
+                id="modal-fecha"
+                type="date"
+                value={fecha}
+                onChange={(e) => setFecha(e.target.value)}
+                disabled={isSaving}
+              />
+            </div>
+            <div className="flex flex-col gap-1.5">
+              <Label
+                htmlFor="modal-recibidoPor"
+                className="text-xs font-medium"
+              >
+                {tRec("campos.recibidoPor")} *
+              </Label>
+              <Input
+                id="modal-recibidoPor"
+                value={recibidoPor}
+                onChange={(e) => setRecibidoPor(e.target.value)}
+                disabled={isSaving}
+              />
+            </div>
+          </div>
+        </section>
 
-            <DialogFooter className="flex-col gap-2 sm:flex-row sm:justify-between">
-              <Button asChild variant="ghost" size="sm">
-                <Link href={`/compras/recepciones/nueva?oc=${oc.id}`}>
-                  {tRec("pendientes.modal.vistaCompleta")}
-                </Link>
-              </Button>
-              <div className="flex items-center gap-2">
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="sm"
-                  onClick={onClose}
-                  disabled={isSaving}
-                >
-                  {tRec("footer.cancelar")}
-                </Button>
-                <Button
-                  type="button"
-                  size="sm"
-                  onClick={handleSave}
-                  disabled={!canSave}
-                >
-                  {isSaving
-                    ? tRec("footer.guardando")
-                    : tRec("footer.confirmar")}
-                </Button>
-              </div>
-            </DialogFooter>
+        {/* Summary strip — running total + Recibir todo */}
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <div className="flex items-baseline gap-2">
+            <span className="text-sm font-semibold text-foreground">
+              {tRec("pendientes.modal.ayudaCantidad")}
+            </span>
+            <span className="text-xs tabular-nums text-muted-foreground">
+              {lineasConCantidad}/{lineasTotal} líneas ·{" "}
+              <span className="font-medium text-foreground">
+                {totalRecibir.toLocaleString("es-AR", {
+                  maximumFractionDigits: 2,
+                })}
+              </span>{" "}
+              unidades a recibir
+            </span>
+          </div>
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            onClick={recibirTodo}
+            disabled={isSaving}
+          >
+            {tRec("acciones.recibirTodo")}
+          </Button>
+        </div>
+
+        {/* Líneas table */}
+        <div className="overflow-hidden rounded-lg border border-border">
+          <table className="w-full text-sm">
+            <thead className="bg-muted/40 text-[10.5px] uppercase tracking-wider text-muted-foreground">
+              <tr>
+                <th className="w-28 px-3 py-2.5 text-left font-semibold">
+                  {tRec("columnas.codigo")}
+                </th>
+                <th className="px-3 py-2.5 text-left font-semibold">
+                  {tRec("columnas.descripcion")}
+                </th>
+                <th className="w-24 px-3 py-2.5 text-right font-semibold">
+                  {tRec("columnas.pendiente")}
+                </th>
+                <th className="w-36 px-3 py-2.5 text-right font-semibold">
+                  {tRec("columnas.recibirAhora")}
+                </th>
+              </tr>
+            </thead>
+            <tbody>
+              {oc.lineas.map((l, idx) => {
+                const qty = qtyById[l.ocDetalleId] ?? 0;
+                const over = qty > l.pendiente + 1e-9;
+                const filled = qty > 0;
+                return (
+                  <tr
+                    key={l.ocDetalleId}
+                    className={cn(
+                      idx !== 0 && "border-t border-border",
+                      "transition-colors",
+                      filled && "bg-success-weak/20",
+                    )}
+                  >
+                    <td className="px-3 py-2.5 align-middle font-mono text-xs">
+                      {l.itemCodigo || "—"}
+                    </td>
+                    <td className="px-3 py-2.5 align-middle">
+                      <div className="flex flex-col">
+                        <span className="text-sm">
+                          {l.itemDescripcion || "—"}
+                        </span>
+                        {l.unidadMedida ? (
+                          <span className="text-[11px] text-muted-foreground">
+                            {l.unidadMedida}
+                          </span>
+                        ) : null}
+                      </div>
+                    </td>
+                    <td className="px-3 py-2.5 text-right align-middle font-mono tabular-nums text-xs text-muted-foreground">
+                      {l.pendiente}
+                    </td>
+                    <td className="px-3 py-2.5 text-right align-middle">
+                      <NumberInput
+                        min={0}
+                        max={l.pendiente}
+                        suffix={l.unidadMedida || undefined}
+                        value={qty}
+                        onChange={(v) =>
+                          updateQty(l.ocDetalleId, v === "" ? 0 : v)
+                        }
+                        disabled={isSaving}
+                        aria-invalid={over || undefined}
+                        className="ml-auto h-8 w-32"
+                      />
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        </div>
+
+        {/* Notas */}
+        <div className="flex flex-col gap-1.5">
+          <Label htmlFor="modal-notas" className="text-xs font-medium">
+            {tRec("resumenSidebar.notas")}
+          </Label>
+          <Textarea
+            id="modal-notas"
+            rows={2}
+            value={notas}
+            onChange={(e) => setNotas(e.target.value)}
+            disabled={isSaving}
+            placeholder={tRec("resumenSidebar.notasPlaceholder")}
+          />
+        </div>
+      </div>
+
+      {/* Pinned footer */}
+      <DialogFooter className="mx-0 mb-0 flex-col gap-2 rounded-none border-t border-border bg-transparent px-6 py-3 sm:flex-row sm:justify-between">
+        <Button asChild variant="ghost" size="sm">
+          <Link href={`/compras/recepciones/nueva?oc=${oc.id}`}>
+            {tRec("pendientes.modal.vistaCompleta")}
+          </Link>
+        </Button>
+        <div className="flex items-center gap-2">
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            onClick={onClose}
+            disabled={isSaving}
+          >
+            {tRec("footer.cancelar")}
+          </Button>
+          <Button
+            type="button"
+            size="sm"
+            onClick={handleSave}
+            disabled={!canSave}
+          >
+            {isSaving
+              ? tRec("footer.guardando")
+              : tRec("footer.confirmar")}
+          </Button>
+        </div>
+      </DialogFooter>
     </>
   );
 }
