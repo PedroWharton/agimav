@@ -26,6 +26,7 @@ export default async function MaquinariaTipoPage({
   const canUpdate = hasPermission(session, "maquinaria.update");
   const canDelete = hasPermission(session, "maquinaria.delete");
   const canConfigureColumns = hasPermission(session, "maquinaria.columnas.configure");
+  const canManageTipos = hasPermission(session, "maquinaria.tipos.manage");
 
   const { tipoId: tipoIdParam } = await params;
   const tipoId = Number.parseInt(tipoIdParam, 10);
@@ -200,6 +201,7 @@ export default async function MaquinariaTipoPage({
         canUpdate={canUpdate}
         canDelete={canDelete}
         canConfigureColumns={canConfigureColumns}
+        canManageTipos={canManageTipos}
         tipo={{
           id: tipo.id,
           nombre: tipo.nombre,

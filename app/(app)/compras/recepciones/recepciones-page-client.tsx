@@ -25,12 +25,16 @@ export function RecepcionesPageClient({
   historialKpis,
   pendientesOcs,
   pendientesProveedores,
+  pendientesUsuarios,
+  pendientesDefaultRecibidoPor,
 }: {
   historialRows: RecepcionRow[];
   historialProveedores: string[];
   historialKpis: RecepcionesKpis;
   pendientesOcs: RecepcionPendienteOc[];
   pendientesProveedores: string[];
+  pendientesUsuarios: string[];
+  pendientesDefaultRecibidoPor: string;
 }) {
   const tRec = useTranslations("compras.recepciones");
   const pendientesCount = pendientesOcs.length;
@@ -62,6 +66,8 @@ export function RecepcionesPageClient({
           <RecepcionesPendientesClient
             ocs={pendientesOcs}
             proveedores={pendientesProveedores}
+            usuarios={pendientesUsuarios}
+            defaultRecibidoPor={pendientesDefaultRecibidoPor}
           />
         </TabsContent>
         <TabsContent value="historial" className="mt-0">

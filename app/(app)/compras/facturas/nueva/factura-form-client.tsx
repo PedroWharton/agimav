@@ -336,8 +336,6 @@ export function FacturaFormClient({
         toast.success(tFac("avisos.creadaExitoso", { numero: composed }));
         router.push(`/compras/facturas/${result.id}`);
         router.refresh();
-      } else if (result.error === "duplicate_numero") {
-        toast.error(tFac("avisos.duplicadoNumero"));
       } else if (result.error === "already_invoiced") {
         toast.error(tFac("avisos.yaFacturada"));
       } else if (result.error === "wrong_proveedor") {

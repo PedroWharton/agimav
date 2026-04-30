@@ -951,6 +951,9 @@
           "item": "Ítem",
           "cantidad": "Cant. total",
           "cantidadTotal": "Cantidad total",
+          "cantidadSolicitada": "Cant. solicitada",
+          "cantidadCompra": "Cantidad a comprar",
+          "precioUnitario": "Precio unitario",
           "unidad": "Unidad",
           "urgencia": "Urgencia",
           "solicitudes": "Solicitudes",
@@ -970,8 +973,11 @@
           "emitirLinea": "{proveedor}: {count, plural, one {# ítem} other {# ítems}}",
           "emitidoExitoso": "{count, plural, one {# OC emitida} other {# OCs emitidas}}.",
           "faltanProveedores": "{count, plural, one {# ítem seleccionado sin proveedor} other {# ítems seleccionados sin proveedor}}.",
+          "faltanCantidades": "{count, plural, one {# ítem seleccionado sin cantidad} other {# ítems seleccionados sin cantidad}}.",
+          "faltanPrecios": "{count, plural, one {# ítem seleccionado sin precio} other {# ítems seleccionados sin precio}}.",
           "nadaSeleccionado": "No hay ítems seleccionados para emitir.",
-          "itemDrained": "Algún ítem seleccionado ya no tiene líneas pendientes. Refrescá la página."
+          "itemDrained": "Algún ítem seleccionado ya no tiene líneas pendientes. Refrescá la página.",
+          "cantidadExcede": "La cantidad a comprar no puede superar la cantidad solicitada."
         },
         "vacio": {
           "titulo": "Sin líneas pendientes de asignar",

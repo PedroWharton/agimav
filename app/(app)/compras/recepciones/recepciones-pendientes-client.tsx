@@ -72,9 +72,13 @@ function todayISODate(): string {
 export function RecepcionesPendientesClient({
   ocs,
   proveedores,
+  usuarios,
+  defaultRecibidoPor,
 }: {
   ocs: RecepcionPendienteOc[];
   proveedores: string[];
+  usuarios: string[];
+  defaultRecibidoPor: string;
 }) {
   const tRec = useTranslations("compras.recepciones");
   const [search, setSearch] = useState("");
@@ -261,6 +265,8 @@ export function RecepcionesPendientesClient({
             <RecibirModalContent
               key={activeOc.id}
               oc={activeOc}
+              usuarios={usuarios}
+              defaultRecibidoPor={defaultRecibidoPor}
               onClose={() => setActiveOcId(null)}
             />
           ) : null}
@@ -272,9 +278,13 @@ export function RecepcionesPendientesClient({
 
 function RecibirModalContent({
   oc,
+  usuarios,
+  defaultRecibidoPor,
   onClose,
 }: {
   oc: RecepcionPendienteOc;
+  usuarios: string[];
+  defaultRecibidoPor: string;
   onClose: () => void;
 }) {
   const tRec = useTranslations("compras.recepciones");
@@ -284,8 +294,16 @@ function RecibirModalContent({
 
   const [numeroRemito, setNumeroRemito] = useState("");
   const [fecha, setFecha] = useState<string>(todayISODate);
-  const [recibidoPor, setRecibidoPor] = useState("");
+  const [recibidoPor, setRecibidoPor] = useState(defaultRecibidoPor);
   const [notas, setNotas] = useState("");
+
+  const usuarioOptions = useMemo(() => {
+    const names = new Set(usuarios);
+    if (defaultRecibidoPor) names.add(defaultRecibidoPor);
+    return Array.from(names)
+      .sort((a, b) => a.localeCompare(b, "es"))
+      .map((nombre) => ({ value: nombre, label: nombre }));
+  }, [usuarios, defaultRecibidoPor]);
   const [qtyById, setQtyById] = useState<Record<number, number>>(() => {
     const next: Record<number, number> = {};
     for (const l of oc.lineas) next[l.ocDetalleId] = l.pendiente;
@@ -417,11 +435,14 @@ function RecibirModalContent({
               >
                 {tRec("campos.recibidoPor")} *
               </Label>
-              <Input
-                id="modal-recibidoPor"
+              <Combobox
                 value={recibidoPor}
-                onChange={(e) => setRecibidoPor(e.target.value)}
+                onChange={setRecibidoPor}
+                options={usuarioOptions}
+                allowCreate={false}
                 disabled={isSaving}
+                placeholder={tRec("campos.recibidoPor")}
+                className="h-9 w-full"
               />
             </div>
           </div>
@@ -509,14 +530,15 @@ function RecibirModalContent({
                       <NumberInput
                         min={0}
                         max={l.pendiente}
-                        suffix={l.unidadMedida || undefined}
+                        steppers
+                        stepAmount={1}
                         value={qty}
                         onChange={(v) =>
                           updateQty(l.ocDetalleId, v === "" ? 0 : v)
                         }
                         disabled={isSaving}
                         aria-invalid={over || undefined}
-                        className="ml-auto h-8 w-32"
+                        className="ml-auto h-8 w-36"
                       />
                     </td>
                   </tr>

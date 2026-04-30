@@ -613,7 +613,7 @@ model RecepcionDetalle {
 
 model Factura {
   id                     Int      @id @default(autoincrement())
-  numeroFactura          String   @unique @map("numero_factura")
+  numeroFactura          String   @map("numero_factura")
   proveedorId            Int      @map("proveedor_id")
   proveedor              Proveedor @relation(fields: [proveedorId], references: [id])
   fechaFactura           DateTime @map("fecha_factura")

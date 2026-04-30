@@ -19,6 +19,7 @@ export type EmitirOcsResult =
         | "invalid"
         | "nothing_selected"
         | "item_drained"
+        | "cantidad_exceeds"
         | "unknown";
       message?: string;
     };

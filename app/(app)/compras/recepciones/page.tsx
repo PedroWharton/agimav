@@ -1,6 +1,6 @@
 import { prisma } from "@/lib/db";
 import { auth } from "@/lib/auth";
-import { requireViewOrRedirect } from "@/lib/rbac";
+import { requireViewOrRedirect, userNameFromSession } from "@/lib/rbac";
 import { formatOCNumber } from "@/lib/compras/oc-number";
 
 import {
@@ -17,7 +17,7 @@ export default async function RecepcionesListPage() {
   const session = await auth();
   requireViewOrRedirect(session, "compras.view");
 
-  const [recepciones, ocsPendientes] = await Promise.all([
+  const [recepciones, ocsPendientes, usuariosActivos] = await Promise.all([
     prisma.recepcion.findMany({
       select: {
         id: true,
@@ -69,6 +69,11 @@ export default async function RecepcionesListPage() {
         },
       },
       orderBy: { id: "desc" },
+    }),
+    prisma.usuario.findMany({
+      where: { estado: "activo" },
+      select: { nombre: true },
+      orderBy: { nombre: "asc" },
     }),
   ]);
 
@@ -134,6 +139,10 @@ export default async function RecepcionesListPage() {
     new Set(pendientesOcs.map((o) => o.proveedor)),
   ).sort((a, b) => a.localeCompare(b, "es"));
 
+  const usuariosNombres = Array.from(
+    new Set(usuariosActivos.map((u) => u.nombre).filter(Boolean)),
+  ).sort((a, b) => a.localeCompare(b, "es"));
+
   return (
     <RecepcionesPageClient
       historialRows={rows}
@@ -141,6 +150,8 @@ export default async function RecepcionesListPage() {
       historialKpis={kpis}
       pendientesOcs={pendientesOcs}
       pendientesProveedores={pendientesProveedores}
+      pendientesUsuarios={usuariosNombres}
+      pendientesDefaultRecibidoPor={userNameFromSession(session) ?? ""}
     />
   );
 }

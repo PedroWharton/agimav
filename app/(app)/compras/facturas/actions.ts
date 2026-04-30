@@ -50,12 +50,6 @@ export async function createFactura(
 
   try {
     const facturaId = await prisma.$transaction(async (tx) => {
-      const dup = await tx.factura.findUnique({
-        where: { numeroFactura: input.numeroFactura },
-        select: { id: true },
-      });
-      if (dup) throw new Error("duplicate_numero");
-
       const recepciones = await tx.recepcionDetalle.findMany({
         where: { id: { in: input.lineas.map((l) => l.recepcionDetalleId) } },
         include: {
@@ -169,7 +163,6 @@ export async function createFactura(
   } catch (e) {
     const msg = e instanceof Error ? e.message : "unknown";
     if (
-      msg === "duplicate_numero" ||
       msg === "not_found" ||
       msg === "already_invoiced" ||
       msg === "wrong_proveedor"

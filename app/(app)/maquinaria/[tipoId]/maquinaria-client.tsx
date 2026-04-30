@@ -14,6 +14,7 @@ import {
   Pencil,
   Plus,
   Rows3,
+  Settings2,
   Truck,
 } from "lucide-react";
 import { toast } from "sonner";
@@ -290,6 +291,7 @@ export function MaquinariaClient({
   canUpdate,
   canDelete,
   canConfigureColumns,
+  canManageTipos,
   tipo,
   tipos,
   niveles,
@@ -301,6 +303,7 @@ export function MaquinariaClient({
   canUpdate: boolean;
   canDelete: boolean;
   canConfigureColumns: boolean;
+  canManageTipos: boolean;
   tipo: TipoInfo;
   tipos: TipoOption[];
   niveles: NivelDef[];
@@ -786,6 +789,14 @@ export function MaquinariaClient({
         })}
         actions={
           <div className="flex items-center gap-2">
+            {canManageTipos ? (
+              <Button asChild variant="outline">
+                <Link href="/maquinaria/tipos">
+                  <Settings2 className="size-4" />
+                  {t("maquinaria.index.administrarTipos")}
+                </Link>
+              </Button>
+            ) : null}
             {canConfigureColumns ? (
               <Button
                 variant="outline"

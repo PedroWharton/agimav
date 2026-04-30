@@ -6,7 +6,6 @@ export type FacturaActionResult =
         | "forbidden"
         | "invalid"
         | "not_found"
-        | "duplicate_numero"
         | "already_invoiced"
         | "wrong_proveedor"
         | "unknown";

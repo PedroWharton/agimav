@@ -16,6 +16,7 @@ import { Combobox } from "@/components/app/combobox";
 import { ConfirmDialog } from "@/components/app/confirm-dialog";
 import { EmptyState } from "@/components/app/states";
 import { Toolbar } from "@/components/app/toolbar";
+import { NumberInput } from "@/components/app/number-input";
 
 import { emitirOcsAgrupadas } from "./actions";
 
@@ -67,6 +68,20 @@ export function OcPendientesClient({
     for (const r of rows) init[r.itemId] = r.proveedorSugeridoId;
     return init;
   });
+  const [cantidadByItem, setCantidadByItem] = useState<
+    Record<number, number | "">
+  >(() => {
+    const init: Record<number, number | ""> = {};
+    for (const r of rows) init[r.itemId] = r.cantidadTotal;
+    return init;
+  });
+  const [precioByItem, setPrecioByItem] = useState<Record<number, number | "">>(
+    () => {
+      const init: Record<number, number | ""> = {};
+      for (const r of rows) init[r.itemId] = "";
+      return init;
+    },
+  );
   const [selected, setSelected] = useState<Set<number>>(new Set());
   const [bulkProveedor, setBulkProveedor] = useState<string>("");
   const [isEmitting, startEmit] = useTransition();
@@ -143,18 +158,43 @@ export function OcPendientesClient({
 
   const readyAsignaciones = useMemo(() => {
     return Array.from(selected)
-      .map((itemId) => ({
-        itemId,
-        proveedorId: proveedorByItem[itemId] ?? null,
-      }))
+      .map((itemId) => {
+        const cant = cantidadByItem[itemId];
+        const precio = precioByItem[itemId];
+        return {
+          itemId,
+          proveedorId: proveedorByItem[itemId] ?? null,
+          cantidad: typeof cant === "number" ? cant : null,
+          precioUnitario: typeof precio === "number" ? precio : null,
+        };
+      })
       .filter(
-        (a): a is { itemId: number; proveedorId: number } =>
-          a.proveedorId != null,
+        (
+          a,
+        ): a is {
+          itemId: number;
+          proveedorId: number;
+          cantidad: number;
+          precioUnitario: number;
+        } =>
+          a.proveedorId != null &&
+          a.cantidad != null &&
+          a.cantidad > 0 &&
+          a.precioUnitario != null &&
+          a.precioUnitario >= 0,
       );
-  }, [selected, proveedorByItem]);
+  }, [selected, proveedorByItem, cantidadByItem, precioByItem]);
 
   const missingProveedor =
     Array.from(selected).filter((id) => !proveedorByItem[id]).length;
+  const missingCantidad = Array.from(selected).filter((id) => {
+    const v = cantidadByItem[id];
+    return typeof v !== "number" || v <= 0;
+  }).length;
+  const missingPrecio = Array.from(selected).filter((id) => {
+    const v = precioByItem[id];
+    return typeof v !== "number" || v < 0;
+  }).length;
 
   const ocsCountByProveedor = useMemo(() => {
     const m = new Map<number, number>();
@@ -177,12 +217,19 @@ export function OcPendientesClient({
         );
         setSelected(new Set());
         setBulkProveedor("");
+        setPrecioByItem((prev) => {
+          const next: Record<number, number | ""> = {};
+          for (const k of Object.keys(prev)) next[Number(k)] = "";
+          return next;
+        });
         router.refresh();
       } else if (result.error === "forbidden") {
         toast.error(tCommon("errorForbidden"));
       } else if (result.error === "item_drained") {
         toast.error(tOc("pendientes.avisos.itemDrained"));
         router.refresh();
+      } else if (result.error === "cantidad_exceeds") {
+        toast.error(tOc("pendientes.avisos.cantidadExcede"));
       } else if (result.error === "nothing_selected") {
         toast.error(tOc("pendientes.avisos.nadaSeleccionado"));
       } else {
@@ -282,6 +329,20 @@ export function OcPendientesClient({
               })}
             </span>
           ) : null}
+          {missingCantidad > 0 ? (
+            <span className="text-xs text-amber-700 dark:text-amber-300">
+              {tOc("pendientes.avisos.faltanCantidades", {
+                count: missingCantidad,
+              })}
+            </span>
+          ) : null}
+          {missingPrecio > 0 ? (
+            <span className="text-xs text-amber-700 dark:text-amber-300">
+              {tOc("pendientes.avisos.faltanPrecios", {
+                count: missingPrecio,
+              })}
+            </span>
+          ) : null}
           <div className="ml-auto">
             <ConfirmDialog
               trigger={
@@ -291,6 +352,8 @@ export function OcPendientesClient({
                   disabled={
                     readyAsignaciones.length === 0 ||
                     missingProveedor > 0 ||
+                    missingCantidad > 0 ||
+                    missingPrecio > 0 ||
                     isEmitting
                   }
                 >
@@ -318,7 +381,7 @@ export function OcPendientesClient({
       ) : null}
 
       <div className="overflow-x-auto rounded-md border border-border">
-        <table className="w-full min-w-[780px] text-sm">
+        <table className="w-full min-w-[1080px] text-sm">
           <thead className="bg-muted/40 text-xs uppercase tracking-wide text-muted-foreground">
             <tr>
               <th className="px-3 py-2.5 text-left font-medium w-10">
@@ -332,7 +395,13 @@ export function OcPendientesClient({
                 {tOc("pendientes.columnas.item")}
               </th>
               <th className="px-3 py-2.5 text-right font-medium w-28">
-                {tOc("pendientes.columnas.cantidadTotal")}
+                {tOc("pendientes.columnas.cantidadSolicitada")}
+              </th>
+              <th className="px-3 py-2.5 text-right font-medium w-44">
+                {tOc("pendientes.columnas.cantidadCompra")}
+              </th>
+              <th className="px-3 py-2.5 text-right font-medium w-36">
+                {tOc("pendientes.columnas.precioUnitario")}
               </th>
               <th className="px-3 py-2.5 text-left font-medium w-36">
                 {tOc("pendientes.columnas.solicitudes")}
@@ -346,7 +415,7 @@ export function OcPendientesClient({
             {filteredRows.length === 0 ? (
               <tr>
                 <td
-                  colSpan={5}
+                  colSpan={7}
                   className="px-3 py-6 text-center text-sm text-muted-foreground"
                 >
                   {tOc("avisos.vacioFiltrado")}
@@ -399,6 +468,42 @@ export function OcPendientesClient({
                     <div className="text-[11px] uppercase tracking-wide text-muted-foreground">
                       {r.unidadMedida ?? "—"}
                     </div>
+                  </td>
+                  <td className="px-3 py-2 align-middle text-right">
+                    <NumberInput
+                      value={cantidadByItem[r.itemId] ?? ""}
+                      onChange={(v) => {
+                        const clamped =
+                          typeof v === "number"
+                            ? Math.min(Math.max(v, 1), r.cantidadTotal)
+                            : "";
+                        setCantidadByItem((prev) => ({
+                          ...prev,
+                          [r.itemId]: clamped,
+                        }));
+                      }}
+                      min={1}
+                      max={r.cantidadTotal}
+                      step={1}
+                      steppers
+                      className="h-9 w-full tabular-nums"
+                      aria-label={tOc("pendientes.columnas.cantidadCompra")}
+                    />
+                  </td>
+                  <td className="px-3 py-2 align-middle text-right">
+                    <NumberInput
+                      value={precioByItem[r.itemId] ?? ""}
+                      onChange={(v) =>
+                        setPrecioByItem((prev) => ({
+                          ...prev,
+                          [r.itemId]: typeof v === "number" ? v : "",
+                        }))
+                      }
+                      min={0}
+                      step={0.01}
+                      className="h-9 w-full text-right tabular-nums"
+                      aria-label={tOc("pendientes.columnas.precioUnitario")}
+                    />
                   </td>
                   <td className="px-3 py-2 align-middle">
                     <div className="flex items-center gap-1.5">

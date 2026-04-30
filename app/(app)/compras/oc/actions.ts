@@ -101,6 +101,8 @@ const emitirSchema = z.object({
       z.object({
         itemId: z.coerce.number().int().positive(),
         proveedorId: z.coerce.number().int().positive(),
+        cantidad: z.coerce.number().positive(),
+        precioUnitario: z.coerce.number().min(0),
       }),
     )
     .min(1),
@@ -120,14 +122,27 @@ export async function emitirOcsAgrupadas(
   const parsed = emitirSchema.safeParse(raw);
   if (!parsed.success) return { ok: false, error: "invalid" };
 
-  // Dedupe: one proveedor per item (if the UI somehow submitted duplicates).
-  const byItem = new Map<number, number>();
-  for (const a of parsed.data.asignaciones) byItem.set(a.itemId, a.proveedorId);
+  // Dedupe: one entry per item (if the UI somehow submitted duplicates).
+  type ItemConfig = {
+    proveedorId: number;
+    cantidad: number;
+    precioUnitario: number;
+  };
+  const byItem = new Map<number, ItemConfig>();
+  for (const a of parsed.data.asignaciones) {
+    byItem.set(a.itemId, {
+      proveedorId: a.proveedorId,
+      cantidad: a.cantidad,
+      precioUnitario: a.precioUnitario,
+    });
+  }
   if (byItem.size === 0) return { ok: false, error: "nothing_selected" };
 
   try {
     const ocIds = await prisma.$transaction(async (tx) => {
-      // Fetch all pending requisicionDetalle for selected items.
+      // Fetch all pending requisicionDetalle for selected items, ordered by
+      // requisicion creation date (oldest first) so we fill FIFO when a
+      // partial OC quantity needs to be allocated across multiple solicitudes.
       const detalles = await tx.requisicionDetalle.findMany({
         where: {
           itemId: { in: Array.from(byItem.keys()) },
@@ -142,23 +157,63 @@ export async function emitirOcsAgrupadas(
           cantidad: true,
           cantidadAprobada: true,
           requisicionId: true,
+          prioridadItem: true,
+          notasItem: true,
+          requisicion: { select: { fechaCreacion: true } },
         },
+        orderBy: [
+          { requisicion: { fechaCreacion: "asc" } },
+          { id: "asc" },
+        ],
       });
 
-      // Group by proveedor → list of detalles that feed each OC.
-      const byProveedor = new Map<
-        number,
-        Array<{ detalleId: number; cantidad: number }>
-      >();
+      // Group by proveedor, keeping each item's detalles together and
+      // remembering the user-chosen total cantidad and precio for the item.
+      type DetalleSnapshot = {
+        id: number;
+        itemId: number;
+        requisicionId: number;
+        cantidad: number;
+        cantidadAprobada: number | null;
+        baseCantidad: number;
+        prioridadItem: string;
+        notasItem: string | null;
+      };
+      type LineGroup = {
+        itemId: number;
+        cantidad: number;
+        precioUnitario: number;
+        detalles: DetalleSnapshot[];
+      };
+      const byProveedor = new Map<number, Map<number, LineGroup>>();
       for (const d of detalles) {
-        const pid = byItem.get(d.itemId);
-        if (pid == null) continue;
-        const arr = byProveedor.get(pid) ?? [];
-        arr.push({
-          detalleId: d.id,
-          cantidad: d.cantidadAprobada ?? d.cantidad,
+        const cfg = byItem.get(d.itemId);
+        if (cfg == null) continue;
+        let perItem = byProveedor.get(cfg.proveedorId);
+        if (!perItem) {
+          perItem = new Map();
+          byProveedor.set(cfg.proveedorId, perItem);
+        }
+        let group = perItem.get(d.itemId);
+        if (!group) {
+          group = {
+            itemId: d.itemId,
+            cantidad: cfg.cantidad,
+            precioUnitario: cfg.precioUnitario,
+            detalles: [],
+          };
+          perItem.set(d.itemId, group);
+        }
+        group.detalles.push({
+          id: d.id,
+          itemId: d.itemId,
+          requisicionId: d.requisicionId,
+          cantidad: d.cantidad,
+          cantidadAprobada: d.cantidadAprobada,
+          baseCantidad: d.cantidadAprobada ?? d.cantidad,
+          prioridadItem: d.prioridadItem,
+          notasItem: d.notasItem,
         });
-        byProveedor.set(pid, arr);
       }
 
       // Every selected item must have produced at least one detalle row.
@@ -170,7 +225,7 @@ export async function emitirOcsAgrupadas(
       }
 
       const ocIds: number[] = [];
-      for (const [proveedorId, lines] of byProveedor) {
+      for (const [proveedorId, perItem] of byProveedor) {
         const oc = await tx.ordenCompra.create({
           data: {
             proveedorId,
@@ -185,25 +240,87 @@ export async function emitirOcsAgrupadas(
           where: { id: oc.id },
           data: { numeroOc: formatOCNumber(oc.id) },
         });
-        for (const ln of lines) {
-          await tx.ordenCompraDetalle.create({
-            data: {
-              ocId: oc.id,
-              requisicionDetalleId: ln.detalleId,
-              cantidadSolicitada: ln.cantidad,
-              cantidadRecibida: 0,
-              precioUnitario: 0,
-              total: 0,
-            },
-          });
-          await tx.requisicionDetalle.update({
-            where: { id: ln.detalleId },
-            data: {
-              estado: "Vinculada OC",
-              proveedorAsignadoId: proveedorId,
-            },
-          });
+
+        let totalEstimado = 0;
+        for (const group of perItem.values()) {
+          // Greedy FIFO: walk detalles oldest-first and consume baseCantidad
+          // until the user-chosen total is reached. The detalle that gets
+          // partially consumed is split: existing row keeps the consumed
+          // portion (linked to OC), and a new sibling detalle holds the
+          // remainder as Pendiente so it shows up in pendientes again.
+          const baseSum = group.detalles.reduce(
+            (s, d) => s + d.baseCantidad,
+            0,
+          );
+          if (group.cantidad > baseSum) throw new Error("cantidad_exceeds");
+
+          let remaining = group.cantidad;
+          for (const d of group.detalles) {
+            if (remaining <= 0) break;
+            const take = Math.min(remaining, d.baseCantidad);
+            remaining = Math.round((remaining - take) * 100) / 100;
+            const isPartial = take < d.baseCantidad;
+
+            if (isPartial) {
+              const leftover = Math.round((d.baseCantidad - take) * 100) / 100;
+              // Split the cantidad (originally requested) proportionally so
+              // both rows preserve the cantidad >= cantidadAprobada invariant.
+              const ratio = d.baseCantidad > 0 ? take / d.baseCantidad : 1;
+              const consumedCantidad =
+                Math.round(d.cantidad * ratio * 100) / 100;
+              const remainderCantidad =
+                Math.round((d.cantidad - consumedCantidad) * 100) / 100;
+
+              await tx.requisicionDetalle.update({
+                where: { id: d.id },
+                data: {
+                  cantidad: consumedCantidad,
+                  cantidadAprobada: take,
+                  estado: "Vinculada OC",
+                  proveedorAsignadoId: proveedorId,
+                },
+              });
+              await tx.requisicionDetalle.create({
+                data: {
+                  requisicionId: d.requisicionId,
+                  itemId: d.itemId,
+                  cantidad: remainderCantidad,
+                  cantidadAprobada: leftover,
+                  prioridadItem: d.prioridadItem,
+                  notasItem: d.notasItem,
+                  estado: "Pendiente",
+                },
+              });
+            } else {
+              await tx.requisicionDetalle.update({
+                where: { id: d.id },
+                data: {
+                  estado: "Vinculada OC",
+                  proveedorAsignadoId: proveedorId,
+                },
+              });
+            }
+
+            const lineTotal =
+              Math.round(take * group.precioUnitario * 100) / 100;
+            totalEstimado += lineTotal;
+            await tx.ordenCompraDetalle.create({
+              data: {
+                ocId: oc.id,
+                requisicionDetalleId: d.id,
+                cantidadSolicitada: take,
+                cantidadRecibida: 0,
+                precioUnitario: group.precioUnitario,
+                total: lineTotal,
+              },
+            });
+          }
         }
+
+        await tx.ordenCompra.update({
+          where: { id: oc.id },
+          data: { totalEstimado: Math.round(totalEstimado * 100) / 100 },
+        });
         ocIds.push(oc.id);
       }
 
@@ -237,6 +354,8 @@ export async function emitirOcsAgrupadas(
   } catch (e) {
     const msg = e instanceof Error ? e.message : "unknown";
     if (msg === "item_drained") return { ok: false, error: "item_drained" };
+    if (msg === "cantidad_exceeds")
+      return { ok: false, error: "cantidad_exceeds" };
     return { ok: false, error: "unknown" };
   }
 }
