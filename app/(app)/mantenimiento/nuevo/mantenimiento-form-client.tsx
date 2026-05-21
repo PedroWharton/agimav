@@ -27,7 +27,13 @@ import {
   type SummaryDraft,
   type TypeOption,
 } from "@/components/mantenimiento/form";
-import { MANT_PRIORIDADES, MANT_TIPOS } from "@/lib/mantenimiento/estado";
+import {
+  MANT_ESTADO_I18N_KEY,
+  MANT_ESTADOS_INICIALES,
+  MANT_PRIORIDADES,
+  MANT_TIPOS,
+  type MantEstado,
+} from "@/lib/mantenimiento/estado";
 
 import { createMantenimiento, saveInsumos } from "../actions";
 
@@ -122,6 +128,7 @@ export function MantenimientoFormClient({
 }) {
   const tM = useTranslations("mantenimiento");
   const tTipos = useTranslations("mantenimiento.tipos");
+  const tEstados = useTranslations("mantenimiento.estados");
   const router = useRouter();
   const [pending, start] = useTransition();
 
@@ -129,6 +136,7 @@ export function MantenimientoFormClient({
     initialMaquinariaId ?? null,
   );
   const [tipo, setTipo] = useState<ServerTipo>("correctivo");
+  const [estadoInicial, setEstadoInicial] = useState<MantEstado>("Pendiente");
   const [plantillaId, setPlantillaId] = useState<number | null>(null);
   const [descripcion, setDescripcion] = useState("");
   const [responsableId, setResponsableId] = useState<number | null>(null);
@@ -240,6 +248,7 @@ export function MantenimientoFormClient({
       const res = await createMantenimiento({
         maquinariaId,
         tipo,
+        estadoInicial,
         descripcion,
         responsableId,
         unidadProductivaId,
@@ -525,6 +534,22 @@ export function MantenimientoFormClient({
                   type="date"
                   value={fechaProgramada}
                   onChange={(e) => setFechaProgramada(e.target.value)}
+                />
+              </div>
+
+              <div className="flex flex-col gap-1.5">
+                <Label>{tM("campos.estado")}</Label>
+                <Combobox
+                  value={estadoInicial}
+                  onChange={(v) =>
+                    setEstadoInicial((v || "Pendiente") as MantEstado)
+                  }
+                  options={MANT_ESTADOS_INICIALES.map((e) => ({
+                    value: e,
+                    label: tEstados(MANT_ESTADO_I18N_KEY[e]),
+                  }))}
+                  placeholder={tM("campos.estado")}
+                  allowCreate={false}
                 />
               </div>
             </div>

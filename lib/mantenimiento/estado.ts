@@ -19,6 +19,15 @@ export const MANT_ESTADOS_TERMINALES: MantEstado[] = [
   "Cancelado",
 ];
 
+/** Estados en los que un mantenimiento puede crearse directamente
+ * (todos menos Cancelado). */
+export const MANT_ESTADOS_INICIALES: MantEstado[] = [
+  "Pendiente",
+  "En Reparación - Chacra",
+  "En Reparación - Taller",
+  "Finalizado",
+];
+
 /** Canonical reference for the "pendiente" state — used by queries that need
  * only the starting state, not the whole active set. */
 export const MANT_ESTADO_PENDIENTE: MantEstado = "Pendiente";

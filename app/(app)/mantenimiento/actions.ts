@@ -51,6 +51,14 @@ const optionalDate = z
 const createSchema = z.object({
   maquinariaId: z.coerce.number().int().positive(),
   tipo: z.enum(MANT_TIPOS).default("correctivo"),
+  estadoInicial: z
+    .enum([
+      "Pendiente",
+      "En Reparación - Chacra",
+      "En Reparación - Taller",
+      "Finalizado",
+    ])
+    .default("Pendiente"),
   descripcion: optionalText(2000),
   responsableId: z.coerce.number().int().positive(),
   unidadProductivaId: z.coerce
@@ -133,6 +141,8 @@ export async function createMantenimiento(
         where: { id: data.maquinariaId },
         select: { horasAcumuladas: true },
       });
+      const now = new Date();
+      const estadoInicial = data.estadoInicial;
       const mant = await tx.mantenimiento.create({
         data: {
           tipo: data.tipo,
@@ -141,8 +151,10 @@ export async function createMantenimiento(
           descripcion: data.descripcion,
           responsableId: data.responsableId,
           unidadProductivaId: data.unidadProductivaId,
-          estado: "Pendiente",
+          estado: estadoInicial,
           fechaProgramada: data.fechaProgramada,
+          fechaInicio: estadoInicial === "Pendiente" ? null : now,
+          fechaFinalizacion: estadoInicial === "Finalizado" ? now : null,
           creadoPor: userName,
           plantillaId: plantilla?.id ?? null,
           frecuenciaValor: plantilla?.frecuenciaValor ?? null,
@@ -166,7 +178,7 @@ export async function createMantenimiento(
           mantenimientoId: mant.id,
           tipoCambio: "estado",
           valorAnterior: null,
-          valorNuevo: "Pendiente",
+          valorNuevo: estadoInicial,
           usuario: userName ?? "—",
           detalle: plantilla
             ? `Generado desde plantilla "${plantilla.nombre}"`
