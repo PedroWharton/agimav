@@ -1,7 +1,6 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { format } from "date-fns";
@@ -133,14 +132,9 @@ export function RecepcionesListClient({
     {
       accessorKey: "ocNumero",
       header: tRec("campos.oc"),
+      enableSorting: true,
       cell: ({ row }) => (
-        <Link
-          href={`/compras/oc/${row.original.ocId}`}
-          className="font-mono text-xs underline-offset-2 hover:underline"
-          onClick={(e) => e.stopPropagation()}
-        >
-          {row.original.ocNumero}
-        </Link>
+        <span className="font-mono text-xs">{row.original.ocNumero}</span>
       ),
     },
     {

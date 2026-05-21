@@ -1180,6 +1180,11 @@
         "toastNadaPorCerrar": "No pending lines to close.",
         "toastForbidden": "You do not have permission for this action.",
         "toastUnknown": "Could not close. Please retry in a few seconds."
+      },
+      "recibidoPor": {
+        "editar": "Edit who received",
+        "descripcion": "Change the user who recorded the reception of this delivery note.",
+        "toastOk": "Reception updated."
       }
     },
     "facturas": {

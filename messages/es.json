@@ -1186,6 +1186,11 @@
         "toastNadaPorCerrar": "No hay líneas pendientes para cerrar.",
         "toastForbidden": "No tenés permisos para esta acción.",
         "toastUnknown": "No se pudo cerrar. Reintentá en unos segundos."
+      },
+      "recibidoPor": {
+        "editar": "Editar quién recibe",
+        "descripcion": "Cambiá el usuario que registró la recepción de este remito.",
+        "toastOk": "Recepción actualizada."
       }
     },
     "facturas": {

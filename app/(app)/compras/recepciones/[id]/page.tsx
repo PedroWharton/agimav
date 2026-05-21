@@ -14,6 +14,7 @@ import { Button } from "@/components/ui/button";
 import { PageHeader } from "@/components/app/page-header";
 
 import { CerrarSinFacturaButton } from "./cerrar-sin-factura-button";
+import { EditarRecibidoPorButton } from "./editar-recibido-por-button";
 
 export default async function RecepcionDetailPage({
   params,
@@ -62,6 +63,15 @@ export default async function RecepcionDetailPage({
   requireViewOrRedirect(session, "compras.view");
   const canUpdate = hasPermission(session, "compras.recepcion.update");
   const tRec = await getTranslations("compras.recepciones");
+  const usuarios = canUpdate
+    ? (
+        await prisma.usuario.findMany({
+          where: { estado: "activo" },
+          select: { nombre: true },
+          orderBy: { nombre: "asc" },
+        })
+      ).map((u) => u.nombre)
+    : [];
   const numeroOc = rec.oc.numeroOc ?? formatOCNumber(rec.oc.id);
   const pendientes = rec.detalle.filter((d) => !d.facturado).length;
   const canCerrarSinFactura =
@@ -118,18 +128,22 @@ export default async function RecepcionDetailPage({
               <div className="text-xs text-muted-foreground">
                 {tRec("campos.oc")}
               </div>
-              <Link
-                href={`/compras/oc/${rec.oc.id}`}
-                className="font-mono text-sm underline-offset-2 hover:underline"
-              >
-                {numeroOc}
-              </Link>
+              <div className="font-mono text-sm">{numeroOc}</div>
             </div>
             <div>
               <div className="text-xs text-muted-foreground">
                 {tRec("campos.recibidoPor")}
               </div>
-              <div className="font-medium">{rec.recibidoPor}</div>
+              <div className="flex items-center gap-1">
+                <span className="font-medium">{rec.recibidoPor}</span>
+                {canUpdate ? (
+                  <EditarRecibidoPorButton
+                    recepcionId={rec.id}
+                    recibidoPorActual={rec.recibidoPor}
+                    usuarios={usuarios}
+                  />
+                ) : null}
+              </div>
             </div>
             {rec.observaciones ? (
               <div className="col-span-2">

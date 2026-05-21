@@ -249,3 +249,42 @@ export async function cerrarRecepcionSinFactura(
     return { ok: false, error: "unknown" };
   }
 }
+
+const actualizarRecibidoPorSchema = z.object({
+  recepcionId: z.coerce.number().int().positive(),
+  recibidoPor: z.string().trim().min(1).max(120),
+});
+
+export async function actualizarRecibidoPor(
+  raw: unknown,
+): Promise<RecepcionActionResult> {
+  const session = await auth();
+  try {
+    requirePermission(session, "compras.recepcion.update");
+  } catch {
+    return { ok: false, error: "forbidden" };
+  }
+
+  const parsed = actualizarRecibidoPorSchema.safeParse(raw);
+  if (!parsed.success) return { ok: false, error: "invalid" };
+  const { recepcionId, recibidoPor } = parsed.data;
+
+  try {
+    const rec = await prisma.recepcion.findUnique({
+      where: { id: recepcionId },
+      select: { id: true },
+    });
+    if (!rec) return { ok: false, error: "not_found" };
+
+    await prisma.recepcion.update({
+      where: { id: recepcionId },
+      data: { recibidoPor },
+    });
+
+    revalidatePath("/compras/recepciones");
+    revalidatePath(`/compras/recepciones/${recepcionId}`);
+    return { ok: true, id: recepcionId };
+  } catch {
+    return { ok: false, error: "unknown" };
+  }
+}
