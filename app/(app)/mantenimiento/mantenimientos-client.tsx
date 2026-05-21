@@ -18,7 +18,6 @@ import {
   SelectContent,
   SelectItem,
   SelectTrigger,
-  SelectValue,
 } from "@/components/ui/select";
 
 import { DataTable } from "@/components/app/data-table";
@@ -80,7 +79,7 @@ const LANE_COUNTER_TONE: Record<LaneDef["tone"], string> = {
 };
 
 function normalizeView(raw: string | null): ViewMode {
-  return raw === "tablero" ? "tablero" : "lista";
+  return raw === "lista" ? "lista" : "tablero";
 }
 
 export type MantenimientoKpis = {
@@ -115,7 +114,7 @@ export function MantenimientosClient({
   const setView = useCallback(
     (next: ViewMode) => {
       const params = new URLSearchParams(searchParams.toString());
-      if (next === "lista") {
+      if (next === "tablero") {
         params.delete("view");
       } else {
         params.set("view", next);
@@ -241,8 +240,13 @@ export function MantenimientosClient({
       />
       <Toolbar.Selects>
         <Select value={tipoFilter} onValueChange={setTipoFilter}>
-          <SelectTrigger className="h-9 w-[160px]">
-            <SelectValue placeholder={tM("filtros.tipo")} />
+          <SelectTrigger className="h-9 w-[180px]">
+            <span className="min-w-0 flex-1 truncate text-left">
+              {tM("filtros.tipo")}:{" "}
+              {tipoFilter === ALL
+                ? tM("filtros.todos")
+                : tTipos(tipoFilter as "correctivo" | "preventivo")}
+            </span>
           </SelectTrigger>
           <SelectContent>
             <SelectItem value={ALL}>{tM("filtros.todos")}</SelectItem>
@@ -255,7 +259,10 @@ export function MantenimientosClient({
           value={responsableFilter === ALL ? "" : responsableFilter}
           onChange={(v) => setResponsableFilter(v || ALL)}
           options={[
-            { value: "", label: tM("filtros.todos") },
+            {
+              value: "",
+              label: `${tM("filtros.responsable")}: ${tM("filtros.todos")}`,
+            },
             ...responsables.map((r) => ({
               value: String(r.id),
               label: r.nombre,
@@ -268,8 +275,17 @@ export function MantenimientosClient({
 
         {view === "lista" ? (
           <Select value={estadoFilter} onValueChange={setEstadoFilter}>
-            <SelectTrigger className="h-9 w-[200px]">
-              <SelectValue placeholder={tM("filtros.estado")} />
+            <SelectTrigger className="h-9 w-[230px]">
+              <span className="min-w-0 flex-1 truncate text-left">
+                {tM("filtros.estado")}:{" "}
+                {estadoFilter === ALL
+                  ? tM("filtros.todos")
+                  : tEstados(
+                      MANT_ESTADO_I18N_KEY[
+                        estadoFilter as keyof typeof MANT_ESTADO_I18N_KEY
+                      ],
+                    )}
+              </span>
             </SelectTrigger>
             <SelectContent>
               <SelectItem value={ALL}>{tM("filtros.todos")}</SelectItem>
