@@ -51,11 +51,13 @@ export function PlantillaDetailClient({
 }) {
   const tM = useTranslations("mantenimiento");
   const tP = useTranslations("mantenimiento.plantillas");
+  const tTipos = useTranslations("mantenimiento.tipos");
   const router = useRouter();
   const [pending, start] = useTransition();
 
   const [open, setOpen] = useState(false);
   const [maquinariaId, setMaquinariaId] = useState<number | null>(null);
+  const [tipo, setTipo] = useState<"correctivo" | "preventivo">("preventivo");
   const [responsableId, setResponsableId] = useState<number | null>(null);
   const [unidadProductivaId, setUnidadProductivaId] = useState<number | null>(
     null,
@@ -80,6 +82,7 @@ export function PlantillaDetailClient({
     start(async () => {
       const res = await aplicarPlantilla(initial.id as number, {
         maquinariaId,
+        tipo,
         responsableId,
         unidadProductivaId,
         fechaProgramada,
@@ -115,6 +118,23 @@ export function PlantillaDetailClient({
               <DialogDescription>{tP("aplicarDescripcion")}</DialogDescription>
             </DialogHeader>
             <div className="flex flex-col gap-3">
+              <div className="flex flex-col gap-1.5">
+                <Label>{tM("campos.tipo")} *</Label>
+                <div className="inline-flex gap-1.5">
+                  {(["correctivo", "preventivo"] as const).map((t) => (
+                    <Button
+                      key={t}
+                      type="button"
+                      size="sm"
+                      variant={tipo === t ? "default" : "outline"}
+                      onClick={() => setTipo(t)}
+                      className="flex-1 capitalize"
+                    >
+                      {tTipos(t)}
+                    </Button>
+                  ))}
+                </div>
+              </div>
               <div className="flex flex-col gap-1.5">
                 <Label>{tM("campos.maquina")} *</Label>
                 <Combobox

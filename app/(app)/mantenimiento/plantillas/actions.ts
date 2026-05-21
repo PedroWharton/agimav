@@ -10,7 +10,7 @@ import {
   requirePermission,
   userNameFromSession,
 } from "@/lib/rbac";
-import { MANT_PRIORIDADES } from "@/lib/mantenimiento/estado";
+import { MANT_PRIORIDADES, MANT_TIPOS } from "@/lib/mantenimiento/estado";
 
 import { FRECUENCIA_UNIDADES } from "./types";
 import type { PlantillaActionResult } from "./types";
@@ -291,6 +291,7 @@ export async function deletePlantilla(
 
 const aplicarSchema = z.object({
   maquinariaId: z.coerce.number().int().positive(),
+  tipo: z.enum(MANT_TIPOS).default("preventivo"),
   responsableId: z.coerce.number().int().positive(),
   unidadProductivaId: z.coerce
     .number()
@@ -356,7 +357,7 @@ export async function aplicarPlantilla(
       });
       const mant = await tx.mantenimiento.create({
         data: {
-          tipo: "preventivo",
+          tipo: data.tipo,
           maquinariaId: data.maquinariaId,
           prioridad: plantilla.prioridad,
           descripcion: plantilla.descripcion,

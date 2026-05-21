@@ -172,8 +172,8 @@ export function MantenimientoFormClient({
     setPlantillaId(p?.id ?? null);
     if (!p) return;
 
-    // Force preventivo — plantillas only apply to preventive flow.
-    setTipo("preventivo");
+    // Tipo de trabajo is left to the user — a plantilla no longer forces
+    // "preventivo". It still seeds descripción, prioridad, fecha y repuestos.
 
     // Prefill descripcion only if the user hasn't typed anything yet.
     if (!descripcion.trim() && p.descripcion) {
@@ -360,13 +360,7 @@ export function MantenimientoFormClient({
             <TypeChooser<ServerTipo>
               options={typeOptions}
               value={tipo}
-              onChange={(v) => {
-                setTipo(v);
-                // Switching away from preventivo clears the plantilla.
-                if (v !== "preventivo" && plantillaId != null) {
-                  setPlantillaId(null);
-                }
-              }}
+              onChange={setTipo}
             />
             {showPlantillaPicker ? (
               <div className="flex flex-col gap-1.5">

@@ -135,7 +135,7 @@ export async function createMantenimiento(
       });
       const mant = await tx.mantenimiento.create({
         data: {
-          tipo: plantilla ? "preventivo" : data.tipo,
+          tipo: data.tipo,
           maquinariaId: data.maquinariaId,
           prioridad: data.prioridad,
           descripcion: data.descripcion,
