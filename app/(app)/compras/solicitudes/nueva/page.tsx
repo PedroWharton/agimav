@@ -17,6 +17,7 @@ export default async function NuevaSolicitudPage() {
     redirect("/compras/solicitudes");
   }
   const currentUserName = userNameFromSession(session);
+  const canCreateInventario = hasPermission(session, "inventario.create");
 
   const [inventario, unidades, localidades, usuarios] = await Promise.all([
     prisma.inventario.findMany({
@@ -59,6 +60,7 @@ export default async function NuevaSolicitudPage() {
       currentUserName={currentUserName}
       canMutate
       canApprove={false}
+      canCreateInventario={canCreateInventario}
     />
   );
 }

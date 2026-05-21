@@ -1,11 +1,12 @@
 "use client";
 
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import { useTranslations } from "next-intl";
 import { Trash2, Plus } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { CrearItemDialog } from "@/components/compras/crear-item-dialog";
 import {
   Select,
   SelectContent,
@@ -59,31 +60,49 @@ export function DetalleLinesEditor({
   onChange,
   inventarioOptions,
   readOnly,
+  canCreateInventario,
 }: {
   lines: DetalleLine[];
   onChange: (next: DetalleLine[]) => void;
   inventarioOptions: InventarioOption[];
   readOnly?: boolean;
+  canCreateInventario?: boolean;
 }) {
   const t = useTranslations("compras.solicitudes.lineas");
   const tPrior = useTranslations("compras.common.prioridades");
 
+  // Items created inline via CrearItemDialog, merged on top of the server-fed
+  // options so they're immediately pickable without a page reload.
+  const [extraOptions, setExtraOptions] = useState<InventarioOption[]>([]);
+
+  const allOptions = useMemo(
+    () => [...inventarioOptions, ...extraOptions],
+    [inventarioOptions, extraOptions],
+  );
+
   const comboOptions = useMemo<ComboboxOption[]>(
     () =>
-      inventarioOptions.map((opt) => ({
+      allOptions.map((opt) => ({
         value: String(opt.id),
         label: opt.codigo
           ? `${opt.codigo} · ${opt.descripcion}`
           : opt.descripcion,
       })),
-    [inventarioOptions],
+    [allOptions],
   );
 
   const itemById = useMemo(() => {
     const m = new Map<number, InventarioOption>();
-    for (const opt of inventarioOptions) m.set(opt.id, opt);
+    for (const opt of allOptions) m.set(opt.id, opt);
     return m;
-  }, [inventarioOptions]);
+  }, [allOptions]);
+
+  function handleItemCreated(item: InventarioOption) {
+    setExtraOptions((prev) =>
+      prev.some((o) => o.id === item.id) ? prev : [...prev, item],
+    );
+    onChange([...lines, { ...emptyLine(), itemId: item.id }]);
+  }
 
   const usedItemIds = useMemo(() => {
     const s = new Set<number>();
@@ -358,11 +377,14 @@ export function DetalleLinesEditor({
           </tbody>
         </table>
       </div>
-      <div>
+      <div className="flex flex-wrap gap-2">
         <Button type="button" variant="outline" size="sm" onClick={addLine}>
           <Plus className="size-4" />
           {t("agregar")}
         </Button>
+        {canCreateInventario ? (
+          <CrearItemDialog onCreated={handleItemCreated} />
+        ) : null}
       </div>
     </div>
   );

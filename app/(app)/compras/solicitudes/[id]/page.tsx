@@ -72,6 +72,7 @@ export default async function SolicitudDetailPage({
   const currentUserName = userNameFromSession(session);
   const canApproveReqs = hasPermission(session, "compras.requisicion.approve");
   const canCreateReqs = hasPermission(session, "compras.requisicion.create");
+  const canCreateInventario = hasPermission(session, "inventario.create");
   const isOwner =
     !!currentUserName &&
     !!solicitud.creadoPor &&
@@ -151,6 +152,7 @@ export default async function SolicitudDetailPage({
       currentUserName={currentUserName}
       canMutate={canMutate}
       canApprove={canApprove}
+      canCreateInventario={canCreateInventario}
     />
   );
 }

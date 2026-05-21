@@ -830,7 +830,20 @@
         "cantidadInvalida": "There are lines with an item selected but quantity 0. Fix the quantity or remove the line.",
         "cantidadMayorACero": "Must be greater than 0.",
         "rechazadaBadge": "Rejected",
-        "aprobadaParcial": "Partially approved"
+        "aprobadaParcial": "Partially approved",
+        "crearItem": {
+          "accion": "Create item",
+          "titulo": "Create inventory item",
+          "descripcion": "The new item becomes available in inventory and is added to the request.",
+          "codigo": "Code",
+          "descripcionItem": "Description",
+          "unidadMedida": "Unit of measure",
+          "categoria": "Category",
+          "crear": "Create item",
+          "toastOk": "Item created.",
+          "duplicado": "An item with that code already exists.",
+          "invalido": "Check the item details."
+        }
       },
       "filtros": {
         "estado": "Status",

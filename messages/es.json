@@ -830,7 +830,20 @@
         "cantidadInvalida": "Hay líneas con ítem seleccionado pero cantidad 0. Corregí la cantidad o eliminá la línea.",
         "cantidadMayorACero": "Debe ser mayor a 0.",
         "rechazadaBadge": "Rechazada",
-        "aprobadaParcial": "Aprobada parcialmente"
+        "aprobadaParcial": "Aprobada parcialmente",
+        "crearItem": {
+          "accion": "Crear ítem",
+          "titulo": "Crear ítem de inventario",
+          "descripcion": "El ítem nuevo queda disponible en el inventario y se agrega a la requisición.",
+          "codigo": "Código",
+          "descripcionItem": "Descripción",
+          "unidadMedida": "Unidad de medida",
+          "categoria": "Categoría",
+          "crear": "Crear ítem",
+          "toastOk": "Ítem creado.",
+          "duplicado": "Ya existe un ítem con ese código.",
+          "invalido": "Revisá los datos del ítem."
+        }
       },
       "filtros": {
         "estado": "Estado",

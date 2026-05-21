@@ -113,6 +113,7 @@ export type SolicitudFormProps = {
   currentUserName: string | null;
   canMutate: boolean;
   canApprove: boolean;
+  canCreateInventario: boolean;
 };
 
 function toDateInput(iso: string | null | undefined): string {
@@ -139,6 +140,7 @@ export function SolicitudForm({
   currentUserName,
   canMutate,
   canApprove,
+  canCreateInventario,
 }: SolicitudFormProps) {
   const tReq = useTranslations("compras.solicitudes");
   const tCommon = useTranslations("listados.common");
@@ -876,6 +878,7 @@ export function SolicitudForm({
                 onChange={setLines}
                 inventarioOptions={inventarioOptions}
                 readOnly={readOnly}
+                canCreateInventario={canCreateInventario}
               />
             </section>
 
