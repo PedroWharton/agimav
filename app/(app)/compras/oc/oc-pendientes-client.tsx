@@ -165,7 +165,9 @@ export function OcPendientesClient({
           itemId,
           proveedorId: proveedorByItem[itemId] ?? null,
           cantidad: typeof cant === "number" ? cant : null,
-          precioUnitario: typeof precio === "number" ? precio : null,
+          // El precio es opcional al emitir la OC: un ítem sin precio se emite
+          // en 0 y queda pendiente hasta que la factura cargue el costo real.
+          precioUnitario: typeof precio === "number" ? precio : 0,
         };
       })
       .filter(
@@ -177,11 +179,7 @@ export function OcPendientesClient({
           cantidad: number;
           precioUnitario: number;
         } =>
-          a.proveedorId != null &&
-          a.cantidad != null &&
-          a.cantidad > 0 &&
-          a.precioUnitario != null &&
-          a.precioUnitario >= 0,
+          a.proveedorId != null && a.cantidad != null && a.cantidad > 0,
       );
   }, [selected, proveedorByItem, cantidadByItem, precioByItem]);
 
@@ -337,7 +335,7 @@ export function OcPendientesClient({
             </span>
           ) : null}
           {missingPrecio > 0 ? (
-            <span className="text-xs text-amber-700 dark:text-amber-300">
+            <span className="text-xs text-muted-foreground">
               {tOc("pendientes.avisos.faltanPrecios", {
                 count: missingPrecio,
               })}
@@ -353,7 +351,6 @@ export function OcPendientesClient({
                     readyAsignaciones.length === 0 ||
                     missingProveedor > 0 ||
                     missingCantidad > 0 ||
-                    missingPrecio > 0 ||
                     isEmitting
                   }
                 >

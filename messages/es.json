@@ -975,7 +975,7 @@
           "emitidoExitoso": "{count, plural, one {# OC emitida} other {# OCs emitidas}}.",
           "faltanProveedores": "{count, plural, one {# ítem seleccionado sin proveedor} other {# ítems seleccionados sin proveedor}}.",
           "faltanCantidades": "{count, plural, one {# ítem seleccionado sin cantidad} other {# ítems seleccionados sin cantidad}}.",
-          "faltanPrecios": "{count, plural, one {# ítem seleccionado sin precio} other {# ítems seleccionados sin precio}}.",
+          "faltanPrecios": "{count, plural, one {# ítem sin precio · queda pendiente} other {# ítems sin precio · quedan pendientes}}",
           "nadaSeleccionado": "No hay ítems seleccionados para emitir.",
           "itemDrained": "Algún ítem seleccionado ya no tiene líneas pendientes. Refrescá la página.",
           "cantidadExcede": "La cantidad a comprar no puede superar la cantidad solicitada."

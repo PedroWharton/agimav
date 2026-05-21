@@ -102,7 +102,7 @@ const emitirSchema = z.object({
         itemId: z.coerce.number().int().positive(),
         proveedorId: z.coerce.number().int().positive(),
         cantidad: z.coerce.number().positive(),
-        precioUnitario: z.coerce.number().min(0),
+        precioUnitario: z.coerce.number().min(0).default(0),
       }),
     )
     .min(1),
