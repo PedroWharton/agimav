@@ -87,9 +87,8 @@ export default async function EstructuraPage({
         niveles={niveles}
         admin
         instanciasCount={tipo._count.maquinarias}
+        tipoId={tipo.id}
       />
-
-      <p className="text-xs text-muted-foreground">{t("nivelesBloqueados")}</p>
     </div>
   );
 }

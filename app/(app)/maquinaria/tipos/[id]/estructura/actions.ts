@@ -18,6 +18,7 @@ const createSchema = z
     nombre: z.string().trim().min(1, "Obligatorio").max(120),
     dataType: dataTypeSchema,
     requerido: z.boolean().default(false),
+    esPrincipal: z.boolean().default(false),
     listOptions: z
       .union([z.string().trim().max(2000), z.null()])
       .optional()
@@ -48,6 +49,7 @@ const updateSchema = z
   .object({
     nombre: z.string().trim().min(1, "Obligatorio").max(120),
     requerido: z.boolean(),
+    esPrincipal: z.boolean().default(false),
     listOptions: z
       .union([z.string().trim().max(2000), z.null()])
       .optional()
@@ -107,7 +109,7 @@ export async function createNivelAtributo(
         requerido: data.requerido,
         listOptions: data.dataType === "list" ? data.listOptions : null,
         sourceRef: data.dataType === "ref" ? data.sourceRef : null,
-        esPrincipal: false,
+        esPrincipal: data.esPrincipal,
         activo: true,
       },
       select: { id: true },
@@ -179,6 +181,7 @@ export async function updateNivelAtributo(
       data: {
         nombre: data.nombre,
         requerido: data.requerido,
+        esPrincipal: data.esPrincipal,
         listOptions: existing.dataType === "list" ? data.listOptions : null,
         sourceRef: existing.dataType === "ref" ? data.sourceRef : null,
       },
@@ -259,6 +262,96 @@ export async function deleteNivelAtributo(
     await revalidateForNivel(existing.nivelId);
     return { ok: true, id };
   } catch {
+    return { ok: false, error: "unknown" };
+  }
+}
+
+const nivelSchema = z.object({
+  tipoId: z.coerce.number().int().positive(),
+  nombre: z.string().trim().min(1, "Obligatorio").max(120),
+  parentLevelId: z
+    .union([z.coerce.number().int().positive(), z.null()])
+    .optional()
+    .transform((v) => v ?? null),
+  permiteInventario: z.boolean().default(false),
+});
+
+export async function createNivel(
+  raw: unknown,
+): Promise<AtributoActionResult> {
+  const session = await auth();
+  try {
+    requirePermission(session, "maquinaria.tipos.manage");
+  } catch {
+    return { ok: false, error: "forbidden" };
+  }
+
+  const parsed = nivelSchema.safeParse(raw);
+  if (!parsed.success) {
+    return {
+      ok: false,
+      error: "invalid",
+      fieldErrors: fieldErrorsFromZod(parsed.error),
+    };
+  }
+  const data = parsed.data;
+
+  try {
+    const tipo = await prisma.maquinariaTipo.findUnique({
+      where: { id: data.tipoId },
+      select: { id: true },
+    });
+    if (!tipo) return { ok: false, error: "not_found" };
+
+    // A parent nivel, if given, must belong to the same tipo.
+    if (data.parentLevelId != null) {
+      const parent = await prisma.tipoNivel.findUnique({
+        where: { id: data.parentLevelId },
+        select: { tipoId: true },
+      });
+      if (!parent || parent.tipoId !== data.tipoId) {
+        return {
+          ok: false,
+          error: "invalid",
+          fieldErrors: { parentLevelId: "Nivel padre inválido" },
+        };
+      }
+    }
+
+    // Append: orden = max among siblings + 1.
+    const agg = await prisma.tipoNivel.aggregate({
+      where: { tipoId: data.tipoId, parentLevelId: data.parentLevelId },
+      _max: { orden: true },
+    });
+    const orden = (agg._max.orden ?? -1) + 1;
+
+    const created = await prisma.tipoNivel.create({
+      data: {
+        tipoId: data.tipoId,
+        nombre: data.nombre,
+        parentLevelId: data.parentLevelId,
+        orden,
+        permiteInventario: data.permiteInventario,
+        activo: true,
+      },
+      select: { id: true },
+    });
+    revalidatePath(`/maquinaria/tipos/${data.tipoId}/estructura`);
+    revalidatePath(`/maquinaria/${data.tipoId}`);
+    return { ok: true, id: created.id };
+  } catch (e) {
+    if (
+      e &&
+      typeof e === "object" &&
+      "code" in e &&
+      (e as { code: string }).code === "P2002"
+    ) {
+      return {
+        ok: false,
+        error: "duplicate",
+        fieldErrors: { nombre: "Ya existe un nivel con ese nombre" },
+      };
+    }
     return { ok: false, error: "unknown" };
   }
 }

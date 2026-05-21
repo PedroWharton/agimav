@@ -55,6 +55,7 @@ import {
 import { ConfirmDialog } from "@/components/app/confirm-dialog";
 
 import {
+  createNivel,
   createNivelAtributo,
   updateNivelAtributo,
   setNivelAtributoActivo,
@@ -118,27 +119,40 @@ export function StructureTree({
   niveles,
   admin = false,
   instanciasCount = 0,
+  tipoId,
 }: {
   niveles: NivelView[];
   admin?: boolean;
   instanciasCount?: number;
+  tipoId: number;
 }) {
   const t = useTranslations("maquinaria.estructura");
   const roots = useMemo(() => buildTree(niveles), [niveles]);
   const [dialog, setDialog] = useState<DialogState>({ kind: "closed" });
-
-  if (roots.length === 0) {
-    return (
-      <div className="rounded-lg border border-dashed border-border p-8 text-center text-sm text-muted-foreground">
-        {t("sinEstructura")}
-      </div>
-    );
-  }
+  const [nivelDialogOpen, setNivelDialogOpen] = useState(false);
 
   return (
-    <>
-      <div className="flex flex-col gap-3">
-        {roots.map((root) => (
+    <div className="flex flex-col gap-3">
+      {admin ? (
+        <div className="flex justify-end">
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            onClick={() => setNivelDialogOpen(true)}
+          >
+            <Plus className="size-4" />
+            {t("agregarNivel")}
+          </Button>
+        </div>
+      ) : null}
+
+      {roots.length === 0 ? (
+        <div className="rounded-lg border border-dashed border-border p-8 text-center text-sm text-muted-foreground">
+          {t("sinEstructura")}
+        </div>
+      ) : (
+        roots.map((root) => (
           <NivelCard
             key={root.id}
             nivel={root}
@@ -151,8 +165,9 @@ export function StructureTree({
               setDialog({ kind: "edit", atributo, nivelId, nivelNombre })
             }
           />
-        ))}
-      </div>
+        ))
+      )}
+
       {admin ? (
         <AtributoDialog
           state={dialog}
@@ -160,7 +175,14 @@ export function StructureTree({
           onClose={() => setDialog({ kind: "closed" })}
         />
       ) : null}
-    </>
+      {admin && nivelDialogOpen ? (
+        <CreateNivelDialog
+          tipoId={tipoId}
+          niveles={niveles}
+          onClose={() => setNivelDialogOpen(false)}
+        />
+      ) : null}
+    </div>
   );
 }
 
@@ -411,6 +433,7 @@ const createFormSchema = z
     nombre: z.string().trim().min(1, "Obligatorio").max(120),
     dataType: z.enum(["text", "number", "date", "list", "ref"]),
     requerido: z.boolean(),
+    esPrincipal: z.boolean(),
     listOptions: z.string().trim().max(2000),
     sourceRef: z.enum(["", "unidades_productivas", "inventario"]),
   })
@@ -436,6 +459,7 @@ type CreateFormValues = z.infer<typeof createFormSchema>;
 const editFormSchema = z.object({
   nombre: z.string().trim().min(1, "Obligatorio").max(120),
   requerido: z.boolean(),
+  esPrincipal: z.boolean(),
   listOptions: z.string().trim().max(2000),
   sourceRef: z.enum(["", "unidades_productivas", "inventario"]),
 });
@@ -491,6 +515,7 @@ function CreateAtributoDialog({
       nombre: "",
       dataType: "text",
       requerido: false,
+      esPrincipal: false,
       listOptions: "",
       sourceRef: "",
     },
@@ -506,6 +531,7 @@ function CreateAtributoDialog({
           nombre: values.nombre,
           dataType: values.dataType,
           requerido: values.requerido,
+          esPrincipal: values.esPrincipal,
           listOptions:
             values.dataType === "list" ? values.listOptions : null,
           sourceRef: values.dataType === "ref" ? values.sourceRef || null : null,
@@ -654,6 +680,26 @@ function CreateAtributoDialog({
                 </FormItem>
               )}
             />
+            <FormField
+              control={form.control}
+              name="esPrincipal"
+              render={({ field }) => (
+                <FormItem className="flex items-start gap-2 space-y-0">
+                  <FormControl>
+                    <Checkbox
+                      checked={field.value}
+                      onCheckedChange={field.onChange as CheckboxHandler}
+                    />
+                  </FormControl>
+                  <div className="leading-tight">
+                    <FormLabel>{t("atributoPrincipal")}</FormLabel>
+                    <p className="text-xs text-muted-foreground">
+                      {t("atributoPrincipalAyuda")}
+                    </p>
+                  </div>
+                </FormItem>
+              )}
+            />
             <DialogFooter>
               <Button type="button" variant="outline" onClick={onClose}>
                 {t("cancelar")}
@@ -686,6 +732,7 @@ function EditAtributoDialog({
     defaultValues: {
       nombre: atributo.nombre,
       requerido: atributo.requerido,
+      esPrincipal: atributo.esPrincipal,
       listOptions: atributo.listOptions ?? "",
       sourceRef:
         atributo.sourceRef === "unidades_productivas" ||
@@ -701,6 +748,7 @@ function EditAtributoDialog({
         const result = await updateNivelAtributo(atributo.id, {
           nombre: values.nombre,
           requerido: values.requerido,
+          esPrincipal: values.esPrincipal,
           listOptions:
             atributo.dataType === "list" ? values.listOptions : null,
           sourceRef:
@@ -827,6 +875,26 @@ function EditAtributoDialog({
                 </FormItem>
               )}
             />
+            <FormField
+              control={form.control}
+              name="esPrincipal"
+              render={({ field }) => (
+                <FormItem className="flex items-start gap-2 space-y-0">
+                  <FormControl>
+                    <Checkbox
+                      checked={field.value}
+                      onCheckedChange={field.onChange as CheckboxHandler}
+                    />
+                  </FormControl>
+                  <div className="leading-tight">
+                    <FormLabel>{t("atributoPrincipal")}</FormLabel>
+                    <p className="text-xs text-muted-foreground">
+                      {t("atributoPrincipalAyuda")}
+                    </p>
+                  </div>
+                </FormItem>
+              )}
+            />
             <DialogFooter>
               <Button type="button" variant="outline" onClick={onClose}>
                 {t("cancelar")}
@@ -850,3 +918,152 @@ type DataTypeKey =
   | "dataType.date"
   | "dataType.list"
   | "dataType.ref";
+
+const ROOT_VALUE = "__root__";
+
+const nivelFormSchema = z.object({
+  nombre: z.string().trim().min(1, "Obligatorio").max(120),
+  parentLevelId: z.string(),
+  permiteInventario: z.boolean(),
+});
+
+type NivelFormValues = z.infer<typeof nivelFormSchema>;
+
+function CreateNivelDialog({
+  tipoId,
+  niveles,
+  onClose,
+}: {
+  tipoId: number;
+  niveles: NivelView[];
+  onClose: () => void;
+}) {
+  const t = useTranslations("maquinaria.estructura");
+  const [isSubmitting, startSubmit] = useTransition();
+
+  const form = useForm<NivelFormValues>({
+    resolver: standardSchemaResolver(nivelFormSchema),
+    defaultValues: {
+      nombre: "",
+      parentLevelId: ROOT_VALUE,
+      permiteInventario: false,
+    },
+  });
+
+  function submit() {
+    form.handleSubmit((values) => {
+      startSubmit(async () => {
+        const result = await createNivel({
+          tipoId,
+          nombre: values.nombre,
+          parentLevelId:
+            values.parentLevelId === ROOT_VALUE
+              ? null
+              : Number(values.parentLevelId),
+          permiteInventario: values.permiteInventario,
+        });
+        if (result.ok) {
+          toast.success(t("nivelCreado"));
+          onClose();
+        } else if (result.error === "duplicate") {
+          form.setError("nombre", { message: t("duplicadoNivel") });
+        } else if (result.error === "invalid" && result.fieldErrors?.nombre) {
+          form.setError("nombre", { message: result.fieldErrors.nombre });
+        } else if (result.error === "forbidden") {
+          toast.error(t("errorPermisos"));
+        } else {
+          toast.error(t("errorGuardar"));
+        }
+      });
+    })();
+  }
+
+  return (
+    <Dialog open onOpenChange={(o) => (!o ? onClose() : null)}>
+      <DialogContent className="sm:max-w-md">
+        <DialogHeader>
+          <DialogTitle>{t("nuevoNivelTitulo")}</DialogTitle>
+          <DialogDescription>{t("nuevoNivelAyuda")}</DialogDescription>
+        </DialogHeader>
+        <Form {...form}>
+          <form
+            onSubmit={(e) => {
+              e.preventDefault();
+              submit();
+            }}
+            className="grid gap-4"
+          >
+            <FormField
+              control={form.control}
+              name="nombre"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>{t("nivelNombre")} *</FormLabel>
+                  <FormControl>
+                    <Input {...field} autoFocus maxLength={120} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
+              name="parentLevelId"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>{t("nivelPadre")}</FormLabel>
+                  <Select value={field.value} onValueChange={field.onChange}>
+                    <FormControl>
+                      <SelectTrigger className="w-full">
+                        <SelectValue />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      <SelectItem value={ROOT_VALUE}>
+                        {t("nivelRaizOpcion")}
+                      </SelectItem>
+                      {niveles.map((n) => (
+                        <SelectItem key={n.id} value={String(n.id)}>
+                          {n.nombre}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
+              name="permiteInventario"
+              render={({ field }) => (
+                <FormItem className="flex items-start gap-2 space-y-0">
+                  <FormControl>
+                    <Checkbox
+                      checked={field.value}
+                      onCheckedChange={field.onChange as CheckboxHandler}
+                    />
+                  </FormControl>
+                  <div className="leading-tight">
+                    <FormLabel>{t("nivelPermiteInventario")}</FormLabel>
+                    <p className="text-xs text-muted-foreground">
+                      {t("nivelPermiteInventarioAyuda")}
+                    </p>
+                  </div>
+                </FormItem>
+              )}
+            />
+            <DialogFooter>
+              <Button type="button" variant="outline" onClick={onClose}>
+                {t("cancelar")}
+              </Button>
+              <Button type="submit" disabled={isSubmitting}>
+                {isSubmitting ? t("guardando") : t("crearNivel")}
+              </Button>
+            </DialogFooter>
+          </form>
+        </Form>
+      </DialogContent>
+    </Dialog>
+  );
+}
