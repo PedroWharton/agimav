@@ -17,20 +17,17 @@ import { hasPermission, requireViewOrRedirect } from "@/lib/rbac";
 import {
   loadBacklogPorMaquina,
   loadGastoPorRubro,
-  loadHorasParadaHeatmap,
   loadKpis,
   loadMezclaOt,
-  loadOtifProveedores,
   loadProductividadTecnicos,
   loadRepuestosConsumidos,
   loadTallerTrend,
 } from "@/lib/stats/dashboard";
 import { PageHeader } from "@/components/app/page-header";
-import { EmptyState, InlineState } from "@/components/app/states";
+import { InlineState } from "@/components/app/states";
 import { Card } from "@/components/ui/card";
 import { ChartCard } from "@/components/stats/chart-card";
 import { Donut, type DonutSlice } from "@/components/stats/donut";
-import { Heatmap } from "@/components/stats/heatmap";
 import {
   HorizontalBars,
   type HorizontalBarRow,
@@ -271,59 +268,6 @@ function BacklogCard({
           formatValue={(n) => `${n}`}
           ariaLabel={t("dashboard.backlog.titulo")}
         />
-      )}
-    </ChartCard>
-  );
-}
-
-function OtifCard({
-  data,
-  t,
-}: {
-  data: Awaited<ReturnType<typeof loadOtifProveedores>>;
-  t: TranslateFn;
-}) {
-  const rows: HorizontalBarRow[] = data.map((d) => {
-    let tone: HorizontalBarTone = "danger";
-    if (d.pct >= 90) tone = "ok";
-    else if (d.pct >= 80) tone = "warn";
-    return {
-      label: d.nombre,
-      value: d.pct,
-      tone,
-      objective: 90,
-    };
-  });
-
-  return (
-    <ChartCard
-      title={t("dashboard.otif.titulo")}
-      subtitle={t("dashboard.otif.subtitulo")}
-      linkHref="/estadisticas/proveedores"
-      linkLabel={t("dashboard.otif.verMas")}
-    >
-      {rows.length === 0 ? (
-        <div className="flex flex-1 items-center justify-center">
-          <EmptyState
-            variant="empty-tab"
-            title={t("dashboard.sinDatos")}
-            description={undefined}
-          />
-        </div>
-      ) : (
-        <>
-          <HorizontalBars
-            data={rows}
-            maxValue={100}
-            formatValue={(n) => `${Math.round(n)}%`}
-            ariaLabel={t("dashboard.otif.titulo")}
-          />
-          <div className="mt-1 flex justify-end">
-            <span className="text-[10.5px] text-muted-foreground">
-              — {t("dashboard.otif.objetivo")}
-            </span>
-          </div>
-        </>
       )}
     </ChartCard>
   );
@@ -575,64 +519,6 @@ function GastoRubroCard({
   );
 }
 
-function HeatmapCard({
-  data,
-  t,
-}: {
-  data: Awaited<ReturnType<typeof loadHorasParadaHeatmap>>;
-  t: TranslateFn;
-}) {
-  const hasAny =
-    data.cells.length > 0 && data.cells.some((c) => c.value > 0);
-
-  return (
-    <ChartCard
-      title={t("dashboard.heatmap.titulo")}
-      subtitle={t("dashboard.heatmap.subtitulo", {
-        count: data.rows.length || 5,
-        weeks: data.cols.length || 12,
-      })}
-    >
-      {!hasAny ? (
-        <div className="flex flex-1 items-center justify-center">
-          <EmptyState
-            variant="empty-tab"
-            title={t("dashboard.sinDatos")}
-            description={undefined}
-          />
-        </div>
-      ) : (
-        <div className="flex flex-col gap-2">
-          <div className="overflow-x-auto">
-            <Heatmap
-              rows={data.rows}
-              cols={data.cols}
-              data={data.cells}
-              cellSize={32}
-              labelCol={88}
-              ariaLabel={t("dashboard.heatmap.titulo")}
-            />
-          </div>
-          <div className="flex items-center justify-end gap-2 text-[10.5px] text-muted-foreground">
-            <span>{t("dashboard.heatmap.leyendaMenos")}</span>
-            {[10, 35, 65, 90].map((pct) => (
-              <span
-                key={pct}
-                className="inline-block h-3 w-3 rounded-sm"
-                style={{
-                  backgroundColor: `color-mix(in oklch, var(--danger) ${pct}%, var(--card))`,
-                }}
-                aria-hidden
-              />
-            ))}
-            <span>{t("dashboard.heatmap.leyendaMas")}</span>
-          </div>
-        </div>
-      )}
-    </ChartCard>
-  );
-}
-
 // ─── page ─────────────────────────────────────────────────────────────────
 
 export default async function EstadisticasPage() {
@@ -649,21 +535,17 @@ export default async function EstadisticasPage() {
     mezcla,
     repuestos,
     backlog,
-    otif,
     tecnicos,
     tallerTrend,
     gastoRubro,
-    heatmap,
   ] = await Promise.all([
     loadKpis(),
     loadMezclaOt(),
     loadRepuestosConsumidos(6),
     loadBacklogPorMaquina(10),
-    loadOtifProveedores(6),
     loadProductividadTecnicos(6),
     loadTallerTrend(),
     loadGastoPorRubro(6, 3),
-    loadHorasParadaHeatmap(12, 5),
   ]);
 
   const mesActual = new Date().toLocaleString("es-AR", {
@@ -751,44 +633,34 @@ export default async function EstadisticasPage() {
 
       {/* 12-col chart grid */}
       <div className="grid grid-cols-1 gap-4 md:grid-cols-6 lg:grid-cols-12">
-        {/* 2. Mezcla de OT */}
+        {/* Mezcla de OT */}
         <div className="md:col-span-3 lg:col-span-4">
           <MezclaCard data={mezcla} t={tRoot} />
         </div>
 
-        {/* 3. Repuestos consumidos */}
+        {/* Repuestos consumidos */}
         <div className="md:col-span-3 lg:col-span-4">
           <RepuestosCard data={repuestos} t={tRoot} />
         </div>
 
-        {/* 4. Backlog por máquina */}
+        {/* Backlog por máquina */}
         <div className="md:col-span-6 lg:col-span-4">
           <BacklogCard data={backlog} t={tRoot} />
         </div>
 
-        {/* 5. OTIF proveedores */}
-        <div className="md:col-span-6 lg:col-span-6">
-          <OtifCard data={otif} t={tRoot} />
-        </div>
-
-        {/* 6. Productividad técnicos */}
+        {/* Productividad técnicos */}
         <div className="md:col-span-6 lg:col-span-6">
           <TecnicosCard data={tecnicos} t={tRoot} />
         </div>
 
-        {/* 7. Disponibilidad / carga taller (dual-axis) */}
-        <div className="md:col-span-6 lg:col-span-8">
-          <TallerTrendCard data={tallerTrend} t={tRoot} />
-        </div>
-
-        {/* 8. Gasto por rubro */}
-        <div className="md:col-span-6 lg:col-span-4">
+        {/* Gasto por rubro */}
+        <div className="md:col-span-6 lg:col-span-6">
           <GastoRubroCard data={gastoRubro} t={tRoot} />
         </div>
 
-        {/* 9. Heatmap correctivos */}
+        {/* Carga de taller (dual-axis) */}
         <div className="md:col-span-6 lg:col-span-12">
-          <HeatmapCard data={heatmap} t={tRoot} />
+          <TallerTrendCard data={tallerTrend} t={tRoot} />
         </div>
       </div>
 

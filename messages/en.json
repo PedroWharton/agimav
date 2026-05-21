@@ -565,7 +565,7 @@
         "mantPendientesCaption": "unassigned or not started",
         "otEnCurso": "WOs in progress",
         "otEnCursoCaption": "open work orders",
-        "facturacionMes": "Monthly billing",
+        "facturacionMes": "Spending",
         "facturacionMesCaption": "{count, plural, =0 {No invoices in {mes}} one {# invoice · {mes}} other {# invoices · {mes}}}"
       },
       "mezcla": {
