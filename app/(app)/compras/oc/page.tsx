@@ -42,6 +42,7 @@ export default async function OcListPage() {
         prioridadItem: true,
         proveedorAsignadoId: true,
         requisicionId: true,
+        notasItem: true,
         requisicion: {
           select: { prioridad: true, fechaCreacion: true },
         },
@@ -82,6 +83,7 @@ export default async function OcListPage() {
     solicitudes: Set<number>;
     oldestSolicitudAt: number;
     detalleIds: number[];
+    notas: string[];
     proveedorSugeridoId: number | null;
   };
 
@@ -99,6 +101,7 @@ export default async function OcListPage() {
         solicitudes: new Set<number>(),
         oldestSolicitudAt: d.requisicion.fechaCreacion.getTime(),
         detalleIds: [],
+        notas: [],
         proveedorSugeridoId: null,
       };
       byItem.set(d.itemId, acc);
@@ -106,6 +109,8 @@ export default async function OcListPage() {
     acc.cantidadTotal += d.cantidadAprobada ?? d.cantidad;
     acc.solicitudes.add(d.requisicionId);
     acc.detalleIds.push(d.id);
+    const nota = d.notasItem?.trim();
+    if (nota && !acc.notas.includes(nota)) acc.notas.push(nota);
     acc.oldestSolicitudAt = Math.min(
       acc.oldestSolicitudAt,
       d.requisicion.fechaCreacion.getTime(),
@@ -129,6 +134,7 @@ export default async function OcListPage() {
       solicitudesCount: acc.solicitudes.size,
       solicitudIds: Array.from(acc.solicitudes).sort((a, b) => a - b),
       oldestSolicitudAt: new Date(acc.oldestSolicitudAt).toISOString(),
+      notas: acc.notas,
       proveedorSugeridoId: acc.proveedorSugeridoId,
     }),
   );

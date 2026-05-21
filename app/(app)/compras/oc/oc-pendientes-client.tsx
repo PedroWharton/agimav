@@ -4,7 +4,7 @@ import { useMemo, useState, useTransition } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
-import { Flame, Send } from "lucide-react";
+import { Flame, Send, StickyNote } from "lucide-react";
 import { toast } from "sonner";
 
 import { cn } from "@/lib/utils";
@@ -31,6 +31,8 @@ export type AggregatedItemRow = {
   solicitudIds: number[];
   /** ISO — used to sort oldest-first. */
   oldestSolicitudAt: string;
+  /** Per-line notes from the source requisiciones (deduped). */
+  notas: string[];
   proveedorSugeridoId: number | null;
 };
 
@@ -446,6 +448,15 @@ export function OcPendientesClient({
                         <span className="truncate text-sm font-medium">
                           {r.itemDescripcion || "—"}
                         </span>
+                        {r.notas.map((nota, i) => (
+                          <span
+                            key={i}
+                            className="mt-0.5 flex items-start gap-1 text-[11px] text-muted-foreground"
+                          >
+                            <StickyNote className="mt-0.5 size-3 shrink-0" />
+                            <span>{nota}</span>
+                          </span>
+                        ))}
                       </div>
                       {r.urgente ? (
                         <Badge

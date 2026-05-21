@@ -12,6 +12,7 @@ import {
   CalendarDays,
   Download,
   PackageCheck,
+  StickyNote,
   User,
   X,
 } from "lucide-react";
@@ -30,6 +31,7 @@ export type OcDetailLinea = {
   id: number;
   itemCodigo: string;
   itemDescripcion: string;
+  notasItem: string | null;
   unidadMedida: string | null;
   cantidadSolicitada: number;
   cantidadRecibida: number;
@@ -311,6 +313,12 @@ export function OcDetailClient({
                             <span className="text-sm">
                               {l.itemDescripcion || "—"}
                             </span>
+                            {l.notasItem ? (
+                              <span className="mt-0.5 flex items-start gap-1 text-[11px] text-muted-foreground">
+                                <StickyNote className="mt-0.5 size-3 shrink-0" />
+                                <span>{l.notasItem}</span>
+                              </span>
+                            ) : null}
                           </div>
                         </td>
                         <td className="px-3 py-2 text-right">

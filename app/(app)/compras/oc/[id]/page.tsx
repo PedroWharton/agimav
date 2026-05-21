@@ -98,6 +98,7 @@ export default async function OcDetailPage({
       id: d.id,
       itemCodigo: d.requisicionDetalle.item.codigo ?? "",
       itemDescripcion: d.requisicionDetalle.item.descripcion ?? "",
+      notasItem: d.requisicionDetalle.notasItem,
       unidadMedida: d.requisicionDetalle.item.unidadMedida,
       cantidadSolicitada: d.cantidadSolicitada,
       cantidadRecibida: d.cantidadRecibida,
