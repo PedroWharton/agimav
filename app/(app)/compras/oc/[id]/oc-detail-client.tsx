@@ -64,6 +64,7 @@ export type OcDetailData = {
     id: number;
     solicitante: string;
     unidadProductiva: string;
+    numeroOrdenInterna: string | null;
   } | null;
   recepciones: OcDetailRecepcion[];
   detalle: OcDetailLinea[];
@@ -446,6 +447,12 @@ export function OcDetailClient({
                     {data.solicitud.solicitante} ·{" "}
                     {data.solicitud.unidadProductiva}
                   </span>
+                  {data.solicitud.numeroOrdenInterna ? (
+                    <span className="text-xs text-muted-foreground">
+                      {tOc("ordenInterna")}:{" "}
+                      {data.solicitud.numeroOrdenInterna}
+                    </span>
+                  ) : null}
                 </div>
                 <ArrowUpRight className="size-3.5 text-muted-foreground group-hover:text-foreground" />
               </Link>

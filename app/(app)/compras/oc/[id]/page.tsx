@@ -48,6 +48,7 @@ export default async function OcDetailPage({
                   id: true,
                   solicitante: true,
                   unidadProductiva: true,
+                  numeroOrdenInterna: true,
                 },
               },
             },

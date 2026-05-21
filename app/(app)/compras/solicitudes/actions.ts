@@ -49,6 +49,7 @@ const optionalDate = z
 
 const headerSchema = z.object({
   solicitante: z.string().trim().min(1, "Obligatorio").max(120),
+  numeroOrdenInterna: optionalText(50),
   unidadProductiva: z.string().trim().min(1, "Obligatorio").max(120),
   localidad: z.string().trim().min(1, "Obligatorio").max(120),
   prioridad: z.enum(PRIORIDADES).default("Normal"),
@@ -110,6 +111,7 @@ export async function createSolicitud(
       const req = await tx.requisicion.create({
         data: {
           solicitante: data.solicitante,
+          numeroOrdenInterna: data.numeroOrdenInterna,
           unidadProductiva: data.unidadProductiva,
           localidad: data.localidad,
           prioridad: data.prioridad,
@@ -179,6 +181,7 @@ export async function updateSolicitud(
         where: { id },
         data: {
           solicitante: data.solicitante,
+          numeroOrdenInterna: data.numeroOrdenInterna,
           unidadProductiva: data.unidadProductiva,
           localidad: data.localidad,
           prioridad: data.prioridad,

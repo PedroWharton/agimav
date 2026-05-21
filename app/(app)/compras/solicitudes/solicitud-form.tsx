@@ -66,6 +66,7 @@ import {
 
 const formSchema = z.object({
   solicitante: z.string().trim().min(1, "Obligatorio").max(120),
+  numeroOrdenInterna: z.string().max(50).optional(),
   unidadProductiva: z.string().trim().min(1, "Obligatorio").max(120),
   localidad: z.string().trim().min(1, "Obligatorio").max(120),
   prioridad: z.enum(["Normal", "Urgente"]),
@@ -79,6 +80,7 @@ export type SolicitudDetail = {
   id: number;
   fechaCreacion: string;
   solicitante: string;
+  numeroOrdenInterna: string | null;
   unidadProductiva: string;
   localidad: string;
   prioridad: string;
@@ -158,6 +160,7 @@ export function SolicitudForm({
     defaultValues: initial
       ? {
           solicitante: initial.solicitante,
+          numeroOrdenInterna: initial.numeroOrdenInterna ?? "",
           unidadProductiva: initial.unidadProductiva,
           localidad: initial.localidad,
           prioridad:
@@ -168,6 +171,7 @@ export function SolicitudForm({
         }
       : {
           solicitante: currentUserName ?? "",
+          numeroOrdenInterna: "",
           unidadProductiva: "",
           localidad: "",
           prioridad: "Normal",
@@ -229,6 +233,7 @@ export function SolicitudForm({
   function buildPayload(values: FormValues) {
     return {
       solicitante: values.solicitante,
+      numeroOrdenInterna: values.numeroOrdenInterna,
       unidadProductiva: values.unidadProductiva,
       localidad: values.localidad,
       prioridad: values.prioridad,
@@ -688,24 +693,43 @@ export function SolicitudForm({
                 />
               </div>
 
-              <FormField
-                control={form.control}
-                name="solicitante"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>{tReq("campos.solicitante")} *</FormLabel>
-                    <FormControl>
-                      <Combobox
-                        value={field.value}
-                        onChange={field.onChange}
-                        options={solicitanteOptions}
-                        disabled={readOnly}
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
+              <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
+                <FormField
+                  control={form.control}
+                  name="solicitante"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>{tReq("campos.solicitante")} *</FormLabel>
+                      <FormControl>
+                        <Combobox
+                          value={field.value}
+                          onChange={field.onChange}
+                          options={solicitanteOptions}
+                          disabled={readOnly}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name="numeroOrdenInterna"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>{tReq("campos.numeroOrdenInterna")}</FormLabel>
+                      <FormControl>
+                        <Input
+                          className="h-9"
+                          {...field}
+                          disabled={readOnly}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
               <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
                 <FormField
                   control={form.control}

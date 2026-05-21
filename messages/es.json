@@ -801,6 +801,7 @@
         "fecha": "Fecha",
         "fechaCreacion": "Fecha de creación",
         "solicitante": "Solicitante",
+        "numeroOrdenInterna": "N° de orden interna",
         "unidadProductiva": "Unidad productiva",
         "localidad": "Localidad",
         "prioridad": "Prioridad",
@@ -988,6 +989,7 @@
       "resultadosCount": "{count, plural, one {# orden} other {# órdenes}}",
       "subtotalEstimado": "Subtotal estimado",
       "solicitudOrigen": "Solicitud origen",
+      "ordenInterna": "Orden interna",
       "canceladaPor": "Cancelada por {nombre} · {fecha}",
       "campos": {
         "numero": "Nº",

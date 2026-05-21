@@ -121,6 +121,7 @@ export default async function SolicitudDetailPage({
         id: solicitud.id,
         fechaCreacion: solicitud.fechaCreacion.toISOString(),
         solicitante: solicitud.solicitante,
+        numeroOrdenInterna: solicitud.numeroOrdenInterna,
         unidadProductiva: solicitud.unidadProductiva,
         localidad: solicitud.localidad,
         prioridad: solicitud.prioridad,

@@ -801,6 +801,7 @@
         "fecha": "Date",
         "fechaCreacion": "Created on",
         "solicitante": "Requester",
+        "numeroOrdenInterna": "Internal order no.",
         "unidadProductiva": "Production unit",
         "localidad": "Location",
         "prioridad": "Priority",
@@ -982,6 +983,7 @@
       "resultadosCount": "{count, plural, one {# order} other {# orders}}",
       "subtotalEstimado": "Estimated subtotal",
       "solicitudOrigen": "Source request",
+      "ordenInterna": "Internal order",
       "canceladaPor": "Cancelled by {nombre} · {fecha}",
       "campos": {
         "numero": "No.",
