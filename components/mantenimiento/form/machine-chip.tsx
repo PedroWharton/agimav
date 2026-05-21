@@ -4,11 +4,6 @@ import { useState } from "react";
 
 import { Button } from "@/components/ui/button";
 import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/components/ui/popover";
-import {
   MaquinariaCombobox,
   type MaquinariaOption,
 } from "@/components/mantenimiento/maquinaria-combobox";
@@ -22,12 +17,13 @@ export type MachineChipValue = {
 
 /**
  * Machine preview pill (§4.11). When a machine is selected, shows a compact
- * chip with codigo (mono) + descripcion and a "Cambiar…" button that opens
- * the máquina picker in a popover. When unset, shows a full-width
- * "Seleccionar máquina" button.
+ * chip with codigo (mono) + descripcion and a "Cambiar…" button that swaps the
+ * chip for the máquina picker inline. When unset, shows the picker directly.
  *
- * The picker reuses the existing {@link MaquinariaCombobox}; the parent is
- * responsible for providing its richer `options` shape.
+ * The picker is the searchable {@link MaquinariaCombobox} (itself a popover
+ * combobox); the parent provides its richer `options` shape. The picker is
+ * rendered inline — never wrapped in an extra popover/button — so the user
+ * sees a single "Seleccionar máquina" control, not a nested one.
  */
 export function MachineChip({
   machine,
@@ -40,38 +36,23 @@ export function MachineChip({
   onChange: (id: number) => void;
   className?: string;
 }) {
-  const [open, setOpen] = useState(false);
+  const [editing, setEditing] = useState(false);
 
   const handleChange = (id: number | null) => {
     if (id != null) {
       onChange(id);
-      setOpen(false);
+      setEditing(false);
     }
   };
 
-  if (!machine) {
+  if (!machine || editing) {
     return (
-      <Popover open={open} onOpenChange={setOpen}>
-        <PopoverTrigger asChild>
-          <Button
-            type="button"
-            variant="outline"
-            className={cn("w-full justify-center", className)}
-          >
-            Seleccionar máquina
-          </Button>
-        </PopoverTrigger>
-        <PopoverContent
-          className="w-(--radix-popover-trigger-width) p-2"
-          align="start"
-        >
-          <MaquinariaCombobox
-            value={null}
-            onChange={handleChange}
-            options={options}
-          />
-        </PopoverContent>
-      </Popover>
+      <MaquinariaCombobox
+        value={machine?.id ?? null}
+        onChange={handleChange}
+        options={options}
+        className={className}
+      />
     );
   }
 
@@ -90,20 +71,14 @@ export function MachineChip({
           {machine.descripcion}
         </div>
       </div>
-      <Popover open={open} onOpenChange={setOpen}>
-        <PopoverTrigger asChild>
-          <Button type="button" variant="outline" size="sm">
-            Cambiar…
-          </Button>
-        </PopoverTrigger>
-        <PopoverContent className="w-80 p-2" align="end">
-          <MaquinariaCombobox
-            value={machine.id}
-            onChange={handleChange}
-            options={options}
-          />
-        </PopoverContent>
-      </Popover>
+      <Button
+        type="button"
+        variant="outline"
+        size="sm"
+        onClick={() => setEditing(true)}
+      >
+        Cambiar…
+      </Button>
     </div>
   );
 }
