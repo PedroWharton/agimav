@@ -354,7 +354,7 @@ export async function approveSolicitud(
     },
   });
   if (!existing) return { ok: false, error: "not_found" };
-  if (existing.estado !== "En Revisión")
+  if (existing.estado !== "En Revisión" && existing.estado !== "Borrador")
     return { ok: false, error: "wrong_estado" };
 
   const parsed = approveSchema.safeParse(raw ?? {});

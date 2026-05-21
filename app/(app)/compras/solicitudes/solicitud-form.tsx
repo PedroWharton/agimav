@@ -578,17 +578,19 @@ export function SolicitudForm({
                   />
                 </>
               ) : null}
-              {showActions && canApprove && estado === "En Revisión" ? (
+              {showActions && canApprove ? (
                 <>
-                  <Button
-                    type="button"
-                    variant="outline"
-                    onClick={() => setRejectOpen(true)}
-                    disabled={isRejecting || isApproving}
-                  >
-                    <X className="size-4" />
-                    {tApr("acciones.rechazar")}
-                  </Button>
+                  {estado === "En Revisión" ? (
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={() => setRejectOpen(true)}
+                      disabled={isRejecting || isApproving}
+                    >
+                      <X className="size-4" />
+                      {tApr("acciones.rechazar")}
+                    </Button>
+                  ) : null}
                   <Button
                     type="button"
                     onClick={openApproveDialog}

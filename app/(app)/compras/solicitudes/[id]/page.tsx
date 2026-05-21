@@ -79,7 +79,9 @@ export default async function SolicitudDetailPage({
   const canMutate =
     solicitud.estado === "Borrador" &&
     (canApproveReqs || (canCreateReqs && isOwner));
-  const canApprove = canApproveReqs && solicitud.estado === "En Revisión";
+  const canApprove =
+    canApproveReqs &&
+    (solicitud.estado === "En Revisión" || solicitud.estado === "Borrador");
 
   const ocMap = new Map<
     number,
