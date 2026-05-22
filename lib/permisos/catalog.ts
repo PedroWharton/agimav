@@ -155,7 +155,7 @@ export const PERMISOS_CATALOG: PermisoDef[] = [
   {
     codigo: "estadisticas.proveedores.view",
     modulo: "estadisticas",
-    descripcion: "Ver gasto por proveedor",
+    descripcion: "Ver gasto por proveedor y por usuario",
   },
   { codigo: "estadisticas.export", modulo: "estadisticas", descripcion: "Exportar XLSX" },
 

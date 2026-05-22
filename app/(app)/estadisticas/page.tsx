@@ -10,6 +10,7 @@ import {
   LineChart,
   PackageOpen,
   Tractor,
+  Users,
 } from "lucide-react";
 
 import { auth } from "@/lib/auth";
@@ -694,6 +695,14 @@ export default async function EstadisticasPage() {
               icon={<Building2 className="size-5 text-muted-foreground" />}
               title={t("lentes.proveedores")}
               description={t("lentes.proveedoresDesc")}
+            />
+          ) : null}
+          {canViewProveedores ? (
+            <SubRouteCard
+              href="/estadisticas/usuarios"
+              icon={<Users className="size-5 text-muted-foreground" />}
+              title={t("lentes.usuarios")}
+              description={t("lentes.usuariosDesc")}
             />
           ) : null}
         </div>

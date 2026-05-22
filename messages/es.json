@@ -563,7 +563,9 @@
       "maquinaria": "Métricas por máquina",
       "maquinariaDesc": "Correctivos, preventivos, MTBF y costo por equipo.",
       "proveedores": "Gasto por proveedor",
-      "proveedoresDesc": "Ranking de proveedores por facturación."
+      "proveedoresDesc": "Ranking de proveedores por facturación.",
+      "usuarios": "Gasto por usuario",
+      "usuariosDesc": "Qué gasta y qué pide cada usuario."
     },
     "dashboard": {
       "subtitulo": "Indicadores operativos de flota, taller y abastecimiento",
@@ -689,6 +691,35 @@
         "total": "Total",
         "porcentaje": "% del total",
         "ultima": "Última factura"
+      }
+    },
+    "usuarios": {
+      "titulo": "Gasto por usuario",
+      "descripcion": "Qué gasta y qué pide cada usuario en el período.",
+      "volver": "Volver a Estadísticas",
+      "notaLegacy": "Las facturas migradas del sistema anterior figuran bajo el usuario «Sistema». La atribución real por usuario se completa con las facturas y requisiciones cargadas a partir del cutover.",
+      "vacio": "No hay facturas ni requisiciones en el período seleccionado.",
+      "sinGasto": "Sin gasto facturado en el período.",
+      "top": "Top 10",
+      "topSubtitulo": "Usuarios por gasto facturado",
+      "tablaTitulo": "Gasto por usuario",
+      "tablaSubtitulo": "Ordenado por gasto facturado",
+      "totalGeneral": "Total del período",
+      "kpi": {
+        "total": "Total gastado",
+        "totalCaption": "Facturas registradas en el período",
+        "usuarios": "Usuarios con gasto",
+        "usuariosCaption": "con al menos una factura en el período",
+        "requisiciones": "Requisiciones",
+        "requisicionesCaption": "pedidos cargados en el período"
+      },
+      "columnas": {
+        "usuario": "Usuario",
+        "facturas": "Facturas",
+        "gasto": "Gasto",
+        "porcentaje": "% del total",
+        "requisiciones": "Requisiciones",
+        "ultima": "Última actividad"
       }
     },
     "maquinaria": {

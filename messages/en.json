@@ -563,7 +563,9 @@
       "maquinaria": "Machine metrics",
       "maquinariaDesc": "Corrective, preventive, MTBF and cost per unit.",
       "proveedores": "Supplier spend",
-      "proveedoresDesc": "Ranking of suppliers by billing."
+      "proveedoresDesc": "Ranking of suppliers by billing.",
+      "usuarios": "User spend",
+      "usuariosDesc": "What each user spends and requests."
     },
     "dashboard": {
       "subtitulo": "Operational indicators for fleet, workshop and procurement",
@@ -689,6 +691,35 @@
         "total": "Total",
         "porcentaje": "% of total",
         "ultima": "Last invoice"
+      }
+    },
+    "usuarios": {
+      "titulo": "User spend",
+      "descripcion": "What each user spends and requests in the period.",
+      "volver": "Back to Statistics",
+      "notaLegacy": "Invoices migrated from the previous system are attributed to the «Sistema» user. Real per-user attribution builds up from invoices and requisitions created after cutover.",
+      "vacio": "No invoices or requisitions in the selected period.",
+      "sinGasto": "No invoiced spend in the period.",
+      "top": "Top 10",
+      "topSubtitulo": "Users by invoiced spend",
+      "tablaTitulo": "User spend",
+      "tablaSubtitulo": "Sorted by invoiced spend",
+      "totalGeneral": "Period total",
+      "kpi": {
+        "total": "Total spent",
+        "totalCaption": "Invoices recorded in the period",
+        "usuarios": "Users with spend",
+        "usuariosCaption": "with at least one invoice in the period",
+        "requisiciones": "Requisitions",
+        "requisicionesCaption": "requests created in the period"
+      },
+      "columnas": {
+        "usuario": "User",
+        "facturas": "Invoices",
+        "gasto": "Spend",
+        "porcentaje": "% of total",
+        "requisiciones": "Requisitions",
+        "ultima": "Last activity"
       }
     },
     "maquinaria": {
