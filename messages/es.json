@@ -1790,6 +1790,7 @@
         "usuarios": "Personas con acceso al sistema. Invitá, asigná roles y gestioná altas y bajas.",
         "roles": "Perfiles de acceso que agrupan permisos para cada área del sistema.",
         "proveedores": "Empresas que proveen repuestos, servicios y combustible. Usado en compras y recepciones.",
+        "proveedoresServicio": "Talleres y prestadores externos. Sus servicios se enganchan a mantenimientos y órdenes de trabajo.",
         "unidadesProductivas": "Obras y bases operativas. Las máquinas y OTs se asocian a una unidad.",
         "tiposUnidad": "Clasificación de unidades productivas: obra vial, cantera, base logística, etc.",
         "unidadesMedida": "Unidades que usan los items de inventario: litros, kilos, unidades, metros."
@@ -1955,6 +1956,33 @@
         "inactivosCaption": "conservan historial, ocultos en altas",
         "nuevos": "Altas últimos 30 días",
         "nuevosCaption": "desde {desde}"
+      }
+    },
+    "proveedoresServicio": {
+      "titulo": "Proveedores de servicio",
+      "descripcion": "Talleres y prestadores de servicios externos para mantenimientos y órdenes de trabajo",
+      "singular": "Proveedor de servicio",
+      "plural": "proveedores de servicio",
+      "nombre": "Nombre",
+      "rubro": "Rubro",
+      "rubroPlaceholder": "Mecánica, gomería, soldadura…",
+      "cuit": "CUIT",
+      "email": "Email",
+      "telefono": "Teléfono",
+      "contacto": "Contacto",
+      "observaciones": "Observaciones",
+      "estado": "Estado",
+      "serviciosCount": "Servicios",
+      "buscarPlaceholder": "Buscar nombre, rubro, CUIT o contacto…",
+      "desactivarPregunta": "¿Desactivar a \"{nombre}\"?",
+      "desactivarAviso": "El proveedor se ocultará de los selectores de servicios externos, pero los servicios ya cargados se conservan. Podés reactivarlo más tarde.",
+      "kpi": {
+        "total": "Total proveedores",
+        "totalCaption": "talleres y prestadores cargados",
+        "activos": "Activos",
+        "activosCaption": "visibles al cargar servicios",
+        "inactivos": "Inactivos",
+        "inactivosCaption": "conservan historial, ocultos en altas"
       }
     },
     "unidadesProductivas": {

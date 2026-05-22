@@ -13,6 +13,7 @@ const listadosSubRoutes: Record<string, string> = {
   "tipos-unidad": "listados.tiposUnidad.titulo",
   usuarios: "listados.usuarios.titulo",
   proveedores: "listados.proveedores.titulo",
+  "proveedores-servicio": "listados.proveedoresServicio.titulo",
   "unidades-productivas": "listados.unidadesProductivas.titulo",
 };
 

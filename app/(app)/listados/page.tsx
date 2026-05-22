@@ -6,6 +6,7 @@ import {
   Users,
   Building2,
   Factory,
+  Wrench,
   Info,
   type LucideIcon,
 } from "lucide-react";
@@ -49,6 +50,8 @@ export default async function ListadosIndexPage() {
     roleNames,
     proveedoresTotal,
     proveedoresActivos,
+    proveedoresServicioTotal,
+    proveedoresServicioActivos,
     unidadesProductivasTotal,
     unidadesProductivasSample,
     tiposUnidadTotal,
@@ -65,6 +68,8 @@ export default async function ListadosIndexPage() {
     }),
     prisma.proveedor.count(),
     prisma.proveedor.count({ where: { estado: "activo" } }),
+    prisma.proveedorServicio.count(),
+    prisma.proveedorServicio.count({ where: { estado: "activo" } }),
     prisma.unidadProductiva.count(),
     prisma.unidadProductiva.findMany({
       select: { nombre: true },
@@ -87,6 +92,8 @@ export default async function ListadosIndexPage() {
 
   const usuariosInactivos = usuariosTotal - usuariosActivos;
   const proveedoresInactivos = proveedoresTotal - proveedoresActivos;
+  const proveedoresServicioInactivos =
+    proveedoresServicioTotal - proveedoresServicioActivos;
 
   const roleSample = roleNames.slice(0, 5).map((r) => r.nombre).join(", ");
   const upMeta = joinSample(unidadesProductivasSample.map((u) => u.nombre));
@@ -130,6 +137,17 @@ export default async function ListadosIndexPage() {
             inactivos: proveedoresInactivos,
           }),
           highlight: t("listados.index.vistaCompleta"),
+        },
+        {
+          href: "/listados/proveedores-servicio",
+          icon: Wrench,
+          labelKey: "listados.proveedoresServicio.titulo",
+          descriptionKey: "listados.tiles.descripciones.proveedoresServicio",
+          count: proveedoresServicioTotal,
+          meta: t("listados.tiles.meta.activosInactivos", {
+            activos: proveedoresServicioActivos,
+            inactivos: proveedoresServicioInactivos,
+          }),
         },
       ],
     },

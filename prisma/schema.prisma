@@ -108,6 +108,9 @@ model Usuario {
   unidadesProductivasAsignadas      UsuarioUnidadProductiva[] @relation("UsuarioUPAsignada")
   usuarioUnidadesProductivasCreadas UsuarioUnidadProductiva[] @relation("UsuarioUPCreatedBy")
 
+  proveedoresServicioCreados ProveedorServicio[] @relation("ProveedorServicioCreatedBy")
+  serviciosExternosCreados   ServicioExterno[]   @relation("ServicioExternoCreatedBy")
+
   @@map("usuarios")
 }
 
@@ -728,10 +731,11 @@ model Mantenimiento {
   revisionDe       Mantenimiento?  @relation("MantenimientoRevision", fields: [revisionDeId], references: [id], onDelete: SetNull)
   revisionesHijas  Mantenimiento[] @relation("MantenimientoRevision")
 
-  insumos    MantenimientoInsumo[]
-  tareas     MantenimientoTarea[]
-  historial  MantenimientoHistorial[]
-  revisiones MantenimientoRevision[]
+  insumos           MantenimientoInsumo[]
+  tareas            MantenimientoTarea[]
+  historial         MantenimientoHistorial[]
+  revisiones        MantenimientoRevision[]
+  serviciosExternos ServicioExterno[]
 
   @@index([tipo])
   @@index([estado])
@@ -882,7 +886,8 @@ model OrdenTrabajo {
   observaciones      String?
   creadoPor          String?  @map("creado_por")
 
-  insumos OtInsumo[]
+  insumos           OtInsumo[]
+  serviciosExternos ServicioExterno[]
 
   @@map("ordenes_trabajo")
 }
@@ -903,4 +908,54 @@ model OtInsumo {
   @@index([otId])
   @@index([itemInventarioId])
   @@map("ot_insumos")
+}
+
+// ──────────────────────────────────────────────────────────────────────────────
+// Servicios externos (WS-C) — catálogo de proveedores de servicio + líneas de
+// servicio externo enganchables a un Mantenimiento o a una Orden de Trabajo.
+// ──────────────────────────────────────────────────────────────────────────────
+
+model ProveedorServicio {
+  id            Int     @id @default(autoincrement())
+  nombre        String
+  rubro         String?
+  contacto      String?
+  telefono      String?
+  email         String?
+  cuit          String?
+  estado        String  @default("activo")
+  observaciones String?
+
+  servicios ServicioExterno[]
+
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+  createdById Int?     @map("created_by")
+  createdBy   Usuario? @relation("ProveedorServicioCreatedBy", fields: [createdById], references: [id], onDelete: SetNull)
+
+  @@map("proveedores_servicio")
+}
+
+model ServicioExterno {
+  id                  Int               @id @default(autoincrement())
+  proveedorServicioId Int               @map("proveedor_servicio_id")
+  proveedorServicio   ProveedorServicio @relation(fields: [proveedorServicioId], references: [id])
+  descripcion         String
+  costo               Float             @default(0)
+  precioPendiente     Boolean           @default(false) @map("precio_pendiente")
+  fecha               DateTime?
+
+  mantenimientoId Int?           @map("mantenimiento_id")
+  mantenimiento   Mantenimiento? @relation(fields: [mantenimientoId], references: [id], onDelete: Cascade)
+  otId            Int?           @map("ot_id")
+  ot              OrdenTrabajo?  @relation(fields: [otId], references: [id], onDelete: Cascade)
+
+  createdAt   DateTime @default(now()) @map("created_at")
+  createdById Int?     @map("created_by")
+  createdBy   Usuario? @relation("ServicioExternoCreatedBy", fields: [createdById], references: [id], onDelete: SetNull)
+
+  @@index([proveedorServicioId])
+  @@index([mantenimientoId])
+  @@index([otId])
+  @@map("servicios_externos")
 }

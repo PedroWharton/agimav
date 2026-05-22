@@ -1784,6 +1784,7 @@
         "usuarios": "People with access to the system. Invite, assign roles and manage onboarding and offboarding.",
         "roles": "Access profiles that group permissions for each area of the system.",
         "proveedores": "Companies that supply parts, services and fuel. Used in purchasing and receptions.",
+        "proveedoresServicio": "Workshops and external providers. Their services attach to maintenance jobs and work orders.",
         "unidadesProductivas": "Sites and operational bases. Machines and WOs are associated with a unit.",
         "tiposUnidad": "Classification of production units: road works, quarry, logistics base, etc.",
         "unidadesMedida": "Units used by inventory items: liters, kilos, units, meters."
@@ -1949,6 +1950,33 @@
         "inactivosCaption": "history preserved, hidden from new records",
         "nuevos": "New in last 30 days",
         "nuevosCaption": "since {desde}"
+      }
+    },
+    "proveedoresServicio": {
+      "titulo": "Service providers",
+      "descripcion": "Workshops and external service providers for maintenance and work orders",
+      "singular": "Service provider",
+      "plural": "service providers",
+      "nombre": "Name",
+      "rubro": "Trade",
+      "rubroPlaceholder": "Mechanics, tires, welding…",
+      "cuit": "CUIT",
+      "email": "Email",
+      "telefono": "Phone",
+      "contacto": "Contact",
+      "observaciones": "Notes",
+      "estado": "Status",
+      "serviciosCount": "Services",
+      "buscarPlaceholder": "Search name, trade, CUIT or contact…",
+      "desactivarPregunta": "Deactivate \"{nombre}\"?",
+      "desactivarAviso": "The provider will be hidden from external-service selectors, but services already logged are preserved. You can reactivate it later.",
+      "kpi": {
+        "total": "Total providers",
+        "totalCaption": "workshops and providers loaded",
+        "activos": "Active",
+        "activosCaption": "visible when logging services",
+        "inactivos": "Inactive",
+        "inactivosCaption": "history preserved, hidden from new records"
       }
     },
     "unidadesProductivas": {
