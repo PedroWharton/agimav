@@ -4,6 +4,7 @@ import { Trash2, Plus } from "lucide-react";
 import { useTranslations } from "next-intl";
 
 import { Button } from "@/components/ui/button";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Combobox } from "@/components/app/combobox";
 import { NumberInput } from "@/components/app/number-input";
 
@@ -23,6 +24,7 @@ export type InsumoLine = {
   cantidadUtilizada: number;
   unidadMedida: string;
   costoUnitario: number;
+  precioPendiente: boolean;
 };
 
 export function InsumosEditor({
@@ -68,6 +70,7 @@ export function InsumosEditor({
         cantidadUtilizada: 0,
         unidadMedida: "",
         costoUnitario: 0,
+        precioPendiente: false,
       },
     ]);
   };
@@ -111,6 +114,9 @@ export function InsumosEditor({
                 ) : null}
                 <th className="px-2 py-2 text-right font-medium w-24">
                   {t("cantidadUtilizada")}
+                </th>
+                <th className="px-2 py-2 text-center font-medium w-24">
+                  {t("precioPendiente")}
                 </th>
                 <th className="px-2 py-2 text-right font-medium w-24">
                   {t("costoTotal")}
@@ -172,12 +178,26 @@ export function InsumosEditor({
                         }
                         className="h-8"
                       />
-                      <div className="mt-0.5 text-right text-xs text-muted-foreground tabular-nums">
-                        @ {formatARS(line.costoUnitario)}
-                      </div>
+                      {line.precioPendiente ? null : (
+                        <div className="mt-0.5 text-right text-xs text-muted-foreground tabular-nums">
+                          @ {formatARS(line.costoUnitario)}
+                        </div>
+                      )}
+                    </td>
+                    <td className="px-2 py-2 text-center">
+                      <Checkbox
+                        checked={line.precioPendiente}
+                        onCheckedChange={(v) =>
+                          updateLine(idx, { precioPendiente: v === true })
+                        }
+                        disabled={disabled}
+                        aria-label={t("precioPendiente")}
+                      />
                     </td>
                     <td className="px-2 py-2 text-right font-medium tabular-nums">
-                      {formatARS(costoTotal)}
+                      {line.precioPendiente
+                        ? t("pendiente")
+                        : formatARS(costoTotal)}
                     </td>
                     <td className="px-2 py-2 text-right">
                       <Button

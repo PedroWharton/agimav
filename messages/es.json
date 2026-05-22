@@ -1479,6 +1479,8 @@
       "titulo": "Insumos",
       "guardar": "Guardar insumos",
       "descripcionAyuda": "Se descuentan del stock al finalizar el mantenimiento, según la cantidad utilizada.",
+      "precioPendiente": "Precio pend.",
+      "pendiente": "Pendiente",
       "item": "Ítem",
       "cantidadSugerida": "Sugerida",
       "cantidadUtilizada": "Utilizada",

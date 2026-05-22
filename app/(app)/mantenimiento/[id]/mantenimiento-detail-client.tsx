@@ -113,6 +113,7 @@ export type MantenimientoDetailData = {
     cantidadUtilizada: number;
     unidadMedida: string;
     costoUnitario: number;
+    precioPendiente: boolean;
   }>;
   tareas: Array<{
     id: number;
@@ -197,6 +198,7 @@ export function MantenimientoDetailClient({
       cantidadUtilizada: i.cantidadUtilizada,
       unidadMedida: i.unidadMedida,
       costoUnitario: i.costoUnitario,
+      precioPendiente: i.precioPendiente,
     })),
   );
   const [savingInsumos, startSaveInsumos] = useTransition();
@@ -263,7 +265,9 @@ export function MantenimientoDetailClient({
   const totalRepuestos = useMemo(
     () =>
       insumos.reduce(
-        (acc, l) => acc + l.cantidadUtilizada * l.costoUnitario,
+        (acc, l) =>
+          acc +
+          (l.precioPendiente ? 0 : l.cantidadUtilizada * l.costoUnitario),
         0,
       ),
     [insumos],
@@ -312,6 +316,7 @@ export function MantenimientoDetailClient({
       cantidadUtilizada: l.cantidadUtilizada,
       unidadMedida: l.unidadMedida,
       costoUnitario: l.costoUnitario,
+      precioPendiente: l.precioPendiente,
     }));
     startSaveInsumos(async () => {
       const res = await saveInsumos(data.id, { lines });

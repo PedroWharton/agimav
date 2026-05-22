@@ -150,6 +150,7 @@ export default async function MantenimientoDetailPage({
       cantidadUtilizada: i.cantidadUtilizada,
       unidadMedida: i.unidadMedida,
       costoUnitario: i.costoUnitario,
+      precioPendiente: i.precioPendiente,
     })),
     tareas: mant.tareas.map((t) => ({
       id: t.id,

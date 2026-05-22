@@ -86,6 +86,7 @@ const insumoSchema = z.object({
   cantidadUtilizada: z.coerce.number().min(0).default(0),
   unidadMedida: z.string().trim().max(50).default(""),
   costoUnitario: z.coerce.number().min(0).default(0),
+  precioPendiente: z.boolean().default(false),
 });
 
 const insumosPayloadSchema = z.object({
@@ -616,7 +617,10 @@ export async function saveInsumos(
               cantidadUtilizada: line.cantidadUtilizada,
               unidadMedida: line.unidadMedida,
               costoUnitario: line.costoUnitario,
-              costoTotal: line.cantidadUtilizada * line.costoUnitario,
+              costoTotal: line.precioPendiente
+                ? 0
+                : line.cantidadUtilizada * line.costoUnitario,
+              precioPendiente: line.precioPendiente,
             },
           });
         } else {
@@ -628,7 +632,10 @@ export async function saveInsumos(
               cantidadUtilizada: line.cantidadUtilizada,
               unidadMedida: line.unidadMedida,
               costoUnitario: line.costoUnitario,
-              costoTotal: line.cantidadUtilizada * line.costoUnitario,
+              costoTotal: line.precioPendiente
+                ? 0
+                : line.cantidadUtilizada * line.costoUnitario,
+              precioPendiente: line.precioPendiente,
             },
           });
         }
