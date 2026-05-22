@@ -150,6 +150,33 @@ export async function createFactura(
             },
           });
         }
+
+        // WS-A3: the factura confirms this item's real cost — resolve any
+        // mantenimiento insumos left with a pending price for the same item.
+        const pendientes = await tx.mantenimientoInsumo.findMany({
+          where: { itemInventarioId: item.id, precioPendiente: true },
+          select: { id: true, mantenimientoId: true, cantidadUtilizada: true },
+        });
+        for (const pi of pendientes) {
+          await tx.mantenimientoInsumo.update({
+            where: { id: pi.id },
+            data: {
+              costoUnitario: netPrice,
+              costoTotal: pi.cantidadUtilizada * netPrice,
+              precioPendiente: false,
+            },
+          });
+          await tx.mantenimientoHistorial.create({
+            data: {
+              mantenimientoId: pi.mantenimientoId,
+              tipoCambio: "insumo",
+              valorAnterior: null,
+              valorNuevo: null,
+              detalle: `Precio de insumo resuelto por factura ${input.numeroFactura}`,
+              usuario: usuario ?? "—",
+            },
+          });
+        }
       }
 
       return factura.id;
@@ -159,6 +186,7 @@ export async function createFactura(
     revalidatePath(`/compras/facturas/${facturaId}`);
     revalidatePath("/compras/recepciones");
     revalidatePath("/listados/inventario");
+    revalidatePath("/mantenimiento");
     return { ok: true, id: facturaId };
   } catch (e) {
     const msg = e instanceof Error ? e.message : "unknown";
