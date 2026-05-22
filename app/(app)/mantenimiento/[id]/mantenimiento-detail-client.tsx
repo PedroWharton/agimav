@@ -9,10 +9,12 @@ import { format } from "date-fns";
 import { es } from "date-fns/locale";
 import {
   ArrowLeft,
+  CalendarClock,
   CheckCircle2,
   Pencil,
   Play,
   Plus,
+  RotateCcw,
   Trash2,
   Wrench,
   X,
@@ -49,7 +51,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { MantEstadoChip } from "@/components/mantenimiento/estado-chip";
 import { HistorialTimeline } from "@/components/mantenimiento/historial-timeline";
 import {
   InsumosEditor,
@@ -71,6 +72,9 @@ import {
 
 import {
   addObservacion,
+  agregarRevisiones,
+  eliminarRevision,
+  marcarRevisionHecha,
   saveInsumos,
   saveTareas,
   transitionEstado,
@@ -91,9 +95,6 @@ export type MantenimientoDetailData = {
   fechaFinalizacion: string | null;
   fechaProgramada: string | null;
   creadoPor: string | null;
-  programarRevision: boolean;
-  fechaProximaRevision: string | null;
-  descripcionRevision: string | null;
   maquinaria: { id: number; label: string };
   responsable: { id: number; nombre: string };
   unidadProductiva: {
@@ -129,11 +130,13 @@ export type MantenimientoDetailData = {
     fechaCambio: string;
     usuario: string;
   }>;
-  revisionHija: {
+  revisiones: Array<{
     id: number;
+    fechaProgramada: string;
+    descripcion: string | null;
     estado: string;
-    fechaProgramada: string | null;
-  } | null;
+    fechaRealizada: string | null;
+  }>;
 };
 
 type TareaDraft = {
@@ -245,6 +248,18 @@ export function MantenimientoDetailClient({
     descripcionRevision: string;
   } | null>(null);
   const [estadoMenuOpen, setEstadoMenuOpen] = useState(false);
+
+  // ─── Revisiones ──────────────────────────────────────────────────────
+  const [revisionDialogOpen, setRevisionDialogOpen] = useState(false);
+  const [revisionForm, setRevisionForm] = useState({
+    fechaProgramada: "",
+    descripcion: "",
+    repetir: false,
+    cantidad: 3,
+    cadaValor: 1,
+    cadaUnidad: "meses" as "dias" | "meses",
+  });
+  const [revisionBusy, startRevision] = useTransition();
 
   const upOptions = useMemo(
     () =>
@@ -390,19 +405,7 @@ export function MantenimientoDetailClient({
         }
         return;
       }
-      if (res.childId) {
-        toast.success(
-          tM("revision.creadaToast", { id: res.childId }),
-          {
-            action: {
-              label: tM("revision.verRevisionCorta"),
-              onClick: () => router.push(`/mantenimiento/${res.childId}`),
-            },
-          },
-        );
-      } else {
-        toast.success(tM("avisos.transicionExitosa"));
-      }
+      toast.success(tM("avisos.transicionExitosa"));
       setTallerDialog(null);
       setFinalizarDialog(null);
       router.refresh();
@@ -429,6 +432,66 @@ export function MantenimientoDetailClient({
       programarRevision: finalizarDialog.programarRevision,
       fechaProximaRevision: finalizarDialog.fechaProximaRevision,
       descripcionRevision: finalizarDialog.descripcionRevision,
+    });
+  };
+
+  // ─── Revisiones ──────────────────────────────────────────────────────
+  const handleAddRevisiones = () => {
+    if (!revisionForm.fechaProgramada) {
+      toast.error(tM("revision.sinFecha"));
+      return;
+    }
+    startRevision(async () => {
+      const res = await agregarRevisiones(data.id, {
+        fechaProgramada: revisionForm.fechaProgramada,
+        descripcion: revisionForm.descripcion,
+        repetir: revisionForm.repetir
+          ? {
+              cantidad: revisionForm.cantidad,
+              cadaValor: revisionForm.cadaValor,
+              cadaUnidad: revisionForm.cadaUnidad,
+            }
+          : null,
+      });
+      if (!res.ok) {
+        toast.error(tM("avisos.errorGenerico"));
+        return;
+      }
+      toast.success(tM("revision.agregadasToast"));
+      setRevisionDialogOpen(false);
+      setRevisionForm({
+        fechaProgramada: "",
+        descripcion: "",
+        repetir: false,
+        cantidad: 3,
+        cadaValor: 1,
+        cadaUnidad: "meses",
+      });
+      router.refresh();
+    });
+  };
+
+  const handleToggleRevision = (revId: number, hecha: boolean) => {
+    startRevision(async () => {
+      const res = await marcarRevisionHecha(revId, { hecha });
+      if (!res.ok) {
+        toast.error(tM("avisos.errorGenerico"));
+        return;
+      }
+      toast.success(tM("revision.actualizadaToast"));
+      router.refresh();
+    });
+  };
+
+  const handleDeleteRevision = (revId: number) => {
+    startRevision(async () => {
+      const res = await eliminarRevision(revId);
+      if (!res.ok) {
+        toast.error(tM("avisos.errorGenerico"));
+        return;
+      }
+      toast.success(tM("revision.eliminadaToast"));
+      router.refresh();
     });
   };
 
@@ -790,6 +853,117 @@ export function MantenimientoDetailClient({
             ) : null}
           </Card>
 
+          {/* Revisiones */}
+          <Card className="gap-3 p-5">
+            <div className="flex items-center justify-between gap-3">
+              <h2 className="flex items-center gap-2 text-sm font-semibold">
+                <CalendarClock className="size-4 text-sky-600 dark:text-sky-400" />
+                {tM("revision.panelTitulo")}
+              </h2>
+              {canUpdate ? (
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={() => setRevisionDialogOpen(true)}
+                  disabled={revisionBusy}
+                >
+                  <Plus className="size-4" />
+                  {tM("revision.agregar")}
+                </Button>
+              ) : null}
+            </div>
+            {data.revisiones.length === 0 ? (
+              <p className="text-sm text-subtle-foreground">
+                {tM("revision.sinRevisiones")}
+              </p>
+            ) : (
+              <ul className="flex flex-col divide-y divide-border">
+                {data.revisiones.map((r) => {
+                  const hecha = r.estado === "hecha";
+                  return (
+                    <li
+                      key={r.id}
+                      className="flex items-center gap-3 py-2 first:pt-0 last:pb-0"
+                    >
+                      <span
+                        className={
+                          hecha
+                            ? "inline-flex shrink-0 items-center rounded-full bg-sky-100 px-2 py-0.5 text-xs font-medium text-sky-700 dark:bg-sky-900/40 dark:text-sky-300"
+                            : "inline-flex shrink-0 items-center rounded-full bg-muted px-2 py-0.5 text-xs font-medium text-muted-foreground"
+                        }
+                      >
+                        {hecha
+                          ? tM("revision.estadoHecha")
+                          : tM("revision.estadoPendiente")}
+                      </span>
+                      <div className="flex min-w-0 flex-1 flex-col">
+                        <span className="text-sm font-medium">
+                          {format(
+                            new Date(r.fechaProgramada),
+                            "dd/MM/yyyy",
+                            { locale: es },
+                          )}
+                        </span>
+                        {r.descripcion ? (
+                          <span className="truncate text-xs text-subtle-foreground">
+                            {r.descripcion}
+                          </span>
+                        ) : null}
+                        {hecha && r.fechaRealizada ? (
+                          <span className="text-xs text-subtle-foreground">
+                            {tM("revision.realizada", {
+                              fecha: format(
+                                new Date(r.fechaRealizada),
+                                "dd/MM/yyyy",
+                                { locale: es },
+                              ),
+                            })}
+                          </span>
+                        ) : null}
+                      </div>
+                      {canUpdate ? (
+                        <div className="flex shrink-0 items-center gap-1">
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="sm"
+                            onClick={() =>
+                              handleToggleRevision(r.id, !hecha)
+                            }
+                            disabled={revisionBusy}
+                          >
+                            {hecha ? (
+                              <>
+                                <RotateCcw className="size-3.5" />
+                                {tM("revision.deshacer")}
+                              </>
+                            ) : (
+                              <>
+                                <CheckCircle2 className="size-3.5" />
+                                {tM("revision.marcarHecha")}
+                              </>
+                            )}
+                          </Button>
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="icon"
+                            aria-label={tM("revision.eliminar")}
+                            onClick={() => handleDeleteRevision(r.id)}
+                            disabled={revisionBusy}
+                            className="size-7 text-muted-foreground hover:text-destructive"
+                          >
+                            <Trash2 className="size-3.5" />
+                          </Button>
+                        </div>
+                      ) : null}
+                    </li>
+                  );
+                })}
+              </ul>
+            )}
+          </Card>
+
           {/* Bitácora (historial) */}
           <Card className="gap-3 p-5">
             <h2 className="text-sm font-semibold">{tM("historial.titulo")}</h2>
@@ -922,37 +1096,6 @@ export function MantenimientoDetailClient({
             </div>
           </Card>
 
-          {/* Revisión programada (if any) */}
-          {data.programarRevision && data.fechaProximaRevision ? (
-            <Card className="gap-2 p-4">
-              <h3 className="text-xs font-semibold uppercase tracking-wide text-subtle-foreground">
-                {tM("revision.titulo")}
-              </h3>
-              <div className="text-sm font-medium">
-                {format(new Date(data.fechaProximaRevision), "dd/MM/yyyy", {
-                  locale: es,
-                })}
-              </div>
-              {data.descripcionRevision ? (
-                <p className="text-xs text-subtle-foreground">
-                  {data.descripcionRevision}
-                </p>
-              ) : null}
-              {data.revisionHija ? (
-                <div className="flex items-center justify-between gap-2 border-t border-border pt-2">
-                  <MantEstadoChip estado={data.revisionHija.estado} />
-                  <Link
-                    href={`/mantenimiento/${data.revisionHija.id}`}
-                    className="text-xs font-medium text-sky-700 hover:underline dark:text-sky-300"
-                  >
-                    {tM("revision.verRevision", {
-                      id: data.revisionHija.id,
-                    })}
-                  </Link>
-                </div>
-              ) : null}
-            </Card>
-          ) : null}
         </aside>
       </div>
 
@@ -1222,6 +1365,138 @@ export function MantenimientoDetailClient({
                 (finalizarDialog?.programarRevision === true &&
                   !finalizarDialog.fechaProximaRevision)
               }
+            >
+              {tM("acciones.confirmar")}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* ─── Agregar revisión dialog ────────────────────────────────── */}
+      <Dialog open={revisionDialogOpen} onOpenChange={setRevisionDialogOpen}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>{tM("revision.agregarTitulo")}</DialogTitle>
+            <DialogDescription>
+              {tM("revision.agregarDescripcion")}
+            </DialogDescription>
+          </DialogHeader>
+          <div className="flex flex-col gap-3">
+            <div className="flex flex-col gap-1.5">
+              <Label>{tM("revision.fecha")} *</Label>
+              <Input
+                type="date"
+                value={revisionForm.fechaProgramada}
+                onChange={(e) =>
+                  setRevisionForm((f) => ({
+                    ...f,
+                    fechaProgramada: e.target.value,
+                  }))
+                }
+              />
+            </div>
+            <div className="flex flex-col gap-1.5">
+              <Label>{tM("revision.descripcion")}</Label>
+              <Textarea
+                value={revisionForm.descripcion}
+                onChange={(e) =>
+                  setRevisionForm((f) => ({
+                    ...f,
+                    descripcion: e.target.value,
+                  }))
+                }
+                rows={2}
+                maxLength={500}
+              />
+            </div>
+            <div className="flex items-start gap-2">
+              <Checkbox
+                id="revision-repetir"
+                checked={revisionForm.repetir}
+                onCheckedChange={(v) =>
+                  setRevisionForm((f) => ({ ...f, repetir: v === true }))
+                }
+                className="mt-0.5"
+              />
+              <div className="flex flex-col gap-0.5">
+                <Label htmlFor="revision-repetir" className="font-normal">
+                  {tM("revision.repetir")}
+                </Label>
+                <span className="text-xs text-muted-foreground">
+                  {tM("revision.repetirAyuda")}
+                </span>
+              </div>
+            </div>
+            {revisionForm.repetir ? (
+              <div className="grid grid-cols-3 gap-2">
+                <div className="flex flex-col gap-1.5">
+                  <Label>{tM("revision.cantidad")}</Label>
+                  <Input
+                    type="number"
+                    min={1}
+                    max={60}
+                    value={revisionForm.cantidad}
+                    onChange={(e) =>
+                      setRevisionForm((f) => ({
+                        ...f,
+                        cantidad: Math.max(1, Number(e.target.value) || 1),
+                      }))
+                    }
+                  />
+                </div>
+                <div className="flex flex-col gap-1.5">
+                  <Label>{tM("revision.cada")}</Label>
+                  <Input
+                    type="number"
+                    min={1}
+                    max={365}
+                    value={revisionForm.cadaValor}
+                    onChange={(e) =>
+                      setRevisionForm((f) => ({
+                        ...f,
+                        cadaValor: Math.max(1, Number(e.target.value) || 1),
+                      }))
+                    }
+                  />
+                </div>
+                <div className="flex flex-col gap-1.5">
+                  <Label>&nbsp;</Label>
+                  <Select
+                    value={revisionForm.cadaUnidad}
+                    onValueChange={(v) =>
+                      setRevisionForm((f) => ({
+                        ...f,
+                        cadaUnidad: v as "dias" | "meses",
+                      }))
+                    }
+                  >
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="dias">
+                        {tM("revision.dias")}
+                      </SelectItem>
+                      <SelectItem value="meses">
+                        {tM("revision.meses")}
+                      </SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+            ) : null}
+          </div>
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={() => setRevisionDialogOpen(false)}
+              disabled={revisionBusy}
+            >
+              {tM("acciones.cancelarDialogo")}
+            </Button>
+            <Button
+              onClick={handleAddRevisiones}
+              disabled={revisionBusy || !revisionForm.fechaProgramada}
             >
               {tM("acciones.confirmar")}
             </Button>

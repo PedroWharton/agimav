@@ -79,16 +79,16 @@ Slices A1–A4 shippeados a `main` (commits `a8d390e`–`3ae6058`).
 - **OT rework:** acercar OT a Mantenimiento (insumos, servicios externos, fecha programada + duración día-completo, categorías con "Otros"); sin máquina.
 - **Movimientos diarios:** registro liviano tipo OT simplificada. Mixto por ítem: cada línea consumible (salida de stock) o herramienta (con devolución que reintegra al stock).
 
-### WS-D · Mantenimiento — revisiones — 🟡 D1 hecho, D2 pendiente
+### WS-D · Mantenimiento — revisiones — ✅ COMPLETADA
 Ítem: revisión = mismo mantenimiento.
 - **D1 ✅** (`516fc73`) — tabla `MantenimientoRevision` + migración aditiva. `transitionEstado`: finalizar con revisión programada crea una fila de revisión sobre el mismo registro, no un mantenimiento-hijo. Decisión: los hijos existentes (`revisionDeId`) se conservan como históricos — sin migración destructiva.
-- **D2 (pendiente)** — UI en el detalle del mantenimiento:
-  - Panel "Revisiones": lista `mantenimiento.revisiones` (fecha programada, estado, descripción); agregar revisión (fecha + descripción + opción "repetir": cantidad + cada X días/meses → genera N filas); marcar hecha (estado=hecha + fechaRealizada); eliminar.
-  - Acciones nuevas en `mantenimiento/actions.ts`: `agregarRevisiones`, `marcarRevisionHecha`, `eliminarRevision`.
-  - `mantenimiento/[id]/page.tsx`: cargar la relación `revisiones`; sacar `revisionesHijas`/`revisionHija`.
-  - `mantenimiento-detail-client.tsx`: reemplazar el display de `revisionHija` + la tarjeta "Revisión programada" del sidebar por el panel nuevo. El diálogo finalizar queda igual (ya crea la fila desde D1).
-  - i18n `mantenimiento.revision.*`.
-  - Refs: detail client `revisionHija` type ~132-136, tarjeta sidebar ~925-955, diálogo finalizar ~1139-1230; page.tsx `revisionesHijas` ~70-78 y ~160-167.
+- **D2 ✅** — UI en el detalle del mantenimiento:
+  - Panel "Revisiones" en la columna principal: lista `mantenimiento.revisiones` (fecha programada, estado, descripción, fecha realizada); badge pendiente/hecha; marcar hecha / reabrir / eliminar por fila.
+  - Diálogo "Agregar revisión": fecha + descripción + opción "Repetir" (cantidad + cada X días/meses → genera N filas espaciadas).
+  - Acciones nuevas en `mantenimiento/actions.ts`: `agregarRevisiones`, `marcarRevisionHecha`, `eliminarRevision` (no bloquean en estado terminal — las revisiones se agendan post-finalización).
+  - `page.tsx`: carga la relación `revisiones`; se sacó `revisionesHijas`/`revisionHija` y los campos legacy `programarRevision`/`fechaProximaRevision`/`descripcionRevision` del payload del cliente.
+  - `mantenimiento-detail-client.tsx`: se reemplazó la tarjeta "Revisión programada" del sidebar por el panel nuevo; se sacó el toast `childId`. El diálogo finalizar queda igual (crea la fila desde D1).
+  - i18n `mantenimiento.revision.*` reescrito.
 
 ### WS-E · Dashboard — métricas por usuario
 Ítem: KPI gasto por usuario + revisión del legacy.

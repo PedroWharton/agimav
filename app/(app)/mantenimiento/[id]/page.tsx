@@ -67,13 +67,14 @@ export default async function MantenimientoDetailPage({
       historial: {
         orderBy: { fechaCambio: "desc" },
       },
-      revisionesHijas: {
-        orderBy: { fechaCreacion: "desc" },
-        take: 1,
+      revisiones: {
+        orderBy: { fechaProgramada: "asc" },
         select: {
           id: true,
-          estado: true,
           fechaProgramada: true,
+          descripcion: true,
+          estado: true,
+          fechaRealizada: true,
         },
       },
     },
@@ -118,9 +119,6 @@ export default async function MantenimientoDetailPage({
     fechaFinalizacion: mant.fechaFinalizacion?.toISOString() ?? null,
     fechaProgramada: mant.fechaProgramada?.toISOString() ?? null,
     creadoPor: mant.creadoPor,
-    programarRevision: mant.programarRevision,
-    fechaProximaRevision: mant.fechaProximaRevision?.toISOString() ?? null,
-    descripcionRevision: mant.descripcionRevision,
     maquinaria: {
       id: mant.maquinaria.id,
       label: `${mant.maquinaria.tipo.nombre} · ${mant.maquinaria.nroSerie ?? "—"}`,
@@ -157,14 +155,13 @@ export default async function MantenimientoDetailPage({
       descripcion: t.descripcion,
       realizada: t.realizada,
     })),
-    revisionHija: mant.revisionesHijas[0]
-      ? {
-          id: mant.revisionesHijas[0].id,
-          estado: mant.revisionesHijas[0].estado,
-          fechaProgramada:
-            mant.revisionesHijas[0].fechaProgramada?.toISOString() ?? null,
-        }
-      : null,
+    revisiones: mant.revisiones.map((r) => ({
+      id: r.id,
+      fechaProgramada: r.fechaProgramada.toISOString(),
+      descripcion: r.descripcion,
+      estado: r.estado,
+      fechaRealizada: r.fechaRealizada?.toISOString() ?? null,
+    })),
     historial: mant.historial.map((h) => ({
       id: h.id,
       tipoCambio: h.tipoCambio,

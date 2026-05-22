@@ -1,6 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { addDays, addMonths } from "date-fns";
 import { z } from "zod";
 
 import type { Prisma } from "@/lib/generated/prisma/client";
@@ -757,6 +758,190 @@ export async function addObservacion(
     });
     revalidatePath(`/mantenimiento/${id}`);
     return { ok: true, id };
+  } catch {
+    return { ok: false, error: "unknown" };
+  }
+}
+
+// ─── Revisiones (WS-D) ─────────────────────────────────────────────────
+// Una revisión es una fila sobre el mismo mantenimiento, no un registro hijo.
+
+const requiredDate = z
+  .string()
+  .trim()
+  .min(1)
+  .transform((v) => new Date(v))
+  .refine((d) => !Number.isNaN(d.getTime()), { message: "Fecha inválida" });
+
+const repetirSchema = z.object({
+  cantidad: z.coerce.number().int().min(1).max(60),
+  cadaValor: z.coerce.number().int().min(1).max(365),
+  cadaUnidad: z.enum(["dias", "meses"]),
+});
+
+const agregarRevisionesSchema = z.object({
+  fechaProgramada: requiredDate,
+  descripcion: optionalText(500),
+  repetir: repetirSchema
+    .nullable()
+    .optional()
+    .transform((v) => v ?? null),
+});
+
+export async function agregarRevisiones(
+  id: number,
+  raw: unknown,
+): Promise<MantActionResult> {
+  const session = await auth();
+  try {
+    requirePermission(session, "mantenimiento.update");
+  } catch {
+    return { ok: false, error: "forbidden" };
+  }
+
+  const existing = await prisma.mantenimiento.findUnique({
+    where: { id },
+    select: { id: true },
+  });
+  if (!existing) return { ok: false, error: "not_found" };
+
+  const parsed = agregarRevisionesSchema.safeParse(raw);
+  if (!parsed.success) {
+    return {
+      ok: false,
+      error: "invalid",
+      fieldErrors: fieldErrorsFromZod(parsed.error),
+    };
+  }
+  const data = parsed.data;
+  const userName = userNameFromSession(session) ?? "—";
+
+  // Build the list of dates: the base date plus N-1 spaced repetitions.
+  const fechas: Date[] = [data.fechaProgramada];
+  if (data.repetir) {
+    for (let i = 1; i < data.repetir.cantidad; i++) {
+      const prev = fechas[i - 1];
+      fechas.push(
+        data.repetir.cadaUnidad === "meses"
+          ? addMonths(prev, data.repetir.cadaValor)
+          : addDays(prev, data.repetir.cadaValor),
+      );
+    }
+  }
+
+  try {
+    await prisma.$transaction(async (tx) => {
+      await tx.mantenimientoRevision.createMany({
+        data: fechas.map((f) => ({
+          mantenimientoId: id,
+          fechaProgramada: f,
+          descripcion: data.descripcion,
+          estado: "pendiente",
+        })),
+      });
+      await tx.mantenimientoHistorial.create({
+        data: {
+          mantenimientoId: id,
+          tipoCambio: "revision",
+          valorAnterior: null,
+          valorNuevo: null,
+          usuario: userName,
+          detalle:
+            fechas.length === 1
+              ? "Revisión agregada"
+              : `${fechas.length} revisiones agregadas`,
+        },
+      });
+    });
+    revalidatePath(`/mantenimiento/${id}`);
+    return { ok: true, id };
+  } catch {
+    return { ok: false, error: "unknown" };
+  }
+}
+
+const marcarRevisionSchema = z.object({
+  hecha: z.boolean().default(true),
+});
+
+export async function marcarRevisionHecha(
+  revisionId: number,
+  raw: unknown,
+): Promise<MantActionResult> {
+  const session = await auth();
+  try {
+    requirePermission(session, "mantenimiento.update");
+  } catch {
+    return { ok: false, error: "forbidden" };
+  }
+
+  const parsed = marcarRevisionSchema.safeParse(raw);
+  if (!parsed.success) {
+    return {
+      ok: false,
+      error: "invalid",
+      fieldErrors: fieldErrorsFromZod(parsed.error),
+    };
+  }
+
+  const rev = await prisma.mantenimientoRevision.findUnique({
+    where: { id: revisionId },
+    select: { id: true, mantenimientoId: true },
+  });
+  if (!rev) return { ok: false, error: "not_found" };
+
+  const userName = userNameFromSession(session) ?? "—";
+  const { hecha } = parsed.data;
+
+  try {
+    await prisma.$transaction(async (tx) => {
+      await tx.mantenimientoRevision.update({
+        where: { id: revisionId },
+        data: {
+          estado: hecha ? "hecha" : "pendiente",
+          fechaRealizada: hecha ? new Date() : null,
+        },
+      });
+      if (hecha) {
+        await tx.mantenimientoHistorial.create({
+          data: {
+            mantenimientoId: rev.mantenimientoId,
+            tipoCambio: "revision",
+            valorAnterior: null,
+            valorNuevo: null,
+            usuario: userName,
+            detalle: "Revisión marcada como realizada",
+          },
+        });
+      }
+    });
+    revalidatePath(`/mantenimiento/${rev.mantenimientoId}`);
+    return { ok: true, id: rev.mantenimientoId };
+  } catch {
+    return { ok: false, error: "unknown" };
+  }
+}
+
+export async function eliminarRevision(
+  revisionId: number,
+): Promise<MantActionResult> {
+  const session = await auth();
+  try {
+    requirePermission(session, "mantenimiento.update");
+  } catch {
+    return { ok: false, error: "forbidden" };
+  }
+
+  const rev = await prisma.mantenimientoRevision.findUnique({
+    where: { id: revisionId },
+    select: { mantenimientoId: true },
+  });
+  if (!rev) return { ok: false, error: "not_found" };
+
+  try {
+    await prisma.mantenimientoRevision.delete({ where: { id: revisionId } });
+    revalidatePath(`/mantenimiento/${rev.mantenimientoId}`);
+    return { ok: true, id: rev.mantenimientoId };
   } catch {
     return { ok: false, error: "unknown" };
   }
