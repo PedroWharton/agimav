@@ -34,6 +34,7 @@ export default async function OtDetailPage({
           localidad: true,
         },
       },
+      categoria: { select: { id: true, nombre: true } },
       insumos: {
         orderBy: { id: "asc" },
         include: {
@@ -69,6 +70,7 @@ export default async function OtDetailPage({
     unidadesProductivas,
     inventario,
     proveedoresServicio,
+    categorias,
   ] = await Promise.all([
     prisma.usuario.findMany({
       where: { estado: "activo" },
@@ -100,6 +102,10 @@ export default async function OtDetailPage({
       select: { id: true, nombre: true },
       orderBy: { nombre: "asc" },
     }),
+    prisma.categoriaOt.findMany({
+      select: { id: true, nombre: true },
+      orderBy: { nombre: "asc" },
+    }),
   ]);
 
   const prioridad: OtPrioridad =
@@ -126,6 +132,12 @@ export default async function OtDetailPage({
         responsableId: ot.responsable?.id ?? null,
         localidad: ot.localidad ?? null,
         unidadProductivaId: ot.unidadProductiva?.id ?? null,
+        categoriaId: ot.categoria?.id ?? null,
+        categoriaNombre: ot.categoria?.nombre ?? null,
+        fechaProgramada: ot.fechaProgramada
+          ? ot.fechaProgramada.toISOString()
+          : null,
+        duracionDias: ot.duracionDias ?? null,
         insumos: ot.insumos.map((i) => ({
           id: i.id,
           itemInventarioId: i.itemInventarioId,
@@ -135,6 +147,7 @@ export default async function OtDetailPage({
           unidadMedida: i.unidadMedida ?? i.item.unidadMedida,
           costoUnitario: i.costoUnitario,
           costoTotal: i.costoTotal,
+          precioPendiente: i.precioPendiente,
           stockDisponible: i.item.stock,
         })),
         serviciosExternos: ot.serviciosExternos.map((s) => ({
@@ -163,6 +176,7 @@ export default async function OtDetailPage({
         stock: i.stock,
       }))}
       proveedoresServicio={proveedoresServicio}
+      categorias={categorias}
       canUpdate={canUpdate}
     />
   );

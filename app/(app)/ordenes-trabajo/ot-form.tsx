@@ -34,10 +34,14 @@ export type OtFormInitial = {
   responsableId: number | null;
   prioridad: OtPrioridad;
   observaciones: string;
+  categoriaId: number | null;
+  fechaProgramada: string | null;
+  duracionDias: number | null;
 };
 
 export type UsuarioOpt = { id: number; nombre: string };
 export type UpOpt = { id: number; nombre: string; localidad: string | null };
+export type CategoriaOpt = { id: number; nombre: string };
 
 const PRIORIDAD_TO_SERVER: Record<Prioridad, OtPrioridad> = {
   baja: "Baja",
@@ -57,6 +61,7 @@ export function OtForm({
   usuarios,
   localidades,
   unidadesProductivas,
+  categorias,
   readOnly,
 }: {
   mode: "new" | "edit";
@@ -64,6 +69,7 @@ export function OtForm({
   usuarios: UsuarioOpt[];
   localidades: string[];
   unidadesProductivas: UpOpt[];
+  categorias: CategoriaOpt[];
   readOnly?: boolean;
 }) {
   const tO = useTranslations("ordenesTrabajo");
@@ -88,6 +94,15 @@ export function OtForm({
     PRIORIDAD_FROM_SERVER[initial.prioridad] ?? "media",
   );
   const [observaciones, setObservaciones] = useState(initial.observaciones);
+  const [categoriaId, setCategoriaId] = useState<number | null>(
+    initial.categoriaId,
+  );
+  const [fechaProgramada, setFechaProgramada] = useState<string>(
+    initial.fechaProgramada ?? "",
+  );
+  const [duracionDias, setDuracionDias] = useState<string>(
+    initial.duracionDias != null ? String(initial.duracionDias) : "",
+  );
   const [errors, setErrors] = useState<Record<string, string>>({});
 
   const localidadOptions = localidades.map((l) => ({ value: l, label: l }));
@@ -108,6 +123,10 @@ export function OtForm({
         responsableId,
         prioridad: PRIORIDAD_TO_SERVER[prioridad],
         observaciones,
+        categoriaId,
+        fechaProgramada: fechaProgramada || null,
+        duracionDias:
+          duracionDias.trim() === "" ? null : Number(duracionDias),
       };
       const res =
         mode === "new"
@@ -265,16 +284,64 @@ export function OtForm({
             </div>
           </FormCard>
 
-          {/* 4 · Prioridad */}
-          <FormCard step={4} title={tO("campos.prioridad")}>
-            <PrioritySegmented
-              value={prioridad}
-              onChange={(v) => (readOnly ? undefined : setPrioridad(v))}
-            />
+          {/* 4 · Clasificación */}
+          <FormCard step={4} title={tO("secciones.clasificacion")}>
+            <div className="flex flex-col gap-1.5">
+              <Label>{tO("campos.prioridad")}</Label>
+              <PrioritySegmented
+                value={prioridad}
+                onChange={(v) => (readOnly ? undefined : setPrioridad(v))}
+              />
+            </div>
+            <div className="flex flex-col gap-1.5">
+              <Label>{tO("campos.categoria")}</Label>
+              <Combobox
+                value={categoriaId ? String(categoriaId) : ""}
+                onChange={(v) => setCategoriaId(v ? Number(v) : null)}
+                options={[
+                  { value: "", label: "—" },
+                  ...categorias.map((c) => ({
+                    value: String(c.id),
+                    label: c.nombre,
+                  })),
+                ]}
+                placeholder={tO("campos.categoria")}
+                allowCreate={false}
+                disabled={readOnly}
+              />
+            </div>
           </FormCard>
 
-          {/* 5 · Observaciones */}
-          <FormCard step={5} title={tO("campos.observaciones")}>
+          {/* 5 · Programación */}
+          <FormCard step={5} title={tO("secciones.programacion")}>
+            <div className="grid gap-3 sm:grid-cols-2">
+              <div className="flex flex-col gap-1.5">
+                <Label>{tO("campos.fechaProgramada")}</Label>
+                <Input
+                  type="date"
+                  value={fechaProgramada}
+                  onChange={(e) => setFechaProgramada(e.target.value)}
+                  disabled={readOnly}
+                />
+              </div>
+              <div className="flex flex-col gap-1.5">
+                <Label>{tO("campos.duracionDias")}</Label>
+                <Input
+                  type="number"
+                  min={0}
+                  step="0.5"
+                  inputMode="decimal"
+                  value={duracionDias}
+                  onChange={(e) => setDuracionDias(e.target.value)}
+                  placeholder={tO("campos.duracionDiasPlaceholder")}
+                  disabled={readOnly}
+                />
+              </div>
+            </div>
+          </FormCard>
+
+          {/* 6 · Observaciones */}
+          <FormCard step={6} title={tO("campos.observaciones")}>
             <Textarea
               value={observaciones}
               onChange={(e) => setObservaciones(e.target.value)}

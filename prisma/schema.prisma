@@ -888,6 +888,8 @@ model OrdenTrabajo {
   creadoPor          String?  @map("creado_por")
   categoriaId        Int?     @map("categoria_id")
   categoria          CategoriaOt? @relation(fields: [categoriaId], references: [id], onDelete: SetNull)
+  fechaProgramada    DateTime? @map("fecha_programada")
+  duracionDias       Float?    @map("duracion_dias")
 
   insumos           OtInsumo[]
   serviciosExternos ServicioExterno[]

@@ -18,6 +18,7 @@ import {
 
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
@@ -91,6 +92,7 @@ type OtInsumoRow = {
   unidadMedida: string | null;
   costoUnitario: number;
   costoTotal: number;
+  precioPendiente: boolean;
   stockDisponible: number;
 };
 
@@ -109,6 +111,10 @@ export type OtDetail = {
   responsableId: number | null;
   localidad: string | null;
   unidadProductivaId: number | null;
+  categoriaId: number | null;
+  categoriaNombre: string | null;
+  fechaProgramada: string | null;
+  duracionDias: number | null;
   insumos: OtInsumoRow[];
   serviciosExternos: ServicioExternoLine[];
 };
@@ -144,6 +150,7 @@ export function OtDetailClient({
   unidadesProductivas,
   inventario,
   proveedoresServicio,
+  categorias,
   canUpdate,
 }: {
   ot: OtDetail;
@@ -152,6 +159,7 @@ export function OtDetailClient({
   unidadesProductivas: UpOpt[];
   inventario: InventarioOpt[];
   proveedoresServicio: Array<{ id: number; nombre: string }>;
+  categorias: Array<{ id: number; nombre: string }>;
   canUpdate: boolean;
 }) {
   const tO = useTranslations("ordenesTrabajo");
@@ -183,6 +191,15 @@ export function OtDetailClient({
     ot.unidadProductivaId,
   );
   const [prioridad, setPrioridad] = useState<OtPrioridad>(ot.prioridad);
+  const [categoriaId, setCategoriaId] = useState<number | null>(
+    ot.categoriaId,
+  );
+  const [fechaProgramada, setFechaProgramada] = useState<string>(
+    ot.fechaProgramada ? ot.fechaProgramada.slice(0, 10) : "",
+  );
+  const [duracionDias, setDuracionDias] = useState<string>(
+    ot.duracionDias != null ? String(ot.duracionDias) : "",
+  );
   const [headerErrors, setHeaderErrors] = useState<Record<string, string>>({});
 
   // ─── Insumos draft ───────────────────────────────────────────────────
@@ -220,6 +237,14 @@ export function OtDetailClient({
     [unidadesProductivas],
   );
 
+  const categoriaOptions = useMemo(
+    () => [
+      { value: "", label: "—" },
+      ...categorias.map((c) => ({ value: String(c.id), label: c.nombre })),
+    ],
+    [categorias],
+  );
+
   const insumosDirty = useMemo(() => {
     if (insumosDraft.length !== ot.insumos.length) return true;
     for (let i = 0; i < insumosDraft.length; i++) {
@@ -230,6 +255,7 @@ export function OtDetailClient({
         a.itemInventarioId !== b.itemInventarioId ||
         a.cantidad !== b.cantidad ||
         a.costoUnitario !== b.costoUnitario ||
+        a.precioPendiente !== b.precioPendiente ||
         (a.unidadMedida ?? "") !== (b.unidadMedida ?? "")
       ) {
         return true;
@@ -240,9 +266,17 @@ export function OtDetailClient({
 
   const totalEstimado = useMemo(
     () =>
-      insumosDraft.reduce((acc, r) => acc + r.cantidad * r.costoUnitario, 0),
+      insumosDraft.reduce(
+        (acc, r) =>
+          acc + (r.precioPendiente ? 0 : r.cantidad * r.costoUnitario),
+        0,
+      ),
     [insumosDraft],
   );
+
+  const insumosPendientes = insumosDraft.filter(
+    (r) => r.precioPendiente,
+  ).length;
 
   const sobreconsumo = insumosDraft.some(
     (r) => r.itemInventarioId > 0 && r.cantidad > r.stockDisponible,
@@ -259,6 +293,7 @@ export function OtDetailClient({
         unidadMedida: null,
         costoUnitario: 0,
         costoTotal: 0,
+        precioPendiente: false,
         stockDisponible: 0,
       },
     ]);
@@ -299,6 +334,10 @@ export function OtDetailClient({
         responsableId,
         prioridad,
         observaciones,
+        categoriaId,
+        fechaProgramada: fechaProgramada || null,
+        duracionDias:
+          duracionDias.trim() === "" ? null : Number(duracionDias),
       });
       if (!res.ok) {
         if (res.error === "invalid" && res.fieldErrors) {
@@ -335,6 +374,7 @@ export function OtDetailClient({
           cantidad: r.cantidad,
           unidadMedida: r.unidadMedida ?? "",
           costoUnitario: r.costoUnitario,
+          precioPendiente: r.precioPendiente,
         })),
       };
       const res = await saveOtInsumos(ot.id, payload);
@@ -431,6 +471,23 @@ export function OtDetailClient({
         if (!up) return null;
         return up.localidad ? `${up.nombre} (${up.localidad})` : up.nombre;
       })(),
+    },
+    {
+      label: tO("campos.categoria"),
+      value: ot.categoriaNombre ?? null,
+    },
+    {
+      label: tO("campos.fechaProgramada"),
+      value: ot.fechaProgramada
+        ? format(new Date(ot.fechaProgramada), "dd/MM/yyyy", { locale: es })
+        : null,
+    },
+    {
+      label: tO("campos.duracionDias"),
+      value:
+        ot.duracionDias != null
+          ? tO("campos.duracionDiasValor", { count: ot.duracionDias })
+          : null,
     },
     {
       label: tO("campos.fechaCreacion"),
@@ -608,6 +665,9 @@ export function OtDetailClient({
                       <th className="py-2 pr-2">
                         {tO("insumos.costoUnitario")}
                       </th>
+                      <th className="py-2 pr-2 text-center">
+                        {tO("insumos.precioPendiente")}
+                      </th>
                       <th className="py-2 pr-2">
                         {tO("insumos.costoTotal")}
                       </th>
@@ -688,12 +748,32 @@ export function OtDetailClient({
                                   costoUnitario: v === "" ? 0 : v,
                                 })
                               }
-                              disabled={terminal}
+                              disabled={terminal || row.precioPendiente}
                               className="w-32"
                             />
                           </td>
+                          <td className="py-2 pr-2 text-center">
+                            <Checkbox
+                              checked={row.precioPendiente}
+                              onCheckedChange={(v) =>
+                                updateInsumo(index, {
+                                  precioPendiente: v === true,
+                                  costoUnitario:
+                                    v === true ? 0 : row.costoUnitario,
+                                })
+                              }
+                              disabled={terminal}
+                              aria-label={tO("insumos.precioPendiente")}
+                            />
+                          </td>
                           <td className="py-2 pr-2 font-mono tabular-nums">
-                            {formatARS(rowTotal)}
+                            {row.precioPendiente ? (
+                              <span className="text-xs font-sans text-amber-600 dark:text-amber-400">
+                                {tO("insumos.pendiente")}
+                              </span>
+                            ) : (
+                              formatARS(rowTotal)
+                            )}
                           </td>
                           {!terminal ? (
                             <td className="py-2">
@@ -719,6 +799,11 @@ export function OtDetailClient({
             {sobreconsumo && !terminal ? (
               <p className="text-xs text-destructive">
                 {tO("insumos.sobreConsumoAvisoFooter")}
+              </p>
+            ) : null}
+            {insumosPendientes > 0 ? (
+              <p className="text-xs text-amber-600 dark:text-amber-400">
+                {tO("insumos.pendientesNota", { count: insumosPendientes })}
               </p>
             ) : null}
           </Card>
@@ -882,7 +967,7 @@ export function OtDetailClient({
                   allowCreate={false}
                 />
               </div>
-              <div className="flex flex-col gap-1.5 sm:col-span-2">
+              <div className="flex flex-col gap-1.5">
                 <Label>{tO("campos.prioridad")}</Label>
                 <Select
                   value={prioridad}
@@ -899,6 +984,36 @@ export function OtDetailClient({
                     ))}
                   </SelectContent>
                 </Select>
+              </div>
+              <div className="flex flex-col gap-1.5">
+                <Label>{tO("campos.categoria")}</Label>
+                <Combobox
+                  value={categoriaId ? String(categoriaId) : ""}
+                  onChange={(v) => setCategoriaId(v ? Number(v) : null)}
+                  options={categoriaOptions}
+                  placeholder={tO("campos.categoria")}
+                  allowCreate={false}
+                />
+              </div>
+              <div className="flex flex-col gap-1.5">
+                <Label>{tO("campos.fechaProgramada")}</Label>
+                <Input
+                  type="date"
+                  value={fechaProgramada}
+                  onChange={(e) => setFechaProgramada(e.target.value)}
+                />
+              </div>
+              <div className="flex flex-col gap-1.5">
+                <Label>{tO("campos.duracionDias")}</Label>
+                <Input
+                  type="number"
+                  min={0}
+                  step="0.5"
+                  inputMode="decimal"
+                  value={duracionDias}
+                  onChange={(e) => setDuracionDias(e.target.value)}
+                  placeholder={tO("campos.duracionDiasPlaceholder")}
+                />
               </div>
             </div>
             <div className="flex flex-col gap-1.5">

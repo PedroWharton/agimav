@@ -10,14 +10,12 @@ import { OrdenesCalendarClient, type OtEventRow } from "./ordenes-calendar-clien
 export const dynamic = "force-dynamic";
 
 /**
- * OT → CalendarEvent mapping (R8-02):
+ * OT → CalendarEvent mapping:
  *
- * The OrdenTrabajo model only exposes `fechaCreacion` / `fechaFinalizacion`;
- * there is no scheduled-start, duration, or direct maquinaria relation
- * (those live on the sibling Mantenimiento table). We therefore use
- * `fechaCreacion` as the event start and a fixed 2h duration placeholder —
- * the calendar is a planning surface over creation dates, which matches how
- * the legacy team tracks OT load.
+ * WS-C added `fechaProgramada` (scheduled date) and `duracionDias` to the
+ * OrdenTrabajo model. The calendar now plots each OT by `fechaProgramada`
+ * when set, falling back to `fechaCreacion`. An OT with a scheduled date
+ * renders as a full-day block ("día completo"); otherwise a 2h placeholder.
  *
  * All OTs map to tipo="mant" (the CalendarEventTipo closest to OT work).
  * The other tipos (inv/comp/log/ins) are reserved for future cross-module
@@ -25,6 +23,7 @@ export const dynamic = "force-dynamic";
  */
 
 const DEFAULT_DURATION_HOURS = 2;
+const FULL_DAY_HOURS = 8;
 
 function parseMondayParam(raw: string | string[] | undefined): Date {
   const candidate = Array.isArray(raw) ? raw[0] : raw;
@@ -73,23 +72,41 @@ export default async function OrdenesTrabajoListPage({
   // más las sin UP; `null` ⇒ sin restricción.
   const ups = await accessibleUpIds(session);
 
+  // La OT cae en la semana por su fecha programada; si no tiene, por la de
+  // creación.
+  const enLaSemana = {
+    OR: [
+      { fechaProgramada: { gte: weekMonday, lt: weekEnd } },
+      {
+        fechaProgramada: null,
+        fechaCreacion: { gte: weekMonday, lt: weekEnd },
+      },
+    ],
+  };
+
   const rows = await prisma.ordenTrabajo.findMany({
     where: {
-      fechaCreacion: { gte: weekMonday, lt: weekEnd },
-      ...(ups
-        ? {
-            OR: [
-              { unidadProductivaId: { in: ups } },
-              { unidadProductivaId: null },
-            ],
-          }
-        : {}),
+      AND: [
+        enLaSemana,
+        ...(ups
+          ? [
+              {
+                OR: [
+                  { unidadProductivaId: { in: ups } },
+                  { unidadProductivaId: null },
+                ],
+              },
+            ]
+          : []),
+      ],
     },
     select: {
       id: true,
       numeroOt: true,
       titulo: true,
       fechaCreacion: true,
+      fechaProgramada: true,
+      duracionDias: true,
       estado: true,
       prioridad: true,
       responsable: { select: { id: true, nombre: true } },
@@ -108,8 +125,9 @@ export default async function OrdenesTrabajoListPage({
       id: o.id,
       title,
       subtitle: subtitleParts.join(" · ") || undefined,
-      start: o.fechaCreacion.toISOString(),
-      durationHours: DEFAULT_DURATION_HOURS,
+      start: (o.fechaProgramada ?? o.fechaCreacion).toISOString(),
+      durationHours:
+        o.fechaProgramada != null ? FULL_DAY_HOURS : DEFAULT_DURATION_HOURS,
       tipo: "mant",
       href: `/ordenes-trabajo/${o.id}`,
     };

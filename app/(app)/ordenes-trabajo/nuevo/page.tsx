@@ -14,22 +14,27 @@ export default async function NuevaOtPage() {
     redirect("/ordenes-trabajo");
   }
 
-  const [usuarios, localidades, unidadesProductivas] = await Promise.all([
-    prisma.usuario.findMany({
-      where: { estado: "activo" },
-      select: { id: true, nombre: true },
-      orderBy: { nombre: "asc" },
-    }),
-    getLocalidadesSugeridas(),
-    prisma.unidadProductiva.findMany({
-      select: {
-        id: true,
-        nombre: true,
-        localidad: true,
-      },
-      orderBy: { nombre: "asc" },
-    }),
-  ]);
+  const [usuarios, localidades, unidadesProductivas, categorias] =
+    await Promise.all([
+      prisma.usuario.findMany({
+        where: { estado: "activo" },
+        select: { id: true, nombre: true },
+        orderBy: { nombre: "asc" },
+      }),
+      getLocalidadesSugeridas(),
+      prisma.unidadProductiva.findMany({
+        select: {
+          id: true,
+          nombre: true,
+          localidad: true,
+        },
+        orderBy: { nombre: "asc" },
+      }),
+      prisma.categoriaOt.findMany({
+        select: { id: true, nombre: true },
+        orderBy: { nombre: "asc" },
+      }),
+    ]);
 
   return (
     <OtForm
@@ -43,6 +48,9 @@ export default async function NuevaOtPage() {
         responsableId: null,
         prioridad: "Media",
         observaciones: "",
+        categoriaId: null,
+        fechaProgramada: null,
+        duracionDias: null,
       }}
       usuarios={usuarios.map((u) => ({ id: u.id, nombre: u.nombre }))}
       localidades={localidades}
@@ -51,6 +59,7 @@ export default async function NuevaOtPage() {
         nombre: up.nombre,
         localidad: up.localidad ?? null,
       }))}
+      categorias={categorias}
     />
   );
 }

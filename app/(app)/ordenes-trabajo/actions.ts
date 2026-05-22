@@ -48,6 +48,20 @@ const createSchema = z.object({
   responsableId: optionalId,
   prioridad: z.enum(OT_PRIORIDADES).default("Media"),
   observaciones: optionalText(2000),
+  categoriaId: optionalId,
+  fechaProgramada: z
+    .string()
+    .trim()
+    .optional()
+    .nullable()
+    .transform((v) => (v ? v : null)),
+  duracionDias: z
+    .number()
+    .min(0)
+    .max(3650)
+    .optional()
+    .nullable()
+    .transform((v) => v ?? null),
 });
 
 export async function createOT(
@@ -82,6 +96,11 @@ export async function createOT(
         responsableId: data.responsableId,
         prioridad: data.prioridad,
         observaciones: data.observaciones,
+        categoriaId: data.categoriaId,
+        fechaProgramada: data.fechaProgramada
+          ? new Date(data.fechaProgramada)
+          : null,
+        duracionDias: data.duracionDias,
         estado: "En Curso",
         creadoPor: userName,
       },
@@ -139,6 +158,11 @@ export async function updateOT(
         responsableId: data.responsableId,
         prioridad: data.prioridad,
         observaciones: data.observaciones,
+        categoriaId: data.categoriaId,
+        fechaProgramada: data.fechaProgramada
+          ? new Date(data.fechaProgramada)
+          : null,
+        duracionDias: data.duracionDias,
       },
     });
     revalidatePath("/ordenes-trabajo");
@@ -155,6 +179,7 @@ const insumoSchema = z.object({
   cantidad: z.coerce.number().min(0),
   unidadMedida: z.string().trim().max(50).default(""),
   costoUnitario: z.coerce.number().min(0).default(0),
+  precioPendiente: z.boolean().default(false),
 });
 
 const saveInsumosSchema = z.object({
@@ -211,7 +236,9 @@ export async function saveOtInsumos(
         });
       }
       for (const ins of data.insumos) {
-        const costoTotal = ins.cantidad * ins.costoUnitario;
+        const costoTotal = ins.precioPendiente
+          ? 0
+          : ins.cantidad * ins.costoUnitario;
         if (ins.id) {
           await tx.otInsumo.update({
             where: { id: ins.id },
@@ -221,6 +248,7 @@ export async function saveOtInsumos(
               unidadMedida: ins.unidadMedida || null,
               costoUnitario: ins.costoUnitario,
               costoTotal,
+              precioPendiente: ins.precioPendiente,
             },
           });
         } else {
@@ -232,6 +260,7 @@ export async function saveOtInsumos(
               unidadMedida: ins.unidadMedida || null,
               costoUnitario: ins.costoUnitario,
               costoTotal,
+              precioPendiente: ins.precioPendiente,
             },
           });
         }

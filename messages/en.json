@@ -1694,11 +1694,18 @@
       "observaciones": "Notes",
       "fechaCreacion": "Created on",
       "fechaFinalizacion": "End date",
-      "creadoPor": "Created by"
+      "creadoPor": "Created by",
+      "categoria": "Category",
+      "fechaProgramada": "Scheduled date",
+      "duracionDias": "Estimated duration",
+      "duracionDiasPlaceholder": "Days",
+      "duracionDiasValor": "{count, plural, one {# day} other {# days}}"
     },
     "secciones": {
       "responsables": "Assignees",
-      "trabajo": "Work"
+      "trabajo": "Work",
+      "clasificacion": "Priority and category",
+      "programacion": "Scheduling"
     },
     "filtros": {
       "estado": "Status",
@@ -1740,6 +1747,9 @@
       "costoUnitario": "Unit cost",
       "costoTotal": "Total",
       "totalEstimado": "Estimated total",
+      "precioPendiente": "Pending price",
+      "pendiente": "Pending",
+      "pendientesNota": "{count, plural, one {# supply with a pending price, not counted in the total} other {# supplies with a pending price, not counted in the total}}.",
       "sobreConsumoAviso": "Exceeds available stock.",
       "sobreConsumoAvisoFooter": "Some supply exceeds stock — please review before closing.",
       "itemRequerido": "Select an item or remove the line.",

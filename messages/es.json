@@ -1700,11 +1700,18 @@
       "observaciones": "Observaciones",
       "fechaCreacion": "Fecha de creación",
       "fechaFinalizacion": "Fecha de finalización",
-      "creadoPor": "Creado por"
+      "creadoPor": "Creado por",
+      "categoria": "Categoría",
+      "fechaProgramada": "Fecha programada",
+      "duracionDias": "Duración estimada",
+      "duracionDiasPlaceholder": "Días",
+      "duracionDiasValor": "{count, plural, one {# día} other {# días}}"
     },
     "secciones": {
       "responsables": "Responsables",
-      "trabajo": "Trabajo"
+      "trabajo": "Trabajo",
+      "clasificacion": "Prioridad y categoría",
+      "programacion": "Programación"
     },
     "filtros": {
       "estado": "Estado",
@@ -1746,6 +1753,9 @@
       "costoUnitario": "Costo unitario",
       "costoTotal": "Total",
       "totalEstimado": "Total estimado",
+      "precioPendiente": "Precio pendiente",
+      "pendiente": "Pendiente",
+      "pendientesNota": "{count, plural, one {# insumo con precio pendiente, no suma al total} other {# insumos con precio pendiente, no suman al total}}.",
       "sobreConsumoAviso": "Supera el stock disponible.",
       "sobreConsumoAvisoFooter": "Algún insumo supera el stock — revisá antes de cerrar.",
       "itemRequerido": "Seleccioná un ítem o eliminá la línea.",
