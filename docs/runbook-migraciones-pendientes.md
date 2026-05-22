@@ -46,7 +46,7 @@ para Point-in-Time Restore.)
 Las dos migraciones son no destructivas, pero el branch es la disciplina mínima
 antes de cualquier `migrate deploy` sobre prod.
 
-## Paso 2 — Aplicar WS-A + WS-D
+## ✅ Paso 2 — Aplicar WS-A + WS-D (HECHO 2026-05-22)
 
 El `DATABASE_URL` del `.env.local` apunta al endpoint **directo** (sin `-pooler` en el host),
 que es el correcto para migraciones — no hace falta cambiarlo.
@@ -64,6 +64,9 @@ npx prisma migrate deploy
 Esperado: aplica 2 migraciones —
 `20260522000000_ws_a_precio_pendiente` y `20260522010000_ws_d_mantenimiento_revision`.
 
+Aplicado y verificado el 2026-05-22: ambas migraciones aplicadas; las 3 columnas nuevas y
+la tabla `mantenimiento_revisiones` existen en la base.
+
 Qué hacen (todo aditivo, metadata-only, instantáneo, sin reescritura de tablas):
 
 - `ws_a`: `ADD COLUMN recepciones_detalle.precio_unitario` (nullable);
@@ -77,9 +80,9 @@ Qué hacen (todo aditivo, metadata-only, instantáneo, sin reescritura de tablas
 npx prisma migrate status
 ```
 
-Las dos migraciones de WS deben figurar como aplicadas. **`migrate status` va a seguir
-reportando** que `agente_ia_skeleton` / `agente_usuario_view` "están en la base pero no
-localmente" — eso es esperado (ver sección final), no es un error.
+Debe decir **"Database schema is up to date!"**. Verificado el 2026-05-22 tras el deploy:
+así quedó. El drift de `agente_ia_skeleton` / `agente_usuario_view` **no** aparece en
+`migrate status` cuando no hay migraciones locales pendientes — ver la sección final.
 
 Smoke test en la app en vivo:
 
@@ -88,8 +91,9 @@ Smoke test en la app en vivo:
 
 ## El drift de `feat/asistente-ia` — qué hacer
 
-`main` no tiene las 2 migraciones `agente_*`, pero la base sí. Mientras la rama siga
-pausada, lo recomendado es **tolerar el drift**:
+`main` no tiene las 2 migraciones `agente_*`, pero la base sí. `migrate status` no lo
+reporta como problema mientras no haya migraciones locales pendientes (post-deploy dice
+"up to date"). Mientras la rama siga pausada, lo recomendado es **tolerar el drift**:
 
 - `migrate deploy` (lo de este runbook) funciona igual — solo aplica hacia adelante.
 - Revertir las tablas `agente_*` destruiría trabajo pausado (hay 2 sesiones y 16 filas
