@@ -1141,6 +1141,7 @@
         "destino": "Destino",
         "observaciones": "Obs.",
         "cantidad": "Cantidad",
+        "precio": "Precio",
         "facturado": "Facturado"
       },
       "filtros": {
@@ -1204,6 +1205,8 @@
         "dialogDescripcion": "Las líneas pendientes quedarán fuera del listado de facturas nuevas. Usalo para devoluciones, reemplazos o remitos que no se facturan.",
         "motivoLabel": "Motivo",
         "motivoPlaceholder": "Ej.: devolución al proveedor, reemplazo por garantía.",
+        "preciosTitulo": "Precio pagado por ítem",
+        "preciosAyuda": "Opcional. Cargá el precio para registrar el costo sin emitir factura. Dejalo vacío en devoluciones o ítems sin costo.",
         "confirmar": "Cerrar sin factura",
         "banner": "Recepción cerrada sin factura.",
         "cerradaPor": "Cerrada por {nombre} el {fecha}.",

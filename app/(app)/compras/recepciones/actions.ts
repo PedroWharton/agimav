@@ -187,9 +187,19 @@ export async function createRecepcion(
   }
 }
 
+const cerrarSinFacturaLineaSchema = z.object({
+  recepcionDetalleId: z.coerce.number().int().positive(),
+  precioUnitario: z.coerce.number().nonnegative(),
+});
+
 const cerrarSinFacturaSchema = z.object({
   recepcionId: z.coerce.number().int().positive(),
   motivo: z.string().trim().min(1).max(500),
+  // Optional per-line prices: lines listed here record the price paid
+  // (RecepcionDetalle.precioUnitario + PrecioHistorico + weighted-avg cost),
+  // just like a factura would. Lines omitted are closed without a price
+  // (returns, free replacements, remitos with no cost).
+  lineas: z.array(cerrarSinFacturaLineaSchema).default([]),
 });
 
 export async function cerrarRecepcionSinFactura(
@@ -201,11 +211,11 @@ export async function cerrarRecepcionSinFactura(
   } catch {
     return { ok: false, error: "forbidden" };
   }
-  const cerradoPor = userNameFromSession(session);
+  const usuario = userNameFromSession(session);
 
   const parsed = cerrarSinFacturaSchema.safeParse(raw);
   if (!parsed.success) return { ok: false, error: "invalid" };
-  const { recepcionId, motivo } = parsed.data;
+  const { recepcionId, motivo, lineas } = parsed.data;
 
   try {
     await prisma.$transaction(async (tx) => {
@@ -214,13 +224,72 @@ export async function cerrarRecepcionSinFactura(
         select: {
           id: true,
           cerradaSinFactura: true,
-          detalle: { select: { facturado: true } },
+          fechaRecepcion: true,
+          detalle: {
+            select: {
+              id: true,
+              facturado: true,
+              cantidadRecibida: true,
+              ocDetalle: {
+                select: {
+                  oc: { select: { proveedorId: true } },
+                  requisicionDetalle: {
+                    select: {
+                      item: {
+                        select: {
+                          id: true,
+                          stock: true,
+                          valorUnitario: true,
+                        },
+                      },
+                    },
+                  },
+                },
+              },
+            },
+          },
         },
       });
       if (!rec) throw new Error("not_found");
       if (rec.cerradaSinFactura) throw new Error("already_closed");
-      const pendientes = rec.detalle.filter((d) => !d.facturado).length;
-      if (pendientes === 0) throw new Error("nothing_to_close");
+      const pendientes = rec.detalle.filter((d) => !d.facturado);
+      if (pendientes.length === 0) throw new Error("nothing_to_close");
+
+      // Record the price paid for the lines the user priced. Same effect as a
+      // factura line: persists the unit price, writes PrecioHistorico and
+      // updates the item's weighted-average cost.
+      const detalleById = new Map(rec.detalle.map((d) => [d.id, d]));
+      for (const ln of lineas) {
+        const d = detalleById.get(ln.recepcionDetalleId);
+        if (!d || d.facturado) throw new Error("invalid");
+        const item = d.ocDetalle.requisicionDetalle.item;
+        const qty = d.cantidadRecibida;
+
+        await tx.recepcionDetalle.update({
+          where: { id: d.id },
+          data: { precioUnitario: ln.precioUnitario },
+        });
+        await tx.precioHistorico.create({
+          data: {
+            itemId: item.id,
+            proveedorId: d.ocDetalle.oc.proveedorId,
+            fecha: rec.fechaRecepcion,
+            precioArs: ln.precioUnitario,
+            fuente: "cierre_sin_factura",
+            usuario,
+          },
+        });
+        const oldStock = item.stock - qty;
+        const denom = oldStock + qty;
+        if (denom > 0) {
+          const newCost =
+            (item.valorUnitario * oldStock + ln.precioUnitario * qty) / denom;
+          await tx.inventario.update({
+            where: { id: item.id },
+            data: { valorUnitario: newCost, valorTotal: item.stock * newCost },
+          });
+        }
+      }
 
       await tx.recepcion.update({
         where: { id: recepcionId },
@@ -228,7 +297,7 @@ export async function cerrarRecepcionSinFactura(
           cerradaSinFactura: true,
           motivoCierre: motivo,
           fechaCierre: new Date(),
-          cerradoPor,
+          cerradoPor: usuario,
         },
       });
     });
@@ -236,6 +305,7 @@ export async function cerrarRecepcionSinFactura(
     revalidatePath("/compras/recepciones");
     revalidatePath(`/compras/recepciones/${recepcionId}`);
     revalidatePath("/compras/facturas/nueva");
+    revalidatePath("/listados/inventario");
     return { ok: true };
   } catch (e) {
     const msg = e instanceof Error ? e.message : "unknown";

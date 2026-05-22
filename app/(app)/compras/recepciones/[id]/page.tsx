@@ -73,9 +73,18 @@ export default async function RecepcionDetailPage({
       ).map((u) => u.nombre)
     : [];
   const numeroOc = rec.oc.numeroOc ?? formatOCNumber(rec.oc.id);
-  const pendientes = rec.detalle.filter((d) => !d.facturado).length;
+  const pendientesLineas = rec.detalle
+    .filter((d) => !d.facturado)
+    .map((d) => ({
+      id: d.id,
+      itemCodigo: d.ocDetalle.requisicionDetalle.item.codigo ?? "",
+      itemDescripcion:
+        d.ocDetalle.requisicionDetalle.item.descripcion ?? "",
+      unidadMedida: d.ocDetalle.requisicionDetalle.item.unidadMedida,
+      cantidadRecibida: d.cantidadRecibida,
+    }));
   const canCerrarSinFactura =
-    canUpdate && !rec.cerradaSinFactura && pendientes > 0;
+    canUpdate && !rec.cerradaSinFactura && pendientesLineas.length > 0;
 
   return (
     <div className="flex flex-col gap-6 p-6">
@@ -93,7 +102,10 @@ export default async function RecepcionDetailPage({
           })} · ${rec.oc.proveedor.nombre}`}
           actions={
             canCerrarSinFactura ? (
-              <CerrarSinFacturaButton recepcionId={rec.id} />
+              <CerrarSinFacturaButton
+                recepcionId={rec.id}
+                lineas={pendientesLineas}
+              />
             ) : undefined
           }
         />
@@ -169,6 +181,9 @@ export default async function RecepcionDetailPage({
                   <th className="px-2 py-2 text-right font-medium w-24">
                     {tRec("columnas.cantidad")}
                   </th>
+                  <th className="px-2 py-2 text-right font-medium w-28">
+                    {tRec("columnas.precio")}
+                  </th>
                   <th className="px-2 py-2 text-left font-medium w-20">
                     {tRec("columnas.facturado")}
                   </th>
@@ -193,6 +208,14 @@ export default async function RecepcionDetailPage({
                           {d.ocDetalle.requisicionDetalle.item.unidadMedida}
                         </span>
                       ) : null}
+                    </td>
+                    <td className="px-2 py-2 text-right tabular-nums">
+                      {d.precioUnitario != null
+                        ? `$ ${d.precioUnitario.toLocaleString("es-AR", {
+                            minimumFractionDigits: 2,
+                            maximumFractionDigits: 2,
+                          })}`
+                        : "—"}
                     </td>
                     <td className="px-2 py-2 text-xs">
                       {d.facturado

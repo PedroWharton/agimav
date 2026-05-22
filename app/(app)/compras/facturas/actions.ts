@@ -121,7 +121,7 @@ export async function createFactura(
 
         await tx.recepcionDetalle.update({
           where: { id: ln.recepcionDetalleId },
-          data: { facturado: true },
+          data: { facturado: true, precioUnitario: netPrice },
         });
 
         await tx.precioHistorico.create({

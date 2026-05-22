@@ -603,6 +603,7 @@ model RecepcionDetalle {
   ocDetalle        OrdenCompraDetalle @relation(fields: [ocDetalleId], references: [id])
   cantidadRecibida Float    @map("cantidad_recibida")
   facturado        Boolean  @default(false)
+  precioUnitario   Float?   @map("precio_unitario")
 
   facturaDetalle FacturaDetalle[]
 
@@ -794,6 +795,7 @@ model MantenimientoInsumo {
   unidadMedida      String   @map("unidad_medida")
   costoUnitario     Float    @default(0) @map("costo_unitario")
   costoTotal        Float    @default(0) @map("costo_total")
+  precioPendiente   Boolean  @default(false) @map("precio_pendiente")
   proveedorId       Int?     @map("proveedor_id")
   proveedor         Proveedor? @relation(fields: [proveedorId], references: [id])
 
@@ -873,6 +875,7 @@ model OtInsumo {
   unidadMedida      String?  @map("unidad_medida")
   costoUnitario     Float    @default(0) @map("costo_unitario")
   costoTotal        Float    @default(0) @map("costo_total")
+  precioPendiente   Boolean  @default(false) @map("precio_pendiente")
   estadoSolicitud   String?  @map("estado_solicitud")
 
   @@index([otId])

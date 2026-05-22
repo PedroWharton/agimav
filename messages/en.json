@@ -1135,6 +1135,7 @@
         "destino": "Destination",
         "observaciones": "Notes",
         "cantidad": "Quantity",
+        "precio": "Price",
         "facturado": "Invoiced"
       },
       "filtros": {
@@ -1198,6 +1199,8 @@
         "dialogDescripcion": "Pending lines will be excluded from the new invoices list. Use this for returns, replacements or delivery notes that will not be invoiced.",
         "motivoLabel": "Reason",
         "motivoPlaceholder": "E.g.: return to supplier, warranty replacement.",
+        "preciosTitulo": "Price paid per item",
+        "preciosAyuda": "Optional. Enter the price to record the cost without issuing an invoice. Leave blank for returns or items with no cost.",
         "confirmar": "Close without invoice",
         "banner": "Reception closed without invoice.",
         "cerradaPor": "Closed by {nombre} on {fecha}.",
