@@ -56,6 +56,10 @@ import {
   PartesTable,
   type KVPair,
 } from "@/components/mantenimiento/detail";
+import {
+  ServiciosExternosPanel,
+  type ServicioExternoLine,
+} from "@/components/servicios/servicios-externos-panel";
 import { formatOTNumber } from "@/lib/ot/ot-number";
 
 import { cancelarOT, cerrarOT, saveOtInsumos, updateOT } from "../actions";
@@ -106,6 +110,7 @@ export type OtDetail = {
   localidad: string | null;
   unidadProductivaId: number | null;
   insumos: OtInsumoRow[];
+  serviciosExternos: ServicioExternoLine[];
 };
 
 type HeroPrioridad = "baja" | "media" | "alta";
@@ -138,12 +143,16 @@ export function OtDetailClient({
   localidades,
   unidadesProductivas,
   inventario,
+  proveedoresServicio,
+  canUpdate,
 }: {
   ot: OtDetail;
   usuarios: UsuarioOpt[];
   localidades: string[];
   unidadesProductivas: UpOpt[];
   inventario: InventarioOpt[];
+  proveedoresServicio: Array<{ id: number; nombre: string }>;
+  canUpdate: boolean;
 }) {
   const tO = useTranslations("ordenesTrabajo");
   const router = useRouter();
@@ -713,6 +722,14 @@ export function OtDetailClient({
               </p>
             ) : null}
           </Card>
+
+          {/* Servicios externos */}
+          <ServiciosExternosPanel
+            target={{ kind: "ot", id: ot.id }}
+            servicios={ot.serviciosExternos}
+            proveedores={proveedoresServicio}
+            canManage={canUpdate}
+          />
 
           {/* Partes de trabajo — empty (not wired for OT in v1) */}
           <Card className="gap-3 p-5">

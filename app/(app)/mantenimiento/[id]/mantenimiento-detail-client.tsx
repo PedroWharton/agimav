@@ -58,6 +58,10 @@ import {
   type InventarioOption,
 } from "@/components/mantenimiento/insumos-editor";
 import {
+  ServiciosExternosPanel,
+  type ServicioExternoLine,
+} from "@/components/servicios/servicios-externos-panel";
+import {
   KVGrid,
   MantenimientoStatusMeter,
   OTHero,
@@ -137,6 +141,7 @@ export type MantenimientoDetailData = {
     estado: string;
     fechaRealizada: string | null;
   }>;
+  serviciosExternos: ServicioExternoLine[];
 };
 
 type TareaDraft = {
@@ -169,6 +174,7 @@ export function MantenimientoDetailClient({
   usuarios,
   unidadesProductivas,
   inventario,
+  proveedoresServicio,
 }: {
   data: MantenimientoDetailData;
   canUpdate: boolean;
@@ -176,6 +182,7 @@ export function MantenimientoDetailClient({
   usuarios: UsuarioOpt[];
   unidadesProductivas: UpOpt[];
   inventario: InventarioOption[];
+  proveedoresServicio: Array<{ id: number; nombre: string }>;
 }) {
   const tM = useTranslations("mantenimiento");
   const tTipos = useTranslations("mantenimiento.tipos");
@@ -963,6 +970,14 @@ export function MantenimientoDetailClient({
               </ul>
             )}
           </Card>
+
+          {/* Servicios externos */}
+          <ServiciosExternosPanel
+            target={{ kind: "mantenimiento", id: data.id }}
+            servicios={data.serviciosExternos}
+            proveedores={proveedoresServicio}
+            canManage={canUpdate}
+          />
 
           {/* Bitácora (historial) */}
           <Card className="gap-3 p-5">

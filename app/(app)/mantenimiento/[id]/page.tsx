@@ -78,6 +78,12 @@ export default async function MantenimientoDetailPage({
           fechaRealizada: true,
         },
       },
+      serviciosExternos: {
+        orderBy: { id: "asc" },
+        include: {
+          proveedorServicio: { select: { id: true, nombre: true } },
+        },
+      },
     },
   });
   if (!mant) notFound();
@@ -86,32 +92,38 @@ export default async function MantenimientoDetailPage({
   // mantenimiento fuera de sus unidades asignadas.
   if (!(await canAccessUp(session, mant.unidadProductivaId))) notFound();
 
-  const [usuarios, unidadesProductivas, inventario] = await Promise.all([
-    prisma.usuario.findMany({
-      where: { estado: "activo" },
-      select: { id: true, nombre: true },
-      orderBy: { nombre: "asc" },
-    }),
-    prisma.unidadProductiva.findMany({
-      select: {
-        id: true,
-        nombre: true,
-        localidad: true,
-      },
-      orderBy: { nombre: "asc" },
-    }),
-    prisma.inventario.findMany({
-      select: {
-        id: true,
-        codigo: true,
-        descripcion: true,
-        unidadMedida: true,
-        valorUnitario: true,
-        stock: true,
-      },
-      orderBy: { descripcion: "asc" },
-    }),
-  ]);
+  const [usuarios, unidadesProductivas, inventario, proveedoresServicio] =
+    await Promise.all([
+      prisma.usuario.findMany({
+        where: { estado: "activo" },
+        select: { id: true, nombre: true },
+        orderBy: { nombre: "asc" },
+      }),
+      prisma.unidadProductiva.findMany({
+        select: {
+          id: true,
+          nombre: true,
+          localidad: true,
+        },
+        orderBy: { nombre: "asc" },
+      }),
+      prisma.inventario.findMany({
+        select: {
+          id: true,
+          codigo: true,
+          descripcion: true,
+          unidadMedida: true,
+          valorUnitario: true,
+          stock: true,
+        },
+        orderBy: { descripcion: "asc" },
+      }),
+      prisma.proveedorServicio.findMany({
+        where: { estado: "activo" },
+        select: { id: true, nombre: true },
+        orderBy: { nombre: "asc" },
+      }),
+    ]);
 
   const data: MantenimientoDetailData = {
     id: mant.id,
@@ -167,6 +179,15 @@ export default async function MantenimientoDetailPage({
       estado: r.estado,
       fechaRealizada: r.fechaRealizada?.toISOString() ?? null,
     })),
+    serviciosExternos: mant.serviciosExternos.map((s) => ({
+      id: s.id,
+      proveedorServicioId: s.proveedorServicioId,
+      proveedorNombre: s.proveedorServicio.nombre,
+      descripcion: s.descripcion,
+      costo: s.costo,
+      precioPendiente: s.precioPendiente,
+      fecha: s.fecha?.toISOString() ?? null,
+    })),
     historial: mant.historial.map((h) => ({
       id: h.id,
       tipoCambio: h.tipoCambio,
@@ -197,6 +218,7 @@ export default async function MantenimientoDetailPage({
         valorUnitario: i.valorUnitario,
         stock: i.stock,
       }))}
+      proveedoresServicio={proveedoresServicio}
     />
   );
 }

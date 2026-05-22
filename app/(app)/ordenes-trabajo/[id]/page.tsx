@@ -2,7 +2,7 @@ import { notFound } from "next/navigation";
 
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/db";
-import { requireViewOrRedirect } from "@/lib/rbac";
+import { hasPermission, requireViewOrRedirect } from "@/lib/rbac";
 import { canAccessUp } from "@/lib/up-scope";
 import { getLocalidadesSugeridas } from "@/lib/localidades";
 
@@ -16,6 +16,7 @@ export default async function OtDetailPage({
 }) {
   const session = await auth();
   requireViewOrRedirect(session, "ot.view");
+  const canUpdate = hasPermission(session, "ot.update");
 
   const { id: idParam } = await params;
   const id = Number.parseInt(idParam, 10);
@@ -48,6 +49,12 @@ export default async function OtDetailPage({
           },
         },
       },
+      serviciosExternos: {
+        orderBy: { id: "asc" },
+        include: {
+          proveedorServicio: { select: { id: true, nombre: true } },
+        },
+      },
     },
   });
   if (!ot) notFound();
@@ -56,34 +63,44 @@ export default async function OtDetailPage({
   // fuera de sus unidades asignadas.
   if (!(await canAccessUp(session, ot.unidadProductivaId))) notFound();
 
-  const [usuarios, localidades, unidadesProductivas, inventario] =
-    await Promise.all([
-      prisma.usuario.findMany({
-        where: { estado: "activo" },
-        select: { id: true, nombre: true },
-        orderBy: { nombre: "asc" },
-      }),
-      getLocalidadesSugeridas(),
-      prisma.unidadProductiva.findMany({
-        select: {
-          id: true,
-          nombre: true,
-          localidad: true,
-        },
-        orderBy: { nombre: "asc" },
-      }),
-      prisma.inventario.findMany({
-        select: {
-          id: true,
-          codigo: true,
-          descripcion: true,
-          unidadMedida: true,
-          valorUnitario: true,
-          stock: true,
-        },
-        orderBy: { descripcion: "asc" },
-      }),
-    ]);
+  const [
+    usuarios,
+    localidades,
+    unidadesProductivas,
+    inventario,
+    proveedoresServicio,
+  ] = await Promise.all([
+    prisma.usuario.findMany({
+      where: { estado: "activo" },
+      select: { id: true, nombre: true },
+      orderBy: { nombre: "asc" },
+    }),
+    getLocalidadesSugeridas(),
+    prisma.unidadProductiva.findMany({
+      select: {
+        id: true,
+        nombre: true,
+        localidad: true,
+      },
+      orderBy: { nombre: "asc" },
+    }),
+    prisma.inventario.findMany({
+      select: {
+        id: true,
+        codigo: true,
+        descripcion: true,
+        unidadMedida: true,
+        valorUnitario: true,
+        stock: true,
+      },
+      orderBy: { descripcion: "asc" },
+    }),
+    prisma.proveedorServicio.findMany({
+      where: { estado: "activo" },
+      select: { id: true, nombre: true },
+      orderBy: { nombre: "asc" },
+    }),
+  ]);
 
   const prioridad: OtPrioridad =
     (OT_PRIORIDADES as readonly string[]).includes(ot.prioridad)
@@ -120,6 +137,15 @@ export default async function OtDetailPage({
           costoTotal: i.costoTotal,
           stockDisponible: i.item.stock,
         })),
+        serviciosExternos: ot.serviciosExternos.map((s) => ({
+          id: s.id,
+          proveedorServicioId: s.proveedorServicioId,
+          proveedorNombre: s.proveedorServicio.nombre,
+          descripcion: s.descripcion,
+          costo: s.costo,
+          precioPendiente: s.precioPendiente,
+          fecha: s.fecha?.toISOString() ?? null,
+        })),
       }}
       usuarios={usuarios.map((u) => ({ id: u.id, nombre: u.nombre }))}
       localidades={localidades}
@@ -136,6 +162,8 @@ export default async function OtDetailPage({
         valorUnitario: i.valorUnitario,
         stock: i.stock,
       }))}
+      proveedoresServicio={proveedoresServicio}
+      canUpdate={canUpdate}
     />
   );
 }
