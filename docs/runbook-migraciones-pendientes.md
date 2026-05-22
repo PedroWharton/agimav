@@ -145,3 +145,47 @@ Verificación:
 Smoke test: abrir `/listados/proveedores` y `/listados/unidades-productivas`
 (el selector de localidad es ahora un combobox de texto); abrir
 `/listados/usuarios`, menú de un usuario → "Asignar unidades productivas".
+
+## WS-C — migraciones pendientes (agregado 2026-05-22)
+
+WS-C (Slices C1–C5, commits `d18c085`–`a649fb0`) está commiteado pero sus
+cuatro migraciones **no** están aplicadas a producción:
+
+- `20260522040000_ws_c_servicios_externos` — **aditiva**: tablas
+  `proveedores_servicio` y `servicios_externos`.
+- `20260522050000_ws_c_categorias_ot` — **aditiva**: tabla `categorias_ot` +
+  columna FK `ordenes_trabajo.categoria_id`; siembra la fila "Otros".
+- `20260522060000_ws_c_ot_rework` — **aditiva**: columnas
+  `ordenes_trabajo.fecha_programada` y `duracion_dias`.
+- `20260522070000_ws_c_movimientos_diarios` — **parcialmente destructiva**:
+  archiva la tabla plana `movimientos_diarios`, crea `movimientos_diarios`
+  (cabecera) + `movimientos_diarios_lineas`, reagrupa las 217 filas legacy y
+  **dropea la tabla legacy** tras el backfill. Por dropear una tabla, **el
+  branch de Neon de backup (Paso 1) es obligatorio** acá.
+
+WS-E (slice `43bca93`) **no tiene migración** — es solo código.
+
+No hay permisos nuevos: WS-C reusa permisos existentes (`listados.*`,
+`inventario.*`, `mantenimiento.update`, `ot.update`) y WS-E reusa
+`estadisticas.proveedores.view`. **No hace falta correr `seed-permisos.ts`.**
+
+Aplicar (desde la raíz del repo, mismo procedimiento que el Paso 2):
+
+```bash
+set -a && . ./.env.local && set +a
+
+npx prisma migrate status     # confirmar que faltan las 4 de WS-C
+npx prisma migrate deploy
+```
+
+Verificación:
+
+- `migrate status` → "Database schema is up to date!".
+- `movimientos_diarios_legacy` ya no existe; `movimientos_diarios_lineas`
+  tiene 217 filas (las 217 filas legacy reagrupadas).
+- Existe la tabla `categorias_ot` con al menos la fila "Otros".
+
+Smoke test: abrir `/listados/proveedores-servicio` y `/listados/categorias-ot`;
+crear una OT con categoría y fecha programada; abrir un mantenimiento y agregar
+un servicio externo; abrir `/movimientos-diarios`, crear un registro con una
+línea herramienta y devolverla; abrir `/estadisticas/usuarios`.

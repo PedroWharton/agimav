@@ -151,11 +151,31 @@ DROP TABLE "localidades";
 - UI de admin para asignar UPs a usuarios (en el área de usuarios/roles).
 - **Decisiones abiertas para B3 (confirmar al empezar):** (a) qué entidades se filtran row-level — Mantenimiento y OrdenTrabajo tienen FK de UP; Maquinaria NO tiene UP; Compras usa UP-texto. (b) política del usuario sin asignaciones: ¿ve todo o no ve nada?
 
-### WS-C · Trabajo sin máquina
-Ítems: rework OT, movimientos diarios, servicios externos.
-- **Servicios externos:** tabla nueva + entidad de proveedor de servicios; ligable a Mantenimiento y OT.
-- **OT rework:** acercar OT a Mantenimiento (insumos, servicios externos, fecha programada + duración día-completo, categorías con "Otros"); sin máquina.
-- **Movimientos diarios:** registro liviano tipo OT simplificada. Mixto por ítem: cada línea consumible (salida de stock) o herramienta (con devolución que reintegra al stock).
+### WS-C · Trabajo sin máquina — ✅ COMPLETADA
+Slices C1–C5 shippeados a `main` (commits `d18c085`–`a649fb0`). Migraciones
+`20260522040000`–`20260522070000` **pendientes de `migrate deploy`** — ver
+`docs/runbook-migraciones-pendientes.md`.
+
+- **C1 `d18c085`** — Servicios externos: modelos `ProveedorServicio` (catálogo)
+  y `ServicioExterno` (línea). Listado/CRUD en `/listados/proveedores-servicio`.
+- **C2 `e12efd2`** — Panel de servicios externos compartido, cableado en el
+  detalle de Mantenimiento y de OT (alta/edición/baja, flag precio pendiente).
+- **C3 `3101d6b`** — Categorías de OT: modelo `CategoriaOt` + FK en
+  `ordenes_trabajo`; listado en `/listados/categorias-ot`; siembra "Otros".
+- **C4 `481aeaa`** — OT rework: `fechaProgramada` + `duracionDias`; categoría,
+  programación y precio pendiente de insumos en form/detalle; el calendario
+  ploteea por fecha programada.
+- **C5 `a649fb0`** — Movimientos diarios: tabla legacy plana reagrupada en
+  cabecera + líneas; módulo `/movimientos-diarios` con líneas mixtas
+  consumible/herramienta e integración de stock (salida, devolución, reverso).
+
+Decisiones confirmadas por el usuario (2026-05-22): servicios externos =
+catálogo completo + líneas; movimientos diarios = cabecera + líneas.
+
+**Probe (`scripts/ws-ce-probe.ts`, 2026-05-22 contra Postgres):** OT 30 filas
+(ya sin máquina); MovimientoDiario 217 filas, todas un log plano de compras
+(sector=Compras, ninguna herramienta) — la mecánica herramienta/devolución
+nace vacía. Proveedores sin campo que distinga "servicios".
 
 ### WS-D · Mantenimiento — revisiones — ✅ COMPLETADA
 Ítem: revisión = mismo mantenimiento.
@@ -168,11 +188,17 @@ DROP TABLE "localidades";
   - `mantenimiento-detail-client.tsx`: se reemplazó la tarjeta "Revisión programada" del sidebar por el panel nuevo; se sacó el toast `childId`. El diálogo finalizar queda igual (crea la fila desde D1).
   - i18n `mantenimiento.revision.*` reescrito.
 
-### WS-E · Dashboard — métricas por usuario
-Ítem: KPI gasto por usuario + revisión del legacy.
-- Probe del legacy `Agimav23b.py`: revisar el detalle "por usuario" (totalizar + detalle) para replicar la lógica.
-- KPI "Gasto por usuario" para trazabilidad de qué pide cada uno.
-- Caveat: todas las facturas legacy traen `usuario='Sistema'` — la métrica nace vacía y se llena con datos nuevos post-cutover.
+### WS-E · Dashboard — métricas por usuario — ✅ COMPLETADA
+Slice E1 `43bca93` shippeado a `main`. Sin migración (solo código).
+
+- **E1** — Subpágina `/estadisticas/usuarios`: tabla por usuario que combina el
+  gasto facturado (`Factura.usuario`) con la actividad de pedidos
+  (`Requisicion.solicitante`), mergeando nombres normalizados. KPIs, top 10,
+  export XLSX, selector de rango. Gated por `estadisticas.proveedores.view`.
+- Decisión confirmada (2026-05-22): la métrica sale de facturas + requisiciones.
+- Caveat vigente: las facturas legacy traen `usuario='Sistema'` (39 filas); ya
+  aparecen usuarios reales post-cutover. La subpágina muestra una nota al
+  respecto — la métrica se llena con datos nuevos.
 
 ---
 

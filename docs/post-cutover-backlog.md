@@ -67,10 +67,8 @@ The string constants are now centralized (`lib/mantenimiento/estado.ts`, `lib/co
 **Shape:** `SparkLine`, `AbcPie`, `PriceChart`, `HorizontalBarChart` are all pure SVG. Swap to Recharts if interactivity demand grows.
 **Why deferred:** static charts are faster to render and have zero dep surface.
 
-### Slice E (gasto por proveedor) will need a "gasto por usuario" companion
-**When:** 6 months post-cutover (≈ 2026-10-19).
-**Shape:** legacy facturas all carry `usuario='Sistema'`, so user-attribution was impossible. Going forward, new facturas will write real usuarios — the original "gasto por usuario" report becomes viable once enough data accrues.
-**Why deferred:** dead-on-arrival with current data.
+### ~~Slice E (gasto por proveedor) will need a "gasto por usuario" companion~~ — ✅ SHIPPED (WS-E, 2026-05-22)
+Resuelto por WS-E (`43bca93`): `/estadisticas/usuarios` combina gasto facturado (`Factura.usuario`) y actividad de pedidos (`Requisicion.solicitante`). El caveat de `usuario='Sistema'` en facturas legacy se muestra como nota en la pantalla; la métrica se llena con datos post-cutover.
 
 ## Phase 5 (Compras) — decisions still unresolved
 
@@ -115,13 +113,11 @@ The string constants are now centralized (`lib/mantenimiento/estado.ts`, `lib/co
 
 ## Phase 6 (Órdenes de Trabajo) — scope to revisit
 
-### OT "Movimiento Diario" + dedicated historial view
+### Historial de OT — dedicated per-OT state-transition log
 **When:** when triggered — confirm scope with Cervi first.
-**Shape:** parity audit 2026-04-19 flagged two legacy OT entry points with no web equivalent:
-- **"Movimiento Diario"** (`Agimav23b.py` ~line 20225) — opens a dialog to record daily-activity justifications per OT. Purpose unclear from code alone: could be time-tracking, could be a free-text journal, could be a duplicate of OT `descripcion` updates.
-- **Historial de OT** — a dedicated per-OT state-transition log. Today the listing shows current estado only; state changes are implicit.
-**Why deferred:** not in acceptance criteria, no day-one blocker, scope requires Cervi input before we commit to UI. If "Movimiento Diario" turns out to be just a notes blob, it may collapse into the existing OT detail form instead of a new surface.
-**How to apply:** before building, schedule 10 min with Cervi to demo the legacy button and capture what they actually use it for. Log the finding here before implementing.
+**Shape:** a dedicated per-OT state-transition log. Today the OT listing shows the current estado only; state changes are implicit. Mantenimiento already has `MantenimientoHistorial` — OT could get an equivalent.
+**Why deferred:** not in acceptance criteria, no day-one blocker.
+**Note:** the sibling concern, "Movimiento Diario", was **shipped as WS-C C5** (`a649fb0`) — a standalone `/movimientos-diarios` module (cabecera + líneas, consumible/herramienta), not an OT-attached dialog.
 
 ## Ops / platform
 
