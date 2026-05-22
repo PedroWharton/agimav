@@ -1827,6 +1827,7 @@
         "proveedoresServicio": "Talleres y prestadores externos. Sus servicios se enganchan a mantenimientos y órdenes de trabajo.",
         "unidadesProductivas": "Obras y bases operativas. Las máquinas y OTs se asocian a una unidad.",
         "tiposUnidad": "Clasificación de unidades productivas: obra vial, cantera, base logística, etc.",
+        "categoriasOt": "Categorías para clasificar órdenes de trabajo. Configurable, con la opción \"Otros\" siempre disponible.",
         "unidadesMedida": "Unidades que usan los items de inventario: litros, kilos, unidades, metros."
       }
     },
@@ -1990,6 +1991,23 @@
         "inactivosCaption": "conservan historial, ocultos en altas",
         "nuevos": "Altas últimos 30 días",
         "nuevosCaption": "desde {desde}"
+      }
+    },
+    "categoriasOt": {
+      "titulo": "Categorías de OT",
+      "descripcion": "Catálogo configurable para clasificar las órdenes de trabajo",
+      "singular": "Categoría",
+      "plural": "categorías de OT",
+      "nombre": "Nombre",
+      "otCount": "Órdenes de trabajo",
+      "buscarPlaceholder": "Buscar categoría…",
+      "eliminarPregunta": "¿Eliminar la categoría \"{nombre}\"?",
+      "eliminarEnUso": "No se puede eliminar \"{nombre}\": {count, plural, one {# orden de trabajo la usa} other {# órdenes de trabajo la usan}}.",
+      "kpi": {
+        "total": "Total categorías",
+        "totalCaption": "disponibles",
+        "enUso": "En uso",
+        "enUsoCaption": "clasifican órdenes de trabajo"
       }
     },
     "proveedoresServicio": {

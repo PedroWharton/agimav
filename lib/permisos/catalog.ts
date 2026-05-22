@@ -179,7 +179,7 @@ export const PERMISOS_CATALOG: PermisoDef[] = [
   {
     codigo: "listados.master_data.manage",
     modulo: "listados",
-    descripcion: "Gestionar localidades, tipos de unidad, unidades de medida y unidades productivas",
+    descripcion: "Gestionar tipos de unidad, unidades de medida, unidades productivas y categorías de OT",
   },
 ];
 

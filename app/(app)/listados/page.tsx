@@ -7,6 +7,7 @@ import {
   Building2,
   Factory,
   Wrench,
+  Layers,
   Info,
   type LucideIcon,
 } from "lucide-react";
@@ -56,6 +57,7 @@ export default async function ListadosIndexPage() {
     unidadesProductivasSample,
     tiposUnidadTotal,
     tipoUnidadNames,
+    categoriasOtTotal,
     unidadesMedidaTotal,
     unidadesMedidaSample,
   ] = await Promise.all([
@@ -82,6 +84,7 @@ export default async function ListadosIndexPage() {
       orderBy: { nombre: "asc" },
       take: 5,
     }),
+    prisma.categoriaOt.count(),
     prisma.unidadMedida.count(),
     prisma.unidadMedida.findMany({
       select: { abreviacion: true },
@@ -170,6 +173,13 @@ export default async function ListadosIndexPage() {
           descriptionKey: "listados.tiles.descripciones.tiposUnidad",
           count: tiposUnidadTotal,
           meta: tipoUnidadMeta,
+        },
+        {
+          href: "/listados/categorias-ot",
+          icon: Layers,
+          labelKey: "listados.categoriasOt.titulo",
+          descriptionKey: "listados.tiles.descripciones.categoriasOt",
+          count: categoriasOtTotal,
         },
       ],
     },

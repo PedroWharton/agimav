@@ -110,6 +110,7 @@ model Usuario {
 
   proveedoresServicioCreados ProveedorServicio[] @relation("ProveedorServicioCreatedBy")
   serviciosExternosCreados   ServicioExterno[]   @relation("ServicioExternoCreatedBy")
+  categoriasOtCreadas        CategoriaOt[]       @relation("CategoriaOtCreatedBy")
 
   @@map("usuarios")
 }
@@ -885,11 +886,30 @@ model OrdenTrabajo {
   descripcionTrabajo String?  @map("descripcion_trabajo")
   observaciones      String?
   creadoPor          String?  @map("creado_por")
+  categoriaId        Int?     @map("categoria_id")
+  categoria          CategoriaOt? @relation(fields: [categoriaId], references: [id], onDelete: SetNull)
 
   insumos           OtInsumo[]
   serviciosExternos ServicioExterno[]
 
+  @@index([categoriaId])
   @@map("ordenes_trabajo")
+}
+
+/// WS-C · Catálogo configurable de categorías de Orden de Trabajo. La fila
+/// "Otros" se siembra en la migración como fallback siempre disponible.
+model CategoriaOt {
+  id     Int    @id @default(autoincrement())
+  nombre String @unique
+
+  ordenesTrabajo OrdenTrabajo[]
+
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+  createdById Int?     @map("created_by")
+  createdBy   Usuario? @relation("CategoriaOtCreatedBy", fields: [createdById], references: [id], onDelete: SetNull)
+
+  @@map("categorias_ot")
 }
 
 model OtInsumo {

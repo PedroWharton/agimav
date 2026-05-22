@@ -1821,6 +1821,7 @@
         "proveedoresServicio": "Workshops and external providers. Their services attach to maintenance jobs and work orders.",
         "unidadesProductivas": "Sites and operational bases. Machines and WOs are associated with a unit.",
         "tiposUnidad": "Classification of production units: road works, quarry, logistics base, etc.",
+        "categoriasOt": "Categories to classify work orders. Configurable, with the \"Other\" option always available.",
         "unidadesMedida": "Units used by inventory items: liters, kilos, units, meters."
       }
     },
@@ -1984,6 +1985,23 @@
         "inactivosCaption": "history preserved, hidden from new records",
         "nuevos": "New in last 30 days",
         "nuevosCaption": "since {desde}"
+      }
+    },
+    "categoriasOt": {
+      "titulo": "WO categories",
+      "descripcion": "Configurable catalog to classify work orders",
+      "singular": "Category",
+      "plural": "WO categories",
+      "nombre": "Name",
+      "otCount": "Work orders",
+      "buscarPlaceholder": "Search category…",
+      "eliminarPregunta": "Delete the category \"{nombre}\"?",
+      "eliminarEnUso": "Cannot delete \"{nombre}\": {count, plural, one {# work order uses it} other {# work orders use it}}.",
+      "kpi": {
+        "total": "Total categories",
+        "totalCaption": "available",
+        "enUso": "In use",
+        "enUsoCaption": "classify work orders"
       }
     },
     "proveedoresServicio": {
