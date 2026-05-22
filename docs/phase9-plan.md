@@ -50,7 +50,14 @@ Cada ítem = 1 commit. `npm run typecheck` + `npm run lint` limpio.
 
 Cada WS: spec-first (`docs/ux-spec/`), probe de datos si aplica, migración Prisma, luego slices mergeables.
 
-### WS-A · Costos y precios pendientes
+### WS-A · Costos y precios pendientes — ✅ COMPLETADA
+Slices A1–A4 shippeados a `main` (commits `a8d390e`–`3ae6058`).
+- **A1** — migración (`precioUnitario?` en RecepciónDetalle, `precioPendiente` en MantenimientoInsumo/OtInsumo) + completar recepción sin factura registrando el precio.
+- **A2** — flag `precioPendiente` por insumo en el detalle de mantenimiento; los pendientes no suman al costo.
+- **A3** — al cargar una factura se resuelven los insumos de mantenimiento con precio pendiente del ítem.
+- **A4** — pantalla `/compras/precios-pendientes` con resolución manual.
+- Pendiente de WS-C: cablear `OtInsumo.precioPendiente` (la columna ya existe).
+
 Ítems: OC sin precio (resolución completa), facturas/remitos, precios pendientes.
 - Probe: cuántos insumos/recepciones quedarían sin precio en datos legacy.
 - Schema: flag `precioPendiente` en líneas de OC / RecepciónDetalle / MantenimientoInsumo / OtInsumo.
