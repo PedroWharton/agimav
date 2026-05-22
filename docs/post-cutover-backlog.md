@@ -145,6 +145,11 @@ The string constants are now centralized (`lib/mantenimiento/estado.ts`, `lib/co
 **Shape:** hobby plan caps daily invocations. If scheduling plantillas needs sub-daily runs, upgrade.
 **Why deferred:** scheduler itself isn't wired yet.
 
+### Base de desarrollo separada de producción
+**When:** immediately — hoy cualquier trabajo de desarrollo corre contra la base de producción.
+**Shape:** hay una sola base Neon (`neondb` en `ep-morning-bird-aejmvo5r…`); el `.env.local` del repo apunta ahí, así que dev = prod. Crear un branch Neon dedicado para desarrollo, apuntar `.env.local` a ese branch, y reservar la URL de prod solo para `migrate deploy` y la app desplegada en Vercel. Documentar cuál es cuál.
+**Why deferred:** el cutover se hizo con una sola base. El riesgo se materializó el 2026-05-22: `prisma migrate status` reveló que la rama sin mergear `feat/asistente-ia` había aplicado 2 migraciones (`agente_ia_skeleton`, `agente_usuario_view`) directo a prod — 4 tablas `agente_*`, la vista `usuario_safe` y el rol `agente_app` con un password placeholder. Mitigado: el rol quedó `NOLOGIN` (2026-05-22). Las tablas/vista quedan como drift inerte en prod hasta que la rama se mergee o se revierta. Detalle y plan en `docs/runbook-migraciones-pendientes.md`.
+
 ## Triage cadence
 
 - **Every Monday** for 30 days post-cutover: re-read this file, promote `immediately` items off the backlog.
