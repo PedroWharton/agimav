@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useMemo, useState, useTransition } from "react";
 import { useTranslations } from "next-intl";
 import { format } from "date-fns";
@@ -356,6 +357,11 @@ export function UsuariosClient({
             <ActionsMenu>
               <DropdownMenuItem onClick={() => openEdit(u)}>
                 {t("listados.common.editar")}
+              </DropdownMenuItem>
+              <DropdownMenuItem asChild>
+                <Link href={`/listados/usuarios/${u.id}/unidades`}>
+                  {t("listados.usuarios.asignarUnidades")}
+                </Link>
               </DropdownMenuItem>
               {activo ? (
                 <ConfirmDialog

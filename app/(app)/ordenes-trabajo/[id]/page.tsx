@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/db";
 import { requireViewOrRedirect } from "@/lib/rbac";
+import { canAccessUp } from "@/lib/up-scope";
 import { getLocalidadesSugeridas } from "@/lib/localidades";
 
 import { OtDetailClient } from "./ot-detail-client";
@@ -50,6 +51,10 @@ export default async function OtDetailPage({
     },
   });
   if (!ot) notFound();
+
+  // WS-B3: un usuario con scoping per-UP no puede abrir el detalle de una OT
+  // fuera de sus unidades asignadas.
+  if (!(await canAccessUp(session, ot.unidadProductivaId))) notFound();
 
   const [usuarios, localidades, unidadesProductivas, inventario] =
     await Promise.all([

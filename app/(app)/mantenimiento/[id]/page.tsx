@@ -2,6 +2,7 @@ import { notFound, redirect } from "next/navigation";
 
 import { auth } from "@/lib/auth";
 import { hasPermission, requireViewOrRedirect } from "@/lib/rbac";
+import { canAccessUp } from "@/lib/up-scope";
 import { prisma } from "@/lib/db";
 
 import {
@@ -80,6 +81,10 @@ export default async function MantenimientoDetailPage({
     },
   });
   if (!mant) notFound();
+
+  // WS-B3: un usuario con scoping per-UP no puede abrir el detalle de un
+  // mantenimiento fuera de sus unidades asignadas.
+  if (!(await canAccessUp(session, mant.unidadProductivaId))) notFound();
 
   const [usuarios, unidadesProductivas, inventario] = await Promise.all([
     prisma.usuario.findMany({

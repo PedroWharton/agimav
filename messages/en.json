@@ -1891,6 +1891,7 @@
       "rol": "Role",
       "estado": "Status",
       "sinRol": "No role",
+      "asignarUnidades": "Assign production units",
       "buscarPlaceholder": "Search name, email or role…",
       "kpi": {
         "total": "Total users",

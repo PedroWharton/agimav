@@ -1,6 +1,7 @@
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/db";
 import { requireViewOrRedirect } from "@/lib/rbac";
+import { accessibleUpIds } from "@/lib/up-scope";
 import { formatOTNumber } from "@/lib/ot/ot-number";
 import type { CalendarEvent } from "@/components/ordenes/week-calendar";
 
@@ -68,9 +69,21 @@ export default async function OrdenesTrabajoListPage({
   const weekEnd = new Date(weekMonday);
   weekEnd.setDate(weekEnd.getDate() + 7);
 
+  // WS-B3: scoping per-UP. Si hay asignaciones, se ven las OTs de esas UPs
+  // más las sin UP; `null` ⇒ sin restricción.
+  const ups = await accessibleUpIds(session);
+
   const rows = await prisma.ordenTrabajo.findMany({
     where: {
       fechaCreacion: { gte: weekMonday, lt: weekEnd },
+      ...(ups
+        ? {
+            OR: [
+              { unidadProductivaId: { in: ups } },
+              { unidadProductivaId: null },
+            ],
+          }
+        : {}),
     },
     select: {
       id: true,

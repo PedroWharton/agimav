@@ -1897,6 +1897,7 @@
       "rol": "Rol",
       "estado": "Estado",
       "sinRol": "Sin rol",
+      "asignarUnidades": "Asignar unidades productivas",
       "buscarPlaceholder": "Buscar nombre, email o rol…",
       "kpi": {
         "total": "Total usuarios",

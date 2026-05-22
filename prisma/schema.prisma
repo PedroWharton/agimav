@@ -105,6 +105,9 @@ model Usuario {
 
   rolPermisosCreados RolPermiso[] @relation("RolPermisoCreatedBy")
 
+  unidadesProductivasAsignadas      UsuarioUnidadProductiva[] @relation("UsuarioUPAsignada")
+  usuarioUnidadesProductivasCreadas UsuarioUnidadProductiva[] @relation("UsuarioUPCreatedBy")
+
   @@map("usuarios")
 }
 
@@ -162,6 +165,7 @@ model UnidadProductiva {
   ordenesTrabajo          OrdenTrabajo[]
   mantenimientosUnidad    Mantenimiento[] @relation("MantenimientoUnidadProductiva")
   mantenimientosTaller    Mantenimiento[] @relation("MantenimientoTallerAsignado")
+  usuariosAsignados       UsuarioUnidadProductiva[]
 
   createdAt   DateTime @default(now()) @map("created_at")
   updatedAt   DateTime @updatedAt @map("updated_at")
@@ -169,6 +173,27 @@ model UnidadProductiva {
   createdBy   Usuario? @relation("UnidadProductivaCreatedBy", fields: [createdById], references: [id], onDelete: SetNull)
 
   @@map("unidades_productivas")
+}
+
+/// WS-B3: asignación per-UP para el scoping row-level. Un usuario puede tener
+/// 0..N unidades productivas asignadas. Sin asignaciones = ve todo (opt-in);
+/// un usuario con `admin.all` ignora el scoping. Hoy filtra Mantenimiento y
+/// OrdenTrabajo (las dos entidades con FK real de UP).
+model UsuarioUnidadProductiva {
+  usuarioId          Int @map("usuario_id")
+  unidadProductivaId Int @map("unidad_productiva_id")
+
+  usuario          Usuario          @relation("UsuarioUPAsignada", fields: [usuarioId], references: [id], onDelete: Cascade)
+  unidadProductiva UnidadProductiva @relation(fields: [unidadProductivaId], references: [id], onDelete: Cascade)
+
+  createdAt   DateTime @default(now()) @map("created_at")
+  createdById Int?     @map("created_by")
+  createdBy   Usuario? @relation("UsuarioUPCreatedBy", fields: [createdById], references: [id], onDelete: SetNull)
+
+  @@id([usuarioId, unidadProductivaId])
+  @@index([usuarioId])
+  @@index([unidadProductivaId])
+  @@map("usuario_unidades_productivas")
 }
 
 model Proveedor {

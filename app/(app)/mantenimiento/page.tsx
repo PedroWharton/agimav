@@ -1,6 +1,7 @@
 import { prisma } from "@/lib/db";
 import { auth } from "@/lib/auth";
 import { requireViewOrRedirect } from "@/lib/rbac";
+import { accessibleUpIds } from "@/lib/up-scope";
 
 import { MantenimientosClient, type MantenimientoRow } from "./mantenimientos-client";
 import { MANT_ESTADOS_ACTIVOS } from "@/lib/mantenimiento/estado";
@@ -9,7 +10,19 @@ export default async function MantenimientoListPage() {
   const session = await auth();
   requireViewOrRedirect(session, "mantenimiento.view");
 
+  // WS-B3: scoping per-UP. `ups === null` ⇒ sin restricción (admin o sin
+  // asignaciones). Si hay asignaciones, se ven las de esas UPs + las sin UP.
+  const ups = await accessibleUpIds(session);
+
   const rows = await prisma.mantenimiento.findMany({
+    where: ups
+      ? {
+          OR: [
+            { unidadProductivaId: { in: ups } },
+            { unidadProductivaId: null },
+          ],
+        }
+      : {},
     select: {
       id: true,
       tipo: true,
