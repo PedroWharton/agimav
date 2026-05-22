@@ -39,7 +39,7 @@ const schema = z.object({
       (v) => v == null || (CONDICIONES_IVA as readonly string[]).includes(v),
       { message: "Condición IVA inválida" },
     ),
-  localidadId: z.union([z.coerce.number().int().positive(), z.null()]).optional(),
+  localidad: optionalString(120),
   email: z
     .string()
     .trim()
@@ -73,7 +73,6 @@ export async function createProveedor(raw: unknown): Promise<ActionResult> {
     await prisma.proveedor.create({
       data: {
         ...parsed.data,
-        localidadId: parsed.data.localidadId ?? null,
         estado: "activo",
         createdById: userIdFromSession(session),
       },
@@ -107,7 +106,6 @@ export async function updateProveedor(
       where: { id },
       data: {
         ...parsed.data,
-        localidadId: parsed.data.localidadId ?? null,
       },
     });
   } catch {

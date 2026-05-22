@@ -67,7 +67,6 @@ import {
 } from "../types";
 
 type UsuarioOpt = { id: number; nombre: string };
-type LocalidadOpt = { id: number; nombre: string };
 type UpOpt = { id: number; nombre: string; localidad: string | null };
 
 type InventarioOpt = {
@@ -104,7 +103,7 @@ export type OtDetail = {
   creadoPor: string | null;
   solicitanteId: number | null;
   responsableId: number | null;
-  localidadId: number | null;
+  localidad: string | null;
   unidadProductivaId: number | null;
   insumos: OtInsumoRow[];
 };
@@ -142,7 +141,7 @@ export function OtDetailClient({
 }: {
   ot: OtDetail;
   usuarios: UsuarioOpt[];
-  localidades: LocalidadOpt[];
+  localidades: string[];
   unidadesProductivas: UpOpt[];
   inventario: InventarioOpt[];
 }) {
@@ -170,7 +169,7 @@ export function OtDetailClient({
   const [responsableId, setResponsableId] = useState<number | null>(
     ot.responsableId,
   );
-  const [localidadId, setLocalidadId] = useState<number | null>(ot.localidadId);
+  const [localidad, setLocalidad] = useState<string>(ot.localidad ?? "");
   const [unidadProductivaId, setUnidadProductivaId] = useState<number | null>(
     ot.unidadProductivaId,
   );
@@ -199,8 +198,7 @@ export function OtDetailClient({
   );
 
   const localidadOptions = useMemo(
-    () =>
-      localidades.map((l) => ({ value: String(l.id), label: l.nombre })),
+    () => localidades.map((l) => ({ value: l, label: l })),
     [localidades],
   );
 
@@ -286,7 +284,7 @@ export function OtDetailClient({
       const res = await updateOT(ot.id, {
         titulo,
         descripcionTrabajo,
-        localidadId,
+        localidad,
         unidadProductivaId,
         solicitanteId,
         responsableId,
@@ -413,7 +411,7 @@ export function OtDetailClient({
     },
     {
       label: tO("campos.localidad"),
-      value: localidades.find((l) => l.id === ot.localidadId)?.nombre ?? null,
+      value: ot.localidad ?? null,
     },
     {
       label: tO("campos.unidadProductiva"),
@@ -847,11 +845,10 @@ export function OtDetailClient({
               <div className="flex flex-col gap-1.5">
                 <Label>{tO("campos.localidad")}</Label>
                 <Combobox
-                  value={localidadId ? String(localidadId) : ""}
-                  onChange={(v) => setLocalidadId(v ? Number(v) : null)}
-                  options={[{ value: "", label: "—" }, ...localidadOptions]}
+                  value={localidad}
+                  onChange={setLocalidad}
+                  options={localidadOptions}
                   placeholder={tO("campos.localidad")}
-                  allowCreate={false}
                 />
               </div>
               <div className="flex flex-col gap-1.5">

@@ -42,7 +42,7 @@ const optionalId = z.coerce
 const createSchema = z.object({
   titulo: z.string().trim().min(1).max(200),
   descripcionTrabajo: optionalText(2000),
-  localidadId: optionalId,
+  localidad: optionalText(120),
   unidadProductivaId: optionalId,
   solicitanteId: optionalId,
   responsableId: optionalId,
@@ -76,7 +76,7 @@ export async function createOT(
       data: {
         titulo: data.titulo,
         descripcionTrabajo: data.descripcionTrabajo,
-        localidadId: data.localidadId,
+        localidad: data.localidad,
         unidadProductivaId: data.unidadProductivaId,
         solicitanteId: data.solicitanteId,
         responsableId: data.responsableId,
@@ -133,7 +133,7 @@ export async function updateOT(
       data: {
         titulo: data.titulo,
         descripcionTrabajo: data.descripcionTrabajo,
-        localidadId: data.localidadId,
+        localidad: data.localidad,
         unidadProductivaId: data.unidadProductivaId,
         solicitanteId: data.solicitanteId,
         responsableId: data.responsableId,

@@ -11,7 +11,12 @@ import type { ActionResult } from "./types";
 
 const schema = z.object({
   nombre: z.string().trim().min(1, "Obligatorio").max(200),
-  localidadId: z.union([z.coerce.number().int().positive(), z.null()]).optional(),
+  localidad: z
+    .string()
+    .trim()
+    .max(120)
+    .optional()
+    .transform((v) => (v ? v : null)),
   tipoUnidadId: z.union([z.coerce.number().int().positive(), z.null()]).optional(),
 });
 
@@ -32,7 +37,7 @@ export async function createUnidadProductiva(raw: unknown): Promise<ActionResult
     await prisma.unidadProductiva.create({
       data: {
         nombre: parsed.data.nombre,
-        localidadId: parsed.data.localidadId ?? null,
+        localidad: parsed.data.localidad,
         tipoUnidadId: parsed.data.tipoUnidadId ?? null,
         createdById: userIdFromSession(session),
       },
@@ -66,7 +71,7 @@ export async function updateUnidadProductiva(
       where: { id },
       data: {
         nombre: parsed.data.nombre,
-        localidadId: parsed.data.localidadId ?? null,
+        localidad: parsed.data.localidad,
         tipoUnidadId: parsed.data.tipoUnidadId ?? null,
       },
     });

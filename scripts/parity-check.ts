@@ -41,7 +41,6 @@ const TABLES = [
   "roles",
   "usuarios",
   "unidades_medida",
-  "localidades",
   "tipos_unidad",
   "unidades_productivas",
   "proveedores",

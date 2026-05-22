@@ -7,6 +7,7 @@ import {
   requireViewOrRedirect,
   userNameFromSession,
 } from "@/lib/rbac";
+import { getLocalidadesSugeridas } from "@/lib/localidades";
 
 import { SolicitudForm } from "../solicitud-form";
 
@@ -33,10 +34,7 @@ export default async function NuevaSolicitudPage() {
       select: { nombre: true },
       orderBy: { nombre: "asc" },
     }),
-    prisma.localidad.findMany({
-      select: { nombre: true },
-      orderBy: { nombre: "asc" },
-    }),
+    getLocalidadesSugeridas(),
     prisma.usuario.findMany({
       where: { estado: "activo" },
       select: { nombre: true },
@@ -55,7 +53,7 @@ export default async function NuevaSolicitudPage() {
         unidadMedida: i.unidadMedida,
       }))}
       unidadesProductivas={unidades.map((u) => u.nombre)}
-      localidades={localidades.map((l) => l.nombre)}
+      localidades={localidades}
       usuariosSolicitantes={usuarios.map((u) => u.nombre)}
       currentUserName={currentUserName}
       canMutate

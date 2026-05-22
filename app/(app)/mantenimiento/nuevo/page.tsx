@@ -51,7 +51,7 @@ export default async function NuevoMantenimientoPage({
         select: {
           id: true,
           nombre: true,
-          localidad: { select: { nombre: true } },
+          localidad: true,
         },
         orderBy: { nombre: "asc" },
       }),
@@ -113,7 +113,7 @@ export default async function NuevoMantenimientoPage({
       unidadesProductivas={unidadesProductivas.map((up) => ({
         id: up.id,
         nombre: up.nombre,
-        localidad: up.localidad?.nombre ?? null,
+        localidad: up.localidad ?? null,
       }))}
       plantillas={plantillas.map((p) => ({
         id: p.id,

@@ -78,7 +78,7 @@ export default async function PlantillaDetailPage({
         select: {
           id: true,
           nombre: true,
-          localidad: { select: { nombre: true } },
+          localidad: true,
         },
         orderBy: { nombre: "asc" },
       }),
@@ -127,7 +127,7 @@ export default async function PlantillaDetailPage({
       unidadesProductivas={unidadesProductivas.map((up) => ({
         id: up.id,
         nombre: up.nombre,
-        localidad: up.localidad?.nombre ?? null,
+        localidad: up.localidad ?? null,
       }))}
       canManage={hasPermission(session, "mantenimiento.plantillas.manage")}
     />

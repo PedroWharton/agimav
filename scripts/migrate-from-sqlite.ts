@@ -127,16 +127,18 @@ async function main() {
       }),
   );
 
-  await upsertMany(
-    "localidades",
-    readAll("localidades") as Array<{ id: number; nombre: string }>,
-    (r) =>
-      prisma.localidad.upsert({
-        where: { id: r.id },
-        create: { id: r.id, nombre: r.nombre },
-        update: { nombre: r.nombre },
-      }),
-  );
+  // WS-B: la tabla `localidades` fue eliminada. `localidad` es ahora texto plano
+  // en unidades_productivas, proveedores y ordenes_trabajo. Mapeamos id→nombre
+  // desde el SQLite legacy para backfillear ese texto durante la importación.
+  const localidadNombrePorId = new Map<number, string>();
+  for (const r of readAll("localidades") as Array<{
+    id: number;
+    nombre: string;
+  }>) {
+    localidadNombrePorId.set(r.id, r.nombre);
+  }
+  const localidadTexto = (id: unknown): string | null =>
+    typeof id === "number" ? (localidadNombrePorId.get(id) ?? null) : null;
 
   await upsertMany(
     "tipos_unidad",
@@ -185,12 +187,12 @@ async function main() {
         create: {
           id: r.id,
           nombre: r.nombre,
-          localidadId: r.localidad_id,
+          localidad: localidadTexto(r.localidad_id),
           tipoUnidadId: r.tipo_unidad_id,
         },
         update: {
           nombre: r.nombre,
-          localidadId: r.localidad_id,
+          localidad: localidadTexto(r.localidad_id),
           tipoUnidadId: r.tipo_unidad_id,
         },
       }),
@@ -207,7 +209,7 @@ async function main() {
           nombre: r.nombre as string,
           contacto: (r.contacto as string | null) ?? null,
           estado: (r.estado as string | null) ?? "activo",
-          localidadId: (r.localidad_id as number | null) ?? null,
+          localidad: localidadTexto(r.localidad_id),
           direccion: (r.direccion as string | null) ?? null,
           email: (r.email as string | null) ?? null,
           telefono: (r.telefono as string | null) ?? null,
@@ -220,7 +222,7 @@ async function main() {
           nombre: r.nombre as string,
           contacto: (r.contacto as string | null) ?? null,
           estado: (r.estado as string | null) ?? "activo",
-          localidadId: (r.localidad_id as number | null) ?? null,
+          localidad: localidadTexto(r.localidad_id),
           direccion: (r.direccion as string | null) ?? null,
           email: (r.email as string | null) ?? null,
           telefono: (r.telefono as string | null) ?? null,
@@ -321,7 +323,6 @@ async function main() {
           monto: (r.monto as number | null) ?? null,
           observaciones: (r.observaciones as string | null) ?? null,
           justificacion: (r.justificacion as string | null) ?? null,
-          localidadId: (r.localidad_id as number | null) ?? null,
           unidadProductivaId: (r.unidad_productiva_id as number | null) ?? null,
         },
         update: {},
@@ -934,7 +935,7 @@ async function main() {
           numeroOt: (r.numero_ot as string | null) ?? null,
           fechaCreacion: toDate(r.fecha_creacion) ?? new Date(),
           fechaFinalizacion: toDate(r.fecha_finalizacion),
-          localidadId: (r.localidad_id as number | null) ?? null,
+          localidad: localidadTexto(r.localidad_id),
           unidadProductivaId: (r.unidad_productiva_id as number | null) ?? null,
           solicitanteId: (r.solicitante_id as number | null) ?? null,
           responsableId: (r.responsable_id as number | null) ?? null,

@@ -3,6 +3,7 @@ import { notFound, redirect } from "next/navigation";
 import { prisma } from "@/lib/db";
 import { auth } from "@/lib/auth";
 import { hasPermission, requireViewOrRedirect, userNameFromSession } from "@/lib/rbac";
+import { getLocalidadesSugeridas } from "@/lib/localidades";
 
 import { SolicitudForm } from "../solicitud-form";
 import type { DetalleLine } from "@/components/compras/detalle-lines-editor";
@@ -56,10 +57,7 @@ export default async function SolicitudDetailPage({
         select: { nombre: true },
         orderBy: { nombre: "asc" },
       }),
-      prisma.localidad.findMany({
-        select: { nombre: true },
-        orderBy: { nombre: "asc" },
-      }),
+      getLocalidadesSugeridas(),
       prisma.usuario.findMany({
         where: { estado: "activo" },
         select: { nombre: true },
@@ -147,7 +145,7 @@ export default async function SolicitudDetailPage({
         unidadMedida: i.unidadMedida,
       }))}
       unidadesProductivas={unidades.map((u) => u.nombre)}
-      localidades={localidades.map((l) => l.nombre)}
+      localidades={localidades}
       usuariosSolicitantes={usuarios.map((u) => u.nombre)}
       currentUserName={currentUserName}
       canMutate={canMutate}

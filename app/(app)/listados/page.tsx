@@ -3,7 +3,6 @@ import {
   Shield,
   Ruler,
   Tag,
-  MapPin,
   Users,
   Building2,
   Factory,
@@ -50,8 +49,6 @@ export default async function ListadosIndexPage() {
     roleNames,
     proveedoresTotal,
     proveedoresActivos,
-    localidadesTotal,
-    localidadesSample,
     unidadesProductivasTotal,
     unidadesProductivasSample,
     tiposUnidadTotal,
@@ -68,12 +65,6 @@ export default async function ListadosIndexPage() {
     }),
     prisma.proveedor.count(),
     prisma.proveedor.count({ where: { estado: "activo" } }),
-    prisma.localidad.count(),
-    prisma.localidad.findMany({
-      select: { nombre: true },
-      orderBy: { nombre: "asc" },
-      take: 3,
-    }),
     prisma.unidadProductiva.count(),
     prisma.unidadProductiva.findMany({
       select: { nombre: true },
@@ -98,7 +89,6 @@ export default async function ListadosIndexPage() {
   const proveedoresInactivos = proveedoresTotal - proveedoresActivos;
 
   const roleSample = roleNames.slice(0, 5).map((r) => r.nombre).join(", ");
-  const localidadesMeta = joinSample(localidadesSample.map((l) => l.nombre));
   const upMeta = joinSample(unidadesProductivasSample.map((u) => u.nombre));
   const tipoUnidadMeta = tipoUnidadNames.map((t) => t.nombre).join(" · ");
   const unidadesMedidaMeta = unidadesMedidaSample
@@ -147,14 +137,6 @@ export default async function ListadosIndexPage() {
       id: "estructura",
       labelKey: "listados.tiles.grupos.estructura",
       tiles: [
-        {
-          href: "/listados/localidades",
-          icon: MapPin,
-          labelKey: "listados.localidades.titulo",
-          descriptionKey: "listados.tiles.descripciones.localidades",
-          count: localidadesTotal,
-          meta: localidadesMeta,
-        },
         {
           href: "/listados/unidades-productivas",
           icon: Factory,

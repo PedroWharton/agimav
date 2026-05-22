@@ -1,6 +1,7 @@
 import { prisma } from "@/lib/db";
 import { auth } from "@/lib/auth";
 import { hasPermission, requireViewOrRedirect } from "@/lib/rbac";
+import { getLocalidadesSugeridas } from "@/lib/localidades";
 
 import { InventarioClient, type InventarioRow } from "./inventario-client";
 
@@ -18,7 +19,7 @@ export default async function InventarioPage() {
 
   const [
     items,
-    localidadesListado,
+    localidadesSugeridas,
     unidadesProductivas,
     unidadesMedida,
     lastMovimiento,
@@ -38,10 +39,7 @@ export default async function InventarioPage() {
       },
       orderBy: { descripcion: "asc" },
     }),
-    prisma.localidad.findMany({
-      select: { nombre: true },
-      orderBy: { nombre: "asc" },
-    }),
+    getLocalidadesSugeridas(),
     prisma.unidadProductiva.findMany({
       select: { nombre: true },
       orderBy: { nombre: "asc" },
@@ -75,7 +73,7 @@ export default async function InventarioPage() {
     if (r.categoria) categoriaSet.add(r.categoria);
     if (r.localidad) localidadSet.add(r.localidad);
   }
-  for (const l of localidadesListado) localidadSet.add(l.nombre);
+  for (const l of localidadesSugeridas) localidadSet.add(l);
   const categoriasDistinct = Array.from(categoriaSet).sort((a, b) =>
     a.localeCompare(b, "es"),
   );

@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/db";
 import { requireViewOrRedirect } from "@/lib/rbac";
+import { getLocalidadesSugeridas } from "@/lib/localidades";
 
 import { OtDetailClient } from "./ot-detail-client";
 import { OT_PRIORIDADES, type OtPrioridad } from "../types";
@@ -24,12 +25,11 @@ export default async function OtDetailPage({
     include: {
       solicitante: { select: { id: true, nombre: true } },
       responsable: { select: { id: true, nombre: true } },
-      localidad: { select: { id: true, nombre: true } },
       unidadProductiva: {
         select: {
           id: true,
           nombre: true,
-          localidad: { select: { nombre: true } },
+          localidad: true,
         },
       },
       insumos: {
@@ -58,15 +58,12 @@ export default async function OtDetailPage({
         select: { id: true, nombre: true },
         orderBy: { nombre: "asc" },
       }),
-      prisma.localidad.findMany({
-        select: { id: true, nombre: true },
-        orderBy: { nombre: "asc" },
-      }),
+      getLocalidadesSugeridas(),
       prisma.unidadProductiva.findMany({
         select: {
           id: true,
           nombre: true,
-          localidad: { select: { nombre: true } },
+          localidad: true,
         },
         orderBy: { nombre: "asc" },
       }),
@@ -105,7 +102,7 @@ export default async function OtDetailPage({
         creadoPor: ot.creadoPor,
         solicitanteId: ot.solicitante?.id ?? null,
         responsableId: ot.responsable?.id ?? null,
-        localidadId: ot.localidad?.id ?? null,
+        localidad: ot.localidad ?? null,
         unidadProductivaId: ot.unidadProductiva?.id ?? null,
         insumos: ot.insumos.map((i) => ({
           id: i.id,
@@ -120,11 +117,11 @@ export default async function OtDetailPage({
         })),
       }}
       usuarios={usuarios.map((u) => ({ id: u.id, nombre: u.nombre }))}
-      localidades={localidades.map((l) => ({ id: l.id, nombre: l.nombre }))}
+      localidades={localidades}
       unidadesProductivas={unidadesProductivas.map((up) => ({
         id: up.id,
         nombre: up.nombre,
-        localidad: up.localidad?.nombre ?? null,
+        localidad: up.localidad ?? null,
       }))}
       inventario={inventario.map((i) => ({
         id: i.id,

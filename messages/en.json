@@ -520,7 +520,7 @@
       "mantenimiento": "Corrective and preventive maintenance, templates and history.",
       "ordenesTrabajo": "Work orders with supplies and traceability.",
       "estadisticas": "Dashboards, ABC analysis, USD price trends and machinery metrics.",
-      "listados": "Master data: users, suppliers, locations and production units."
+      "listados": "Master data: users, suppliers and production units."
     }
   },
   "estadisticas": {
@@ -1784,7 +1784,6 @@
         "usuarios": "People with access to the system. Invite, assign roles and manage onboarding and offboarding.",
         "roles": "Access profiles that group permissions for each area of the system.",
         "proveedores": "Companies that supply parts, services and fuel. Used in purchasing and receptions.",
-        "localidades": "Cities and regions where Agimav operates. Used in suppliers and production units.",
         "unidadesProductivas": "Sites and operational bases. Machines and WOs are associated with a unit.",
         "tiposUnidad": "Classification of production units: road works, quarry, logistics base, etc.",
         "unidadesMedida": "Units used by inventory items: liters, kilos, units, meters."
@@ -1880,25 +1879,6 @@
         "totalCaption": "available",
         "enUso": "In use",
         "enUsoCaption": "classify units"
-      }
-    },
-    "localidades": {
-      "titulo": "Locations",
-      "descripcion": "Locations of suppliers and production units",
-      "singular": "Location",
-      "plural": "locations",
-      "nombre": "Name",
-      "referencias": "References",
-      "buscarPlaceholder": "Search location…",
-      "eliminarPregunta": "Delete the location \"{nombre}\"?",
-      "eliminarEnUso": "Cannot delete \"{nombre}\": {count, plural, one {# record references it} other {# records reference it}}.",
-      "kpi": {
-        "total": "Total locations",
-        "totalCaption": "loaded",
-        "enUso": "In use",
-        "enUsoCaption": "with references",
-        "sinUso": "Unused",
-        "sinUsoCaption": "could be deleted"
       }
     },
     "usuarios": {

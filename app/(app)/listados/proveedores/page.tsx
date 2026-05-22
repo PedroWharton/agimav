@@ -1,11 +1,11 @@
 import { prisma } from "@/lib/db";
 import { auth } from "@/lib/auth";
 import { hasPermission, requireViewOrRedirect } from "@/lib/rbac";
+import { getLocalidadesSugeridas } from "@/lib/localidades";
 
 import {
   ProveedoresClient,
   type ProveedorRow,
-  type LocalidadOption,
   type ProveedoresKpis,
 } from "./proveedores-client";
 
@@ -32,16 +32,12 @@ export default async function ProveedoresPage() {
           nombreContacto: true,
           contacto: true,
           estado: true,
-          localidadId: true,
-          localidad: { select: { nombre: true } },
+          localidad: true,
           createdAt: true,
         },
         orderBy: { nombre: "asc" },
       }),
-      prisma.localidad.findMany({
-        select: { id: true, nombre: true },
-        orderBy: { nombre: "asc" },
-      }),
+      getLocalidadesSugeridas(),
       prisma.proveedor.count(),
       prisma.proveedor.count({ where: { estado: "activo" } }),
       prisma.proveedor.count({ where: { estado: "inactivo" } }),
@@ -60,14 +56,8 @@ export default async function ProveedoresPage() {
     nombreContacto: p.nombreContacto ?? null,
     contacto: p.contacto ?? null,
     estado: p.estado,
-    localidadId: p.localidadId ?? null,
-    localidadNombre: p.localidad?.nombre ?? null,
+    localidad: p.localidad ?? null,
     createdAt: p.createdAt,
-  }));
-
-  const localidadOptions: LocalidadOption[] = localidades.map((l) => ({
-    id: l.id,
-    nombre: l.nombre,
   }));
 
   const kpis: ProveedoresKpis = {
@@ -81,7 +71,7 @@ export default async function ProveedoresPage() {
   return (
     <ProveedoresClient
       rows={rows}
-      localidades={localidadOptions}
+      localidades={localidades}
       canManage={canManage}
       kpis={kpis}
     />

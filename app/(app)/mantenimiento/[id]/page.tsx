@@ -36,14 +36,14 @@ export default async function MantenimientoDetailPage({
         select: {
           id: true,
           nombre: true,
-          localidad: { select: { nombre: true } },
+          localidad: true,
         },
       },
       tallerAsignado: {
         select: {
           id: true,
           nombre: true,
-          localidad: { select: { nombre: true } },
+          localidad: true,
         },
       },
       insumos: {
@@ -91,7 +91,7 @@ export default async function MantenimientoDetailPage({
       select: {
         id: true,
         nombre: true,
-        localidad: { select: { nombre: true } },
+        localidad: true,
       },
       orderBy: { nombre: "asc" },
     }),
@@ -131,14 +131,14 @@ export default async function MantenimientoDetailPage({
       ? {
           id: mant.unidadProductiva.id,
           nombre: mant.unidadProductiva.nombre,
-          localidad: mant.unidadProductiva.localidad?.nombre ?? null,
+          localidad: mant.unidadProductiva.localidad ?? null,
         }
       : null,
     tallerAsignado: mant.tallerAsignado
       ? {
           id: mant.tallerAsignado.id,
           nombre: mant.tallerAsignado.nombre,
-          localidad: mant.tallerAsignado.localidad?.nombre ?? null,
+          localidad: mant.tallerAsignado.localidad ?? null,
         }
       : null,
     insumos: mant.insumos.map((i) => ({
@@ -182,7 +182,7 @@ export default async function MantenimientoDetailPage({
       unidadesProductivas={unidadesProductivas.map((up) => ({
         id: up.id,
         nombre: up.nombre,
-        localidad: up.localidad?.nombre ?? null,
+        localidad: up.localidad ?? null,
       }))}
       inventario={inventario.map((i) => ({
         id: i.id,

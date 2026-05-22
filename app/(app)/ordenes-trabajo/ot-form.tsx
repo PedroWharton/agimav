@@ -28,7 +28,7 @@ export type OtFormInitial = {
   id?: number;
   titulo: string;
   descripcionTrabajo: string;
-  localidadId: number | null;
+  localidad: string | null;
   unidadProductivaId: number | null;
   solicitanteId: number | null;
   responsableId: number | null;
@@ -37,7 +37,6 @@ export type OtFormInitial = {
 };
 
 export type UsuarioOpt = { id: number; nombre: string };
-export type LocalidadOpt = { id: number; nombre: string };
 export type UpOpt = { id: number; nombre: string; localidad: string | null };
 
 const PRIORIDAD_TO_SERVER: Record<Prioridad, OtPrioridad> = {
@@ -63,7 +62,7 @@ export function OtForm({
   mode: "new" | "edit";
   initial: OtFormInitial;
   usuarios: UsuarioOpt[];
-  localidades: LocalidadOpt[];
+  localidades: string[];
   unidadesProductivas: UpOpt[];
   readOnly?: boolean;
 }) {
@@ -75,9 +74,7 @@ export function OtForm({
   const [descripcionTrabajo, setDescripcionTrabajo] = useState(
     initial.descripcionTrabajo,
   );
-  const [localidadId, setLocalidadId] = useState<number | null>(
-    initial.localidadId,
-  );
+  const [localidad, setLocalidad] = useState<string>(initial.localidad ?? "");
   const [unidadProductivaId, setUnidadProductivaId] = useState<number | null>(
     initial.unidadProductivaId,
   );
@@ -93,6 +90,8 @@ export function OtForm({
   const [observaciones, setObservaciones] = useState(initial.observaciones);
   const [errors, setErrors] = useState<Record<string, string>>({});
 
+  const localidadOptions = localidades.map((l) => ({ value: l, label: l }));
+
   const submit = () => {
     setErrors({});
     if (!titulo.trim()) {
@@ -103,7 +102,7 @@ export function OtForm({
       const payload = {
         titulo,
         descripcionTrabajo,
-        localidadId,
+        localidad,
         unidadProductivaId,
         solicitanteId,
         responsableId,
@@ -233,17 +232,10 @@ export function OtForm({
               <div className="flex flex-col gap-1.5">
                 <Label>{tO("campos.localidad")}</Label>
                 <Combobox
-                  value={localidadId ? String(localidadId) : ""}
-                  onChange={(v) => setLocalidadId(v ? Number(v) : null)}
-                  options={[
-                    { value: "", label: "—" },
-                    ...localidades.map((l) => ({
-                      value: String(l.id),
-                      label: l.nombre,
-                    })),
-                  ]}
+                  value={localidad}
+                  onChange={setLocalidad}
+                  options={localidadOptions}
                   placeholder={tO("campos.localidad")}
-                  allowCreate={false}
                   disabled={readOnly}
                 />
               </div>
@@ -326,9 +318,7 @@ export function OtForm({
             />
             <SummaryLine
               label={tO("campos.localidad")}
-              value={
-                localidades.find((l) => l.id === localidadId)?.nombre ?? null
-              }
+              value={localidad || null}
             />
             <SummaryLine
               label={tO("campos.unidadProductiva")}

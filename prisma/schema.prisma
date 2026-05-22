@@ -91,7 +91,6 @@ model Usuario {
   rolesCreados                Rol[]              @relation("RolCreatedBy")
   usuariosCreados             Usuario[]          @relation("UsuarioCreatedBy")
   unidadesMedidaCreadas       UnidadMedida[]     @relation("UnidadMedidaCreatedBy")
-  localidadesCreadas          Localidad[]        @relation("LocalidadCreatedBy")
   tiposUnidadCreados          TipoUnidad[]       @relation("TipoUnidadCreatedBy")
   unidadesProductivasCreadas  UnidadProductiva[] @relation("UnidadProductivaCreatedBy")
   proveedoresCreados          Proveedor[]        @relation("ProveedorCreatedBy")
@@ -139,22 +138,6 @@ model UnidadMedida {
   @@map("unidades_medida")
 }
 
-model Localidad {
-  id       Int    @id @default(autoincrement())
-  nombre   String @unique
-
-  unidadesProductivas UnidadProductiva[]
-  proveedores         Proveedor[]
-  ordenesTrabajo      OrdenTrabajo[]
-
-  createdAt   DateTime @default(now()) @map("created_at")
-  updatedAt   DateTime @updatedAt @map("updated_at")
-  createdById Int?     @map("created_by")
-  createdBy   Usuario? @relation("LocalidadCreatedBy", fields: [createdById], references: [id], onDelete: SetNull)
-
-  @@map("localidades")
-}
-
 model TipoUnidad {
   id       Int    @id @default(autoincrement())
   nombre   String @unique
@@ -170,11 +153,10 @@ model TipoUnidad {
 }
 
 model UnidadProductiva {
-  id           Int    @id @default(autoincrement())
+  id           Int     @id @default(autoincrement())
   nombre       String
-  localidadId  Int?   @map("localidad_id")
-  tipoUnidadId Int?   @map("tipo_unidad_id")
-  localidad    Localidad?  @relation(fields: [localidadId], references: [id])
+  localidad    String?
+  tipoUnidadId Int?    @map("tipo_unidad_id")
   tipoUnidad   TipoUnidad? @relation(fields: [tipoUnidadId], references: [id])
 
   ordenesTrabajo          OrdenTrabajo[]
@@ -194,8 +176,7 @@ model Proveedor {
   nombre          String
   contacto        String?
   estado          String  @default("activo")
-  localidadId     Int?    @map("localidad_id")
-  localidad       Localidad? @relation(fields: [localidadId], references: [id])
+  localidad       String?
   direccion       String?
   email           String?
   telefono        String?
@@ -215,7 +196,6 @@ model Proveedor {
   createdById Int?     @map("created_by")
   createdBy   Usuario? @relation("ProveedorCreatedBy", fields: [createdById], references: [id], onDelete: SetNull)
 
-  @@index([localidadId])
   @@map("proveedores")
 }
 
@@ -296,7 +276,6 @@ model MovimientoDiario {
   monto              Float?
   observaciones      String?
   justificacion      String?
-  localidadId        Int?     @map("localidad_id")
   unidadProductivaId Int?     @map("unidad_productiva_id")
 
   @@map("movimientos_diarios")
@@ -864,8 +843,7 @@ model OrdenTrabajo {
   numeroOt           String?  @unique @map("numero_ot")
   fechaCreacion      DateTime @default(now()) @map("fecha_creacion")
   fechaFinalizacion  DateTime? @map("fecha_finalizacion")
-  localidadId        Int?     @map("localidad_id")
-  localidad          Localidad? @relation(fields: [localidadId], references: [id])
+  localidad          String?
   unidadProductivaId Int?     @map("unidad_productiva_id")
   unidadProductiva   UnidadProductiva? @relation(fields: [unidadProductivaId], references: [id])
   solicitanteId      Int?     @map("solicitante_id")

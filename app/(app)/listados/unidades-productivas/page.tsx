@@ -1,11 +1,11 @@
 import { prisma } from "@/lib/db";
 import { auth } from "@/lib/auth";
 import { hasPermission, requireViewOrRedirect } from "@/lib/rbac";
+import { getLocalidadesSugeridas } from "@/lib/localidades";
 
 import {
   UnidadesProductivasClient,
   type UnidadProductivaRow,
-  type LocalidadOption,
   type TipoUnidadOption,
   type UnidadesProductivasKpis,
 } from "./unidades-productivas-client";
@@ -20,8 +20,7 @@ export default async function UnidadesProductivasPage() {
       select: {
         id: true,
         nombre: true,
-        localidadId: true,
-        localidad: { select: { nombre: true } },
+        localidad: true,
         tipoUnidadId: true,
         tipoUnidad: { select: { nombre: true } },
         createdAt: true,
@@ -35,10 +34,7 @@ export default async function UnidadesProductivasPage() {
       },
       orderBy: { nombre: "asc" },
     }),
-    prisma.localidad.findMany({
-      select: { id: true, nombre: true },
-      orderBy: { nombre: "asc" },
-    }),
+    getLocalidadesSugeridas(),
     prisma.tipoUnidad.findMany({
       select: { id: true, nombre: true },
       orderBy: { nombre: "asc" },
@@ -48,8 +44,7 @@ export default async function UnidadesProductivasPage() {
   const rows: UnidadProductivaRow[] = unidades.map((u) => ({
     id: u.id,
     nombre: u.nombre,
-    localidadId: u.localidadId ?? null,
-    localidadNombre: u.localidad?.nombre ?? null,
+    localidad: u.localidad ?? null,
     tipoUnidadId: u.tipoUnidadId ?? null,
     tipoUnidadNombre: u.tipoUnidad?.nombre ?? null,
     createdAt: u.createdAt,
@@ -59,10 +54,6 @@ export default async function UnidadesProductivasPage() {
       u._count.mantenimientosTaller,
   }));
 
-  const localidadOptions: LocalidadOption[] = localidades.map((l) => ({
-    id: l.id,
-    nombre: l.nombre,
-  }));
   const tipoOptions: TipoUnidadOption[] = tipos.map((t) => ({
     id: t.id,
     nombre: t.nombre,
@@ -70,14 +61,14 @@ export default async function UnidadesProductivasPage() {
 
   const total = rows.length;
   const enUso = rows.filter((r) => r.usageCount > 0).length;
-  const sinLocalidad = rows.filter((r) => r.localidadId == null).length;
+  const sinLocalidad = rows.filter((r) => !r.localidad).length;
 
   const kpis: UnidadesProductivasKpis = { total, enUso, sinLocalidad };
 
   return (
     <UnidadesProductivasClient
       rows={rows}
-      localidades={localidadOptions}
+      localidades={localidades}
       tipos={tipoOptions}
       canManage={canManage}
       kpis={kpis}

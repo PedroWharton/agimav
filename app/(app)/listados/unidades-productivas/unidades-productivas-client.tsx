@@ -33,6 +33,7 @@ import {
   DropdownMenuSeparator,
 } from "@/components/ui/dropdown-menu";
 
+import { Combobox } from "@/components/app/combobox";
 import { DataTable } from "@/components/app/data-table";
 import { FormSheet } from "@/components/app/form-sheet";
 import { ActionsMenu } from "@/components/app/actions-menu";
@@ -50,15 +51,13 @@ import {
 export type UnidadProductivaRow = {
   id: number;
   nombre: string;
-  localidadId: number | null;
-  localidadNombre: string | null;
+  localidad: string | null;
   tipoUnidadId: number | null;
   tipoUnidadNombre: string | null;
   createdAt: Date;
   usageCount: number;
 };
 
-export type LocalidadOption = { id: number; nombre: string };
 export type TipoUnidadOption = { id: number; nombre: string };
 
 export type UnidadesProductivasKpis = {
@@ -72,14 +71,14 @@ const ALL = "__all__";
 
 const formSchema = z.object({
   nombre: z.string().trim().min(1, "Obligatorio").max(200),
-  localidadId: z.string(),
+  localidad: z.string().trim().max(120).optional(),
   tipoUnidadId: z.string(),
 });
 type FormValues = z.infer<typeof formSchema>;
 
 const emptyForm: FormValues = {
   nombre: "",
-  localidadId: NONE,
+  localidad: "",
   tipoUnidadId: NONE,
 };
 
@@ -98,7 +97,7 @@ export function UnidadesProductivasClient({
   kpis,
 }: {
   rows: UnidadProductivaRow[];
-  localidades: LocalidadOption[];
+  localidades: string[];
   tipos: TipoUnidadOption[];
   canManage: boolean;
   kpis: UnidadesProductivasKpis;
@@ -117,11 +116,15 @@ export function UnidadesProductivasClient({
 
   const [isSubmitting, startSubmit] = useTransition();
 
+  const localidadOptions = useMemo(
+    () => localidades.map((l) => ({ value: l, label: l })),
+    [localidades],
+  );
+
   const filtered = useMemo(() => {
     let out = rows;
     if (localidadFilter !== ALL) {
-      const id = Number(localidadFilter);
-      out = out.filter((r) => r.localidadId === id);
+      out = out.filter((r) => r.localidad === localidadFilter);
     }
     if (tipoFilter !== ALL) {
       const id = Number(tipoFilter);
@@ -133,7 +136,7 @@ export function UnidadesProductivasClient({
       out = out.filter(
         (r) =>
           norm(r.nombre).includes(qn) ||
-          norm(r.localidadNombre).includes(qn) ||
+          norm(r.localidad).includes(qn) ||
           norm(r.tipoUnidadNombre).includes(qn),
       );
     }
@@ -153,7 +156,7 @@ export function UnidadesProductivasClient({
     setEditing(row);
     form.reset({
       nombre: row.nombre,
-      localidadId: row.localidadId == null ? NONE : String(row.localidadId),
+      localidad: row.localidad ?? "",
       tipoUnidadId: row.tipoUnidadId == null ? NONE : String(row.tipoUnidadId),
     });
     setOpen(true);
@@ -164,8 +167,7 @@ export function UnidadesProductivasClient({
       startSubmit(async () => {
         const payload = {
           nombre: values.nombre,
-          localidadId:
-            values.localidadId === NONE ? null : Number(values.localidadId),
+          localidad: values.localidad ?? "",
           tipoUnidadId:
             values.tipoUnidadId === NONE ? null : Number(values.tipoUnidadId),
         };
@@ -224,11 +226,11 @@ export function UnidadesProductivasClient({
       enableSorting: true,
     },
     {
-      accessorKey: "localidadNombre",
+      accessorKey: "localidad",
       header: t("listados.unidadesProductivas.localidad"),
       enableSorting: true,
       cell: ({ row }) =>
-        row.original.localidadNombre ?? (
+        row.original.localidad ?? (
           <span className="text-muted-foreground">—</span>
         ),
     },
@@ -359,8 +361,8 @@ export function UnidadesProductivasClient({
                 {t("listados.unidadesProductivas.filtroLocalidadTodas")}
               </SelectItem>
               {localidades.map((l) => (
-                <SelectItem key={l.id} value={String(l.id)}>
-                  {l.nombre}
+                <SelectItem key={l} value={l}>
+                  {l}
                 </SelectItem>
               ))}
             </SelectContent>
@@ -427,27 +429,19 @@ export function UnidadesProductivasClient({
           />
           <FormField
             control={form.control}
-            name="localidadId"
+            name="localidad"
             render={({ field }) => (
               <FormItem>
                 <FormLabel>
                   {t("listados.unidadesProductivas.localidad")}
                 </FormLabel>
-                <Select value={field.value} onValueChange={field.onChange}>
-                  <FormControl>
-                    <SelectTrigger className="w-full">
-                      <SelectValue />
-                    </SelectTrigger>
-                  </FormControl>
-                  <SelectContent>
-                    <SelectItem value={NONE}>—</SelectItem>
-                    {localidades.map((l) => (
-                      <SelectItem key={l.id} value={String(l.id)}>
-                        {l.nombre}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                <FormControl>
+                  <Combobox
+                    value={field.value ?? ""}
+                    onChange={field.onChange}
+                    options={localidadOptions}
+                  />
+                </FormControl>
                 <FormMessage />
               </FormItem>
             )}

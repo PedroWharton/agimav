@@ -520,7 +520,7 @@
       "mantenimiento": "Mantenimientos correctivos y preventivos, plantillas e historial.",
       "ordenesTrabajo": "Órdenes de trabajo con insumos y trazabilidad.",
       "estadisticas": "Dashboards, análisis ABC, evolución de precios USD y métricas de maquinaria.",
-      "listados": "Maestros de usuarios, proveedores, localidades y unidades productivas."
+      "listados": "Maestros de usuarios, proveedores y unidades productivas."
     }
   },
   "estadisticas": {
@@ -1790,7 +1790,6 @@
         "usuarios": "Personas con acceso al sistema. Invitá, asigná roles y gestioná altas y bajas.",
         "roles": "Perfiles de acceso que agrupan permisos para cada área del sistema.",
         "proveedores": "Empresas que proveen repuestos, servicios y combustible. Usado en compras y recepciones.",
-        "localidades": "Ciudades y regiones donde Agimav opera. Se usan en proveedores y unidades productivas.",
         "unidadesProductivas": "Obras y bases operativas. Las máquinas y OTs se asocian a una unidad.",
         "tiposUnidad": "Clasificación de unidades productivas: obra vial, cantera, base logística, etc.",
         "unidadesMedida": "Unidades que usan los items de inventario: litros, kilos, unidades, metros."
@@ -1886,25 +1885,6 @@
         "totalCaption": "disponibles",
         "enUso": "En uso",
         "enUsoCaption": "clasifican unidades"
-      }
-    },
-    "localidades": {
-      "titulo": "Localidades",
-      "descripcion": "Localidades de proveedores y unidades productivas",
-      "singular": "Localidad",
-      "plural": "localidades",
-      "nombre": "Nombre",
-      "referencias": "Referencias",
-      "buscarPlaceholder": "Buscar localidad…",
-      "eliminarPregunta": "¿Eliminar la localidad \"{nombre}\"?",
-      "eliminarEnUso": "No se puede eliminar \"{nombre}\": {count, plural, one {# registro la referencia} other {# registros la referencian}}.",
-      "kpi": {
-        "total": "Total localidades",
-        "totalCaption": "cargadas",
-        "enUso": "En uso",
-        "enUsoCaption": "con referencias",
-        "sinUso": "Sin uso",
-        "sinUsoCaption": "podrían eliminarse"
       }
     },
     "usuarios": {

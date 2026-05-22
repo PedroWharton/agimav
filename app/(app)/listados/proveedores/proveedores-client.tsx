@@ -32,6 +32,7 @@ import {
   DropdownMenuSeparator,
 } from "@/components/ui/dropdown-menu";
 
+import { Combobox } from "@/components/app/combobox";
 import { DataTable } from "@/components/app/data-table";
 import { FormSheet } from "@/components/app/form-sheet";
 import { ActionsMenu } from "@/components/app/actions-menu";
@@ -61,12 +62,9 @@ export type ProveedorRow = {
   nombreContacto: string | null;
   contacto: string | null;
   estado: string;
-  localidadId: number | null;
-  localidadNombre: string | null;
+  localidad: string | null;
   createdAt: Date;
 };
-
-export type LocalidadOption = { id: number; nombre: string };
 
 export type ProveedoresKpis = {
   total: number;
@@ -90,7 +88,7 @@ const formSchema = z.object({
       message: "Formato: 30-12345678-9",
     }),
   condicionIva: z.string(),
-  localidadId: z.string(),
+  localidad: z.string().trim().max(120).optional(),
   email: z
     .string()
     .trim()
@@ -113,7 +111,7 @@ const emptyForm: FormValues = {
   nombre: "",
   cuit: "",
   condicionIva: NONE,
-  localidadId: NONE,
+  localidad: "",
   email: "",
   telefono: "",
   direccion: "",
@@ -127,7 +125,7 @@ function rowToForm(row: ProveedorRow): FormValues {
     nombre: row.nombre,
     cuit: row.cuit ?? "",
     condicionIva: row.condicionIva ?? NONE,
-    localidadId: row.localidadId == null ? NONE : String(row.localidadId),
+    localidad: row.localidad ?? "",
     email: row.email ?? "",
     telefono: row.telefono ?? "",
     direccion: row.direccion ?? "",
@@ -151,7 +149,7 @@ export function ProveedoresClient({
   kpis,
 }: {
   rows: ProveedorRow[];
-  localidades: LocalidadOption[];
+  localidades: string[];
   canManage: boolean;
   kpis: ProveedoresKpis;
 }) {
@@ -182,7 +180,7 @@ export function ProveedoresClient({
           norm(r.nombre).includes(qn) ||
           norm(r.cuit).includes(qn) ||
           norm(r.email).includes(qn) ||
-          norm(r.localidadNombre).includes(qn),
+          norm(r.localidad).includes(qn),
       );
     }
     return out;
@@ -195,6 +193,11 @@ export function ProveedoresClient({
       month: "short",
     });
   }, [kpis.since30dIso]);
+
+  const localidadOptions = useMemo(
+    () => localidades.map((l) => ({ value: l, label: l })),
+    [localidades],
+  );
 
   function openCreate() {
     setEditing(null);
@@ -215,8 +218,7 @@ export function ProveedoresClient({
           nombre: values.nombre,
           cuit: values.cuit ?? "",
           condicionIva: values.condicionIva === NONE ? "" : values.condicionIva,
-          localidadId:
-            values.localidadId === NONE ? null : Number(values.localidadId),
+          localidad: values.localidad ?? "",
           email: values.email ?? "",
           telefono: values.telefono ?? "",
           direccion: values.direccion ?? "",
@@ -302,11 +304,11 @@ export function ProveedoresClient({
       ),
     },
     {
-      accessorKey: "localidadNombre",
+      accessorKey: "localidad",
       header: t("listados.proveedores.localidad"),
       enableSorting: true,
       cell: ({ row }) =>
-        row.original.localidadNombre ?? (
+        row.original.localidad ?? (
           <span className="text-muted-foreground">—</span>
         ),
     },
@@ -533,25 +535,17 @@ export function ProveedoresClient({
           </div>
           <FormField
             control={form.control}
-            name="localidadId"
+            name="localidad"
             render={({ field }) => (
               <FormItem>
                 <FormLabel>{t("listados.proveedores.localidad")}</FormLabel>
-                <Select value={field.value} onValueChange={field.onChange}>
-                  <FormControl>
-                    <SelectTrigger className="w-full">
-                      <SelectValue />
-                    </SelectTrigger>
-                  </FormControl>
-                  <SelectContent>
-                    <SelectItem value={NONE}>—</SelectItem>
-                    {localidades.map((l) => (
-                      <SelectItem key={l.id} value={String(l.id)}>
-                        {l.nombre}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                <FormControl>
+                  <Combobox
+                    value={field.value ?? ""}
+                    onChange={field.onChange}
+                    options={localidadOptions}
+                  />
+                </FormControl>
                 <FormMessage />
               </FormItem>
             )}
