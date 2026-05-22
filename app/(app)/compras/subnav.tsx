@@ -11,6 +11,7 @@ const TABS = [
   { href: "/compras/oc", key: "oc" },
   { href: "/compras/recepciones", key: "recepciones" },
   { href: "/compras/facturas", key: "facturas" },
+  { href: "/compras/precios-pendientes", key: "precios" },
 ] as const;
 
 export function ComprasSubnav() {

@@ -951,7 +951,23 @@
       "solicitudes": "Solicitudes",
       "oc": "Órdenes de compra",
       "recepciones": "Recepciones",
-      "facturas": "Facturas"
+      "facturas": "Facturas",
+      "precios": "Precios pendientes"
+    },
+    "preciosPendientes": {
+      "titulo": "Precios pendientes",
+      "descripcion": "Insumos de mantenimiento consumidos cuyo costo todavía no se conoce.",
+      "vacioTitulo": "Sin precios pendientes",
+      "vacioDescripcion": "No hay insumos de mantenimiento con el precio sin resolver.",
+      "resolver": "Resolver",
+      "resueltoOk": "Precio resuelto.",
+      "precioInvalido": "Ingresá un precio válido.",
+      "columnas": {
+        "item": "Ítem",
+        "mantenimiento": "Mantenimiento",
+        "cantidad": "Cantidad",
+        "precio": "Precio unitario"
+      }
     },
     "oc": {
       "titulo": "Órdenes de compra",

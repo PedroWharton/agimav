@@ -951,7 +951,23 @@
       "solicitudes": "Requests",
       "oc": "Purchase orders",
       "recepciones": "Receptions",
-      "facturas": "Invoices"
+      "facturas": "Invoices",
+      "precios": "Pending prices"
+    },
+    "preciosPendientes": {
+      "titulo": "Pending prices",
+      "descripcion": "Maintenance supplies consumed whose cost is not yet known.",
+      "vacioTitulo": "No pending prices",
+      "vacioDescripcion": "No maintenance supplies have an unresolved price.",
+      "resolver": "Resolve",
+      "resueltoOk": "Price resolved.",
+      "precioInvalido": "Enter a valid price.",
+      "columnas": {
+        "item": "Item",
+        "mantenimiento": "Maintenance",
+        "cantidad": "Quantity",
+        "precio": "Unit price"
+      }
     },
     "oc": {
       "titulo": "Purchase orders",
