@@ -22,9 +22,12 @@
 
 ---
 
-## TANDA 1 — Pre-cutover (bugs / fixes de UX)
+## TANDA 1 — Pre-cutover (bugs / fixes de UX) — ✅ COMPLETADA
 
-Cada ítem = 1 commit. `npm run typecheck` + `npm run lint` limpio. QA en navegador antes de cerrar.
+Los 12 ítems se implementaron, QA-aron y shippearon a `main` (commits `dfb3808`–`ec2b9c9`).
+Cutover realizado el 2026-05-21.
+
+Cada ítem = 1 commit. `npm run typecheck` + `npm run lint` limpio.
 
 | # | Ítem | Esf. | Detalle |
 |---|---|---|---|
