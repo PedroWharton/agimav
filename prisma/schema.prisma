@@ -724,9 +724,10 @@ model Mantenimiento {
   revisionDe       Mantenimiento?  @relation("MantenimientoRevision", fields: [revisionDeId], references: [id], onDelete: SetNull)
   revisionesHijas  Mantenimiento[] @relation("MantenimientoRevision")
 
-  insumos   MantenimientoInsumo[]
-  tareas    MantenimientoTarea[]
-  historial MantenimientoHistorial[]
+  insumos    MantenimientoInsumo[]
+  tareas     MantenimientoTarea[]
+  historial  MantenimientoHistorial[]
+  revisiones MantenimientoRevision[]
 
   @@index([tipo])
   @@index([estado])
@@ -737,6 +738,24 @@ model Mantenimiento {
   @@index([estado, tipo])
   @@index([revisionDeId])
   @@map("mantenimientos")
+}
+
+/// WS-D: a scheduled revision is a row on the parent Mantenimiento — not a new
+/// child record. Replaces the legacy revisionDeId child-mantenimiento mechanic
+/// (existing children are kept as historical records).
+model MantenimientoRevision {
+  id              Int           @id @default(autoincrement())
+  mantenimientoId Int           @map("mantenimiento_id")
+  mantenimiento   Mantenimiento @relation(fields: [mantenimientoId], references: [id], onDelete: Cascade)
+  fechaProgramada DateTime      @map("fecha_programada")
+  descripcion     String?
+  estado          String        @default("pendiente")
+  fechaRealizada  DateTime?     @map("fecha_realizada")
+  notas           String?
+  createdAt       DateTime      @default(now()) @map("created_at")
+
+  @@index([mantenimientoId])
+  @@map("mantenimiento_revisiones")
 }
 
 model PlantillaMantenimiento {

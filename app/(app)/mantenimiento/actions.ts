@@ -409,7 +409,7 @@ export async function transitionEstado(
       updateData.descripcionRevision = parsed.data.descripcionRevision;
     }
 
-    const childId = await prisma.$transaction(async (tx) => {
+    await prisma.$transaction(async (tx) => {
       const guard = await tx.mantenimiento.updateMany({
         where: {
           id,
@@ -451,42 +451,32 @@ export async function transitionEstado(
         await commitInsumosConsumption(tx, id, userName);
 
         if (parsed.data.programarRevision && parsed.data.fechaProximaRevision) {
-          const maqForChild = await tx.maquinaria.findUnique({
-            where: { id: existing.maquinariaId },
-            select: { horasAcumuladas: true },
-          });
-          const child = await tx.mantenimiento.create({
+          // WS-D: a programmed revision is a row on the same mantenimiento,
+          // not a new child record.
+          await tx.mantenimientoRevision.create({
             data: {
-              tipo: "correctivo",
-              maquinariaId: existing.maquinariaId,
-              prioridad: "Media",
-              descripcion: parsed.data.descripcionRevision,
-              responsableId: existing.responsableId,
-              estado: "Pendiente",
+              mantenimientoId: id,
               fechaProgramada: parsed.data.fechaProximaRevision,
-              creadoPor: userName,
-              revisionDeId: id,
-              horasAcumuladasSnapshot: maqForChild?.horasAcumuladas ?? null,
+              descripcion: parsed.data.descripcionRevision,
+              estado: "pendiente",
             },
           });
           await tx.mantenimientoHistorial.create({
             data: {
-              mantenimientoId: child.id,
-              tipoCambio: "estado",
+              mantenimientoId: id,
+              tipoCambio: "revision",
               valorAnterior: null,
-              valorNuevo: "Pendiente",
+              valorNuevo: null,
               usuario: userName,
-              detalle: `Revisión programada desde mantenimiento #${id}`,
+              detalle: "Revisión programada",
             },
           });
-          return child.id;
         }
       }
-      return undefined;
     });
     revalidatePath("/mantenimiento");
     revalidatePath(`/mantenimiento/${id}`);
-    return childId !== undefined ? { ok: true, id, childId } : { ok: true, id };
+    return { ok: true, id };
   } catch (err) {
     if (err instanceof Error && err.message === "wrong_estado") {
       return { ok: false, error: "wrong_estado" };
