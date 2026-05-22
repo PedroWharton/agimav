@@ -4,9 +4,17 @@
 -- cabeceras (una por día + usuario + sector + localidad + UP) con sus líneas.
 -- PARCIALMENTE DESTRUCTIVA: dropea la tabla legacy al final — branch de Neon
 -- de backup obligatorio (ver runbook).
+--
+-- Paso 1 idempotente (ALTER ... IF EXISTS / DROP ... IF EXISTS): permite
+-- re-correr la migración si una corrida previa quedó a mitad de camino
+-- (RENAME aplicado, CREATE TABLE no).
 
--- 1. Archivar la tabla plana legacy.
-ALTER TABLE "movimientos_diarios" RENAME TO "movimientos_diarios_legacy";
+-- 1. Archivar la tabla plana legacy. RENAME no renombra el índice de la PK ni
+--    la secuencia, así que se liberan esos nombres para poder recrear la tabla
+--    `movimientos_diarios`.
+ALTER TABLE IF EXISTS "movimientos_diarios" RENAME TO "movimientos_diarios_legacy";
+ALTER TABLE IF EXISTS "movimientos_diarios_legacy" DROP CONSTRAINT IF EXISTS "movimientos_diarios_pkey";
+ALTER SEQUENCE IF EXISTS "movimientos_diarios_id_seq" RENAME TO "movimientos_diarios_legacy_id_seq";
 
 -- 2. Cabecera.
 CREATE TABLE "movimientos_diarios" (
