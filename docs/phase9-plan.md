@@ -66,12 +66,74 @@ Slices A1–A4 shippeados a `main` (commits `a8d390e`–`3ae6058`).
 - **Pantalla de pendientes:** lista todos los ítems con precio pendiente, con carga manual.
 - Recepciones: dropdown de proveedor (depende de este rediseño remito/factura).
 
-### WS-B · Modelo organizacional + permisos por UP
+### WS-B · Modelo organizacional + permisos por UP — 🟡 probe hecho, diseño confirmado, implementación pendiente
 Ítem: merge Localidad / Unidad Productiva.
-- Probe: relación real Localidad↔UP en `flota7.db` (¿1:1?).
-- Migración: mover FKs de Localidad (Proveedor, OrdenTrabajo, UnidadProductiva) a Unidad Productiva; eliminar Localidad de Listados y del schema.
-- UP con type-to-filter en todos los selectores.
-- RBAC: tabla `UsuarioUnidadProductiva`; scoping row-level (hoy `lib/rbac.ts` es solo por rol) — los usuarios ven/editan solo datos de sus UPs. Extiende la Fase 8 de permisos.
+
+**Probe (`scripts/ws-b-probe.ts`, corrido el 2026-05-22 contra Postgres):**
+- 9 Localidades → 44 UPs. Cardinalidad **1:muchos real** (El Chañar 13 UPs, Neuquén 11). NO es 1:1 — el plan original asumía mal.
+- Proveedor: 57, 25 con localidadId. OrdenTrabajo: 30, 26 con localidadId, 23 con UP, **0 discrepancias** (`ot.localidad` ⇔ `up.localidad`, derivable).
+- MovimientoDiario: 217 filas, solo 11 usan `localidad_id` (columna huérfana, sin relación); 206 usan el texto `localidad`.
+- Requisicion (154) ya usa `localidad`/`unidadProductiva` como **texto libre**, no FK.
+- Usuarios: 34 activos.
+
+**Decisión confirmada por el usuario (2026-05-22):**
+- **Eliminar la tabla `localidades`.** `localidad` pasa a ser texto plano (`localidad String?`) en `UnidadProductiva`, `Proveedor` y `OrdenTrabajo`. Se pierde el catálogo editable de 9 ciudades (aceptado).
+- **RBAC per-UP:** tabla `UsuarioUnidadProductiva` (asignación individual de UPs, hasta 44 por usuario).
+
+#### Slice B1+B2 — eliminar Localidad (atómico, 1 commit — ~42 archivos)
+B1 (schema) y B2 (barrido de código) van juntos: dropear la tabla rompe el build hasta que el código deje de referenciar `prisma.localidad`.
+
+**Migración SQL** (`prisma/migrations/<ts>_ws_b_drop_localidad/migration.sql`) — borrador validado contra el probe:
+```sql
+-- 1. columnas de texto nuevas
+ALTER TABLE "unidades_productivas" ADD COLUMN "localidad" TEXT;
+ALTER TABLE "proveedores"          ADD COLUMN "localidad" TEXT;
+ALTER TABLE "ordenes_trabajo"      ADD COLUMN "localidad" TEXT;
+-- 2. backfill desde la tabla localidades
+UPDATE "unidades_productivas" u SET "localidad" = l.nombre
+  FROM "localidades" l WHERE u.localidad_id = l.id;
+UPDATE "proveedores" p SET "localidad" = l.nombre
+  FROM "localidades" l WHERE p.localidad_id = l.id;
+UPDATE "ordenes_trabajo" o SET "localidad" = l.nombre
+  FROM "localidades" l WHERE o.localidad_id = l.id;
+-- 3. dropear FKs + columnas
+ALTER TABLE "unidades_productivas" DROP CONSTRAINT IF EXISTS "unidades_productivas_localidad_id_fkey";
+ALTER TABLE "unidades_productivas" DROP COLUMN "localidad_id";
+ALTER TABLE "proveedores" DROP CONSTRAINT IF EXISTS "proveedores_localidad_id_fkey";
+DROP INDEX IF EXISTS "proveedores_localidad_id_idx";
+ALTER TABLE "proveedores" DROP COLUMN "localidad_id";
+ALTER TABLE "ordenes_trabajo" DROP CONSTRAINT IF EXISTS "ordenes_trabajo_localidad_id_fkey";
+ALTER TABLE "ordenes_trabajo" DROP COLUMN "localidad_id";
+-- 4. columna huérfana de movimientos_diarios (ya tiene texto `localidad`)
+ALTER TABLE "movimientos_diarios" DROP COLUMN "localidad_id";
+-- 5. dropear la tabla
+DROP TABLE "localidades";
+```
+
+**Schema (`prisma/schema.prisma`):**
+- Borrar el modelo `Localidad` entero.
+- `Usuario`: borrar la relación `localidadesCreadas Localidad[]`.
+- `UnidadProductiva`: sacar `localidadId` + relación `localidad`; agregar `localidad String?`.
+- `Proveedor`: sacar `localidadId` + relación + `@@index([localidadId])`; agregar `localidad String?`.
+- `OrdenTrabajo`: sacar `localidadId` + relación; agregar `localidad String?`.
+- `MovimientoDiario`: sacar `localidadId`.
+- Después: `npm run db:generate`.
+
+**Barrido de código (inventario del Explore, 42 archivos):**
+- **Borrar** `app/(app)/listados/localidades/` (page.tsx, localidades-client.tsx, actions.ts).
+- **Forms** Proveedor / UnidadProductiva / OrdenTrabajo: el selector de localidad pasa de combobox-sobre-tabla a combobox de texto sembrado con los `distinct` de la columna `localidad` existente, `allowCreate` true (mismo patrón que el texto-libre de Inventario/Requisicion).
+- **Includes** `localidad: { select: { nombre } }` sobre `unidadProductiva` → leer el campo `localidad` directo (mantenimiento `[id]`/`nuevo`/`plantillas`, OT pages).
+- Reemplazar todos los `prisma.localidad.findMany()` por `distinct` sobre las columnas de texto (proveedores, UPs, OT, solicitudes, inventario, listados dashboard).
+- `listados/page.tsx`: sacar el KPI/conteo de localidades.
+- i18n: borrar `listados.localidades.*` (es+en); revisar labels sueltos.
+- Scripts: `parity-check.ts` saca `localidades` de la lista de tablas; `migrate-from-sqlite.ts` ya no aplica post-cutover (dejar nota o no tocar).
+- `components/app/breadcrumbs.tsx`: sacar la entrada `localidades`.
+
+#### Slice B3 — RBAC per-UP
+- Modelo `UsuarioUnidadProductiva` (usuarioId, unidadProductivaId, `@@unique([usuarioId, unidadProductivaId])`) — migración aditiva.
+- `lib/rbac.ts`: helpers `accessibleUpIds(session)` / `canAccessUp(session, upId)`; admin bypassa el scoping.
+- UI de admin para asignar UPs a usuarios (en el área de usuarios/roles).
+- **Decisiones abiertas para B3 (confirmar al empezar):** (a) qué entidades se filtran row-level — Mantenimiento y OrdenTrabajo tienen FK de UP; Maquinaria NO tiene UP; Compras usa UP-texto. (b) política del usuario sin asignaciones: ¿ve todo o no ve nada?
 
 ### WS-C · Trabajo sin máquina
 Ítems: rework OT, movimientos diarios, servicios externos.
