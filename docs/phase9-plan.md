@@ -66,7 +66,23 @@ Slices A1–A4 shippeados a `main` (commits `a8d390e`–`3ae6058`).
 - **Pantalla de pendientes:** lista todos los ítems con precio pendiente, con carga manual.
 - Recepciones: dropdown de proveedor (depende de este rediseño remito/factura).
 
-### WS-B · Modelo organizacional + permisos por UP — 🟡 probe hecho, diseño confirmado, implementación pendiente
+### WS-B · Modelo organizacional + permisos por UP — ✅ COMPLETADA
+Slices B1+B2 (`5699c43`) y B3 (`875da7b`) shippeados a `main`. Las migraciones
+`20260522020000_ws_b_drop_localidad` y `20260522030000_ws_b3_usuario_unidad_productiva`
+quedan **pendientes de `migrate deploy` a producción** — ver
+`docs/runbook-migraciones-pendientes.md`.
+
+- **B1+B2** — eliminada la tabla `localidades`. `localidad` es texto plano en
+  UnidadProductiva/Proveedor/OrdenTrabajo; los selectores de FK pasaron a
+  combobox de texto libre sembrados con `lib/localidades.getLocalidadesSugeridas()`.
+- **B3** — tabla `UsuarioUnidadProductiva` + `lib/up-scope.ts`
+  (`accessibleUpIds`/`canAccessUp`). Filtro row-level en los listados **y** el
+  detalle de Mantenimiento y OrdenTrabajo. UI de admin en
+  `/listados/usuarios/[id]/unidades`. Decisiones confirmadas y aplicadas:
+  filtra Mantenimiento + OT; un usuario sin asignaciones ve todo (opt-in).
+- El probe `scripts/ws-b-probe.ts` se eliminó (ya cumplido; sondeaba la tabla
+  `localidades`, que ya no existe).
+
 Ítem: merge Localidad / Unidad Productiva.
 
 **Probe (`scripts/ws-b-probe.ts`, corrido el 2026-05-22 contra Postgres):**
@@ -80,7 +96,7 @@ Slices A1–A4 shippeados a `main` (commits `a8d390e`–`3ae6058`).
 - **Eliminar la tabla `localidades`.** `localidad` pasa a ser texto plano (`localidad String?`) en `UnidadProductiva`, `Proveedor` y `OrdenTrabajo`. Se pierde el catálogo editable de 9 ciudades (aceptado).
 - **RBAC per-UP:** tabla `UsuarioUnidadProductiva` (asignación individual de UPs, hasta 44 por usuario).
 
-#### Slice B1+B2 — eliminar Localidad (atómico, 1 commit — ~42 archivos)
+#### Slice B1+B2 — eliminar Localidad ✅ (`5699c43`)
 B1 (schema) y B2 (barrido de código) van juntos: dropear la tabla rompe el build hasta que el código deje de referenciar `prisma.localidad`.
 
 **Migración SQL** (`prisma/migrations/<ts>_ws_b_drop_localidad/migration.sql`) — borrador validado contra el probe:
@@ -129,7 +145,7 @@ DROP TABLE "localidades";
 - Scripts: `parity-check.ts` saca `localidades` de la lista de tablas; `migrate-from-sqlite.ts` ya no aplica post-cutover (dejar nota o no tocar).
 - `components/app/breadcrumbs.tsx`: sacar la entrada `localidades`.
 
-#### Slice B3 — RBAC per-UP
+#### Slice B3 — RBAC per-UP ✅ (`875da7b`)
 - Modelo `UsuarioUnidadProductiva` (usuarioId, unidadProductivaId, `@@unique([usuarioId, unidadProductivaId])`) — migración aditiva.
 - `lib/rbac.ts`: helpers `accessibleUpIds(session)` / `canAccessUp(session, upId)`; admin bypassa el scoping.
 - UI de admin para asignar UPs a usuarios (en el área de usuarios/roles).

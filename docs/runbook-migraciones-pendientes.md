@@ -1,4 +1,4 @@
-# Runbook — aplicar migraciones pendientes (WS-A / WS-D)
+# Runbook — aplicar migraciones pendientes (WS-A / WS-D / WS-B)
 
 Escrito 2026-05-22. Todos los comandos se corren desde la raíz del repo.
 
@@ -111,3 +111,37 @@ Si en algún momento se quiere un `migrate status` 100% limpio sin esperar al me
 traer a `main` solo la capa de base de la rama — las 2 carpetas de migración **y** los
 modelos `agente_*` + la vista en `schema.prisma` — para que schema, historia y base
 coincidan. Es trabajo aparte; no es necesario para aplicar WS-A/WS-D.
+
+## WS-B — migraciones pendientes (agregado 2026-05-22)
+
+WS-B (Slices B1+B2 `5699c43` y B3 `875da7b`) está commiteado pero sus dos
+migraciones **no** están aplicadas a producción:
+
+- `20260522020000_ws_b_drop_localidad` — **parcialmente destructiva**: dropea
+  FKs, las columnas `localidad_id` y la tabla `localidades`. No es aditiva.
+  Hace el backfill del nombre a las columnas de texto nuevas **antes** de
+  dropear, así que el dato no se pierde — pero por dropear una tabla, **el
+  branch de Neon de backup (Paso 1) es obligatorio** acá.
+- `20260522030000_ws_b3_usuario_unidad_productiva` — aditiva, crea la tabla
+  `usuario_unidades_productivas`.
+
+Aplicar (desde la raíz del repo, mismo procedimiento que el Paso 2):
+
+```bash
+set -a && . ./.env.local && set +a
+
+npx prisma migrate status     # confirmar que faltan las 2 de WS-B
+npx prisma migrate deploy
+```
+
+Verificación:
+
+- `migrate status` → "Database schema is up to date!".
+- La tabla `localidades` ya no existe.
+- `unidades_productivas`, `proveedores` y `ordenes_trabajo` tienen una columna
+  `localidad` TEXT con los nombres backfilleados; ya no tienen `localidad_id`.
+- Existe la tabla `usuario_unidades_productivas` (vacía).
+
+Smoke test: abrir `/listados/proveedores` y `/listados/unidades-productivas`
+(el selector de localidad es ahora un combobox de texto); abrir
+`/listados/usuarios`, menú de un usuario → "Asignar unidades productivas".

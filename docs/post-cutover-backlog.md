@@ -150,6 +150,11 @@ The string constants are now centralized (`lib/mantenimiento/estado.ts`, `lib/co
 **Shape:** hay una sola base Neon (`neondb` en `ep-morning-bird-aejmvo5r…`); el `.env.local` del repo apunta ahí, así que dev = prod. Crear un branch Neon dedicado para desarrollo, apuntar `.env.local` a ese branch, y reservar la URL de prod solo para `migrate deploy` y la app desplegada en Vercel. Documentar cuál es cuál.
 **Why deferred:** el cutover se hizo con una sola base. El riesgo se materializó el 2026-05-22: `prisma migrate status` reveló que la rama sin mergear `feat/asistente-ia` había aplicado 2 migraciones (`agente_ia_skeleton`, `agente_usuario_view`) directo a prod — 4 tablas `agente_*`, la vista `usuario_safe` y el rol `agente_app` con un password placeholder. Mitigado: el rol quedó `NOLOGIN` (2026-05-22). Las tablas/vista quedan como drift inerte en prod hasta que la rama se mergee o se revierta. Detalle y plan en `docs/runbook-migraciones-pendientes.md`.
 
+### WS-B3 — scoping per-UP no cubre las server actions de mutación
+**When:** cuando se empiece a asignar UPs a usuarios en serio (hoy nadie tiene asignaciones → nadie está acotado, así que no urge).
+**Shape:** el scoping per-UP (`lib/up-scope.ts`) filtra los listados de Mantenimiento/OT y hace `notFound()` en sus páginas de detalle. Las server actions de mutación (`mantenimiento/actions.ts`, `ordenes-trabajo/actions.ts` — update, transiciones de estado, insumos) **no** revalidan el scope. Un usuario acotado no puede ver ni abrir un registro fuera de su scope desde la UI, pero una request cruda a una server action con un id ajeno no sería rechazada. Agregar un guard `canAccessUp` al inicio de esas actions.
+**Why deferred:** el modelo de amenaza es 34 usuarios internos no hostiles; el guard de listado + detalle es proporcionado para v1, y WS-B3 in-scopeó explícitamente "los listados". Endurecer las actions es un paso aparte.
+
 ## Triage cadence
 
 - **Every Monday** for 30 days post-cutover: re-read this file, promote `immediately` items off the backlog.
