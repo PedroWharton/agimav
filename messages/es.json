@@ -9,6 +9,7 @@
     "compras": "Compras",
     "mantenimiento": "Mantenimiento",
     "ordenesTrabajo": "Órdenes de trabajo",
+    "movimientosDiarios": "Movimientos diarios",
     "estadisticas": "Estadísticas",
     "listados": "Listados",
     "cerrarSesion": "Cerrar sesión"
@@ -1807,6 +1808,88 @@
       "campoRequerido": "Este campo es obligatorio.",
       "cancelarTitulo": "¿Cancelar la orden de trabajo?",
       "cancelarDescripcion": "La OT quedará cancelada sin consumir insumos del stock."
+    }
+  },
+  "movimientosDiarios": {
+    "titulo": "Movimientos diarios",
+    "descripcion": "Registro liviano de consumos y herramientas que salen del pañol",
+    "nuevo": "Nuevo registro",
+    "volver": "Volver a Movimientos diarios",
+    "cancelar": "Cancelar",
+    "guardar": "Guardar registro",
+    "nuevoTitulo": "Nuevo movimiento diario",
+    "nuevoAyuda": "Cargá la cabecera y las líneas de ítems. Al guardar, cada línea descuenta stock.",
+    "detalleTitulo": "Movimiento diario #{id}",
+    "detalleAyuda": "Líneas del registro y devolución de herramientas.",
+    "eliminar": "Eliminar registro",
+    "eliminarPregunta": "¿Eliminar este movimiento diario?",
+    "eliminarAviso": "Se reintegra al stock todo lo que siga afuera (consumibles y herramientas sin devolver) y se borra el registro. No se puede deshacer.",
+    "buscarPlaceholder": "Buscar usuario, sector o localidad…",
+    "sinResultados": "No hay registros con ese criterio.",
+    "vacio": "No hay movimientos diarios aún.",
+    "vacioAdmin": "No hay movimientos diarios aún. Creá el primero.",
+    "herramientasPendientes": "{count, plural, one {# herramienta sin devolver} other {# herramientas sin devolver}}",
+    "columnas": {
+      "fecha": "Fecha",
+      "usuario": "Usuario",
+      "sector": "Sector",
+      "lineas": "Líneas",
+      "herramientas": "Herramientas",
+      "total": "Valor"
+    },
+    "kpi": {
+      "total": "Total registros",
+      "totalCaption": "movimientos diarios cargados",
+      "nuevos": "Últimos 30 días",
+      "nuevosCaption": "registros recientes",
+      "herramientas": "Herramientas afuera",
+      "herramientasCaption": "sin devolver al pañol"
+    },
+    "secciones": {
+      "cabecera": "Cabecera",
+      "lineas": "Líneas"
+    },
+    "campos": {
+      "fecha": "Fecha",
+      "usuario": "Usuario",
+      "sector": "Sector",
+      "localidad": "Localidad",
+      "observaciones": "Observaciones"
+    },
+    "tipo": {
+      "consumible": "Consumible",
+      "herramienta": "Herramienta"
+    },
+    "lineas": {
+      "agregar": "Agregar línea",
+      "ayuda": "Consumible: sale del stock definitivamente. Herramienta: sale del stock y puede devolverse para reintegrarlo.",
+      "item": "Ítem",
+      "cantidad": "Cantidad",
+      "tipo": "Tipo",
+      "justificacion": "Justificación",
+      "justificacionHerramienta": "Por qué se retira la herramienta",
+      "justificacionOpcional": "Opcional",
+      "stockDisponible": "Stock: {stock} {unidad}",
+      "sobreStock": "Supera el stock disponible.",
+      "eliminar": "Eliminar línea",
+      "total": "Valor total:",
+      "estado": "Estado",
+      "valor": "Valor",
+      "consumido": "Consumido",
+      "devuelto": "Devuelta",
+      "devueltoEl": "Devuelta el {fecha}",
+      "sinDevolver": "Sin devolver",
+      "devolver": "Devolver"
+    },
+    "avisos": {
+      "fechaRequerida": "Ingresá la fecha del registro.",
+      "lineasRequeridas": "Agregá al menos una línea con ítem.",
+      "cantidadRequerida": "Cada línea necesita una cantidad mayor a cero.",
+      "sinPermisos": "No tenés permisos para esta acción.",
+      "errorGuardar": "No se pudo guardar. Reintentá en unos segundos.",
+      "creado": "Movimiento diario creado.",
+      "devuelto": "Herramienta devuelta y reintegrada al stock.",
+      "eliminado": "Movimiento diario eliminado."
     }
   },
   "serviciosExternos": {

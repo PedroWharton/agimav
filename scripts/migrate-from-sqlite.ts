@@ -302,6 +302,10 @@ async function main() {
       }),
   );
 
+  // WS-C: la tabla legacy `movimientos_diarios` es plana (un ítem por fila).
+  // En el modelo nuevo cada fila legacy es una cabecera con una única línea
+  // (id legacy preservado en la cabecera; la línea es autoincrement). La
+  // migración SQL agrupa de verdad por día+usuario; este import es 1:1.
   await upsertMany(
     "movimientos_diarios",
     readAll("movimientos_diarios") as Row[],
@@ -310,20 +314,25 @@ async function main() {
         where: { id: r.id as number },
         create: {
           id: r.id as number,
-          fecha: toDate(r.fecha),
-          codigoItem: (r.codigo_item as string | null) ?? null,
-          descripcion: (r.descripcion as string | null) ?? null,
-          cantidad: (r.cantidad as number | null) ?? null,
-          unidadMedida: (r.unidad_medida as string | null) ?? null,
+          fecha: toDateReq(r.fecha),
           usuario: (r.usuario as string | null) ?? null,
-          localidad: (r.localidad as string | null) ?? null,
           sector: (r.sector as string | null) ?? null,
-          proveedor: (r.proveedor as string | null) ?? null,
-          factura: (r.factura as string | null) ?? null,
-          monto: (r.monto as number | null) ?? null,
-          observaciones: (r.observaciones as string | null) ?? null,
-          justificacion: (r.justificacion as string | null) ?? null,
+          localidad: (r.localidad as string | null) ?? null,
           unidadProductivaId: (r.unidad_productiva_id as number | null) ?? null,
+          observaciones: (r.observaciones as string | null) ?? null,
+          lineas: {
+            create: {
+              codigoItem: (r.codigo_item as string | null) ?? null,
+              descripcion: (r.descripcion as string | null) ?? null,
+              cantidad: (r.cantidad as number | null) ?? 0,
+              unidadMedida: (r.unidad_medida as string | null) ?? null,
+              tipo: "consumible",
+              monto: (r.monto as number | null) ?? null,
+              proveedor: (r.proveedor as string | null) ?? null,
+              factura: (r.factura as string | null) ?? null,
+              justificacion: (r.justificacion as string | null) ?? null,
+            },
+          },
         },
         update: {},
       }),

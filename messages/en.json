@@ -9,6 +9,7 @@
     "compras": "Purchasing",
     "mantenimiento": "Maintenance",
     "ordenesTrabajo": "Work orders",
+    "movimientosDiarios": "Daily movements",
     "estadisticas": "Statistics",
     "listados": "Lists",
     "cerrarSesion": "Sign out"
@@ -1801,6 +1802,88 @@
       "campoRequerido": "This field is required.",
       "cancelarTitulo": "Cancel the work order?",
       "cancelarDescripcion": "The WO will be cancelled without consuming supplies from stock."
+    }
+  },
+  "movimientosDiarios": {
+    "titulo": "Daily movements",
+    "descripcion": "Lightweight log of consumables and tools leaving the store",
+    "nuevo": "New record",
+    "volver": "Back to Daily movements",
+    "cancelar": "Cancel",
+    "guardar": "Save record",
+    "nuevoTitulo": "New daily movement",
+    "nuevoAyuda": "Fill in the header and the item lines. On save, each line deducts stock.",
+    "detalleTitulo": "Daily movement #{id}",
+    "detalleAyuda": "Record lines and tool returns.",
+    "eliminar": "Delete record",
+    "eliminarPregunta": "Delete this daily movement?",
+    "eliminarAviso": "Anything still out (consumables and undelivered tools) is added back to stock and the record is deleted. This cannot be undone.",
+    "buscarPlaceholder": "Search user, sector or location…",
+    "sinResultados": "No records match that search.",
+    "vacio": "No daily movements yet.",
+    "vacioAdmin": "No daily movements yet. Create the first one.",
+    "herramientasPendientes": "{count, plural, one {# tool not returned} other {# tools not returned}}",
+    "columnas": {
+      "fecha": "Date",
+      "usuario": "User",
+      "sector": "Sector",
+      "lineas": "Lines",
+      "herramientas": "Tools",
+      "total": "Value"
+    },
+    "kpi": {
+      "total": "Total records",
+      "totalCaption": "daily movements logged",
+      "nuevos": "Last 30 days",
+      "nuevosCaption": "recent records",
+      "herramientas": "Tools out",
+      "herramientasCaption": "not returned to the store"
+    },
+    "secciones": {
+      "cabecera": "Header",
+      "lineas": "Lines"
+    },
+    "campos": {
+      "fecha": "Date",
+      "usuario": "User",
+      "sector": "Sector",
+      "localidad": "Location",
+      "observaciones": "Notes"
+    },
+    "tipo": {
+      "consumible": "Consumable",
+      "herramienta": "Tool"
+    },
+    "lineas": {
+      "agregar": "Add line",
+      "ayuda": "Consumable: leaves stock permanently. Tool: leaves stock and can be returned to add it back.",
+      "item": "Item",
+      "cantidad": "Quantity",
+      "tipo": "Type",
+      "justificacion": "Justification",
+      "justificacionHerramienta": "Why the tool is taken out",
+      "justificacionOpcional": "Optional",
+      "stockDisponible": "Stock: {stock} {unidad}",
+      "sobreStock": "Exceeds available stock.",
+      "eliminar": "Remove line",
+      "total": "Total value:",
+      "estado": "Status",
+      "valor": "Value",
+      "consumido": "Consumed",
+      "devuelto": "Returned",
+      "devueltoEl": "Returned on {fecha}",
+      "sinDevolver": "Not returned",
+      "devolver": "Return"
+    },
+    "avisos": {
+      "fechaRequerida": "Enter the record date.",
+      "lineasRequeridas": "Add at least one line with an item.",
+      "cantidadRequerida": "Each line needs a quantity greater than zero.",
+      "sinPermisos": "You don't have permission for this action.",
+      "errorGuardar": "Could not save. Try again in a few seconds.",
+      "creado": "Daily movement created.",
+      "devuelto": "Tool returned and added back to stock.",
+      "eliminado": "Daily movement deleted."
     }
   },
   "serviciosExternos": {

@@ -111,6 +111,7 @@ model Usuario {
   proveedoresServicioCreados ProveedorServicio[] @relation("ProveedorServicioCreatedBy")
   serviciosExternosCreados   ServicioExterno[]   @relation("ServicioExternoCreatedBy")
   categoriasOtCreadas        CategoriaOt[]       @relation("CategoriaOtCreatedBy")
+  movimientosDiariosCreados  MovimientoDiario[]  @relation("MovimientoDiarioCreatedBy")
 
   @@map("usuarios")
 }
@@ -255,6 +256,7 @@ model Inventario {
   plantillaInsumos       PlantillaInsumo[]
   mantenimientoInsumos   MantenimientoInsumo[]
   preciosHistoricos      PrecioHistorico[]
+  movimientoDiarioLineas MovimientoDiarioLinea[] @relation("MovimientoDiarioLineaItem")
 
   createdAt   DateTime @default(now()) @map("created_at")
   updatedAt   DateTime @updatedAt @map("updated_at")
@@ -290,24 +292,51 @@ model InventarioMovimiento {
   @@map("inventario_movimientos")
 }
 
+/// WS-C · Movimiento diario — registro liviano (cabecera) con líneas. Cada
+/// línea es un consumible (salida de stock) o una herramienta (salida + posible
+/// devolución que reintegra el stock).
 model MovimientoDiario {
   id                 Int      @id @default(autoincrement())
-  fecha              DateTime?
-  codigoItem         String?  @map("codigo_item")
-  descripcion        String?
-  cantidad           Float?
-  unidadMedida       String?  @map("unidad_medida")
+  fecha              DateTime
   usuario            String?
-  localidad          String?
   sector             String?
-  proveedor          String?
-  factura            String?
-  monto              Float?
-  observaciones      String?
-  justificacion      String?
+  localidad          String?
   unidadProductivaId Int?     @map("unidad_productiva_id")
+  observaciones      String?
 
+  lineas MovimientoDiarioLinea[]
+
+  createdAt   DateTime @default(now()) @map("created_at")
+  createdById Int?     @map("created_by")
+  createdBy   Usuario? @relation("MovimientoDiarioCreatedBy", fields: [createdById], references: [id], onDelete: SetNull)
+
+  @@index([fecha])
   @@map("movimientos_diarios")
+}
+
+model MovimientoDiarioLinea {
+  id               Int              @id @default(autoincrement())
+  movimientoId     Int              @map("movimiento_id")
+  movimiento       MovimientoDiario @relation(fields: [movimientoId], references: [id], onDelete: Cascade)
+  itemInventarioId Int?             @map("item_inventario_id")
+  item             Inventario?      @relation("MovimientoDiarioLineaItem", fields: [itemInventarioId], references: [id], onDelete: SetNull)
+  codigoItem       String?          @map("codigo_item")
+  descripcion      String?
+  cantidad         Float
+  unidadMedida     String?          @map("unidad_medida")
+  /// "consumible" | "herramienta"
+  tipo             String           @default("consumible")
+  devuelto         Boolean          @default(false)
+  fechaDevolucion  DateTime?        @map("fecha_devolucion")
+  monto            Float?
+  proveedor        String?
+  factura          String?
+  justificacion    String?
+  observaciones    String?
+
+  @@index([movimientoId])
+  @@index([itemInventarioId])
+  @@map("movimientos_diarios_lineas")
 }
 
 // ──────────────────────────────────────────────────────────────────────────────

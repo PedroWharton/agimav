@@ -46,7 +46,8 @@ const TABLES = [
   "proveedores",
   "inventario",
   "inventario_movimientos",
-  "movimientos_diarios",
+  // movimientos_diarios: la tabla legacy plana se reagrupó en cabecera + líneas
+  // (WS-C); ya no compara 1:1 por nombre.
   "maquinaria_tipos",
   "tipo_niveles",
   "nivel_atributos",
