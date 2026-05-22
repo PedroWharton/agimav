@@ -152,9 +152,10 @@ DROP TABLE "localidades";
 - **Decisiones abiertas para B3 (confirmar al empezar):** (a) qué entidades se filtran row-level — Mantenimiento y OrdenTrabajo tienen FK de UP; Maquinaria NO tiene UP; Compras usa UP-texto. (b) política del usuario sin asignaciones: ¿ve todo o no ve nada?
 
 ### WS-C · Trabajo sin máquina — ✅ COMPLETADA
-Slices C1–C5 shippeados a `main` (commits `d18c085`–`a649fb0`). Migraciones
-`20260522040000`–`20260522070000` **pendientes de `migrate deploy`** — ver
-`docs/runbook-migraciones-pendientes.md`.
+Slices C1–C5 shippeados a `main` (commits `d18c085`–`a649fb0`). Las 4
+migraciones `20260522040000`–`20260522070000` se **aplicaron a prod** el
+2026-05-22 (la de movimientos diarios necesitó un fix de colisión de PK,
+commit `ae8a48b` — ver `docs/runbook-migraciones-pendientes.md`).
 
 - **C1 `d18c085`** — Servicios externos: modelos `ProveedorServicio` (catálogo)
   y `ServicioExterno` (línea). Listado/CRUD en `/listados/proveedores-servicio`.

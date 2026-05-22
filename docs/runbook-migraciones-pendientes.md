@@ -146,10 +146,23 @@ Smoke test: abrir `/listados/proveedores` y `/listados/unidades-productivas`
 (el selector de localidad es ahora un combobox de texto); abrir
 `/listados/usuarios`, menú de un usuario → "Asignar unidades productivas".
 
-## WS-C — migraciones pendientes (agregado 2026-05-22)
+## ✅ WS-C — migraciones aplicadas (HECHO 2026-05-22)
 
-WS-C (Slices C1–C5, commits `d18c085`–`a649fb0`) está commiteado pero sus
-cuatro migraciones **no** están aplicadas a producción:
+WS-C (Slices C1–C5, commits `d18c085`–`a649fb0`) — las cuatro migraciones se
+aplicaron a producción el 2026-05-22. `migrate status` quedó en "Database
+schema is up to date!".
+
+**Incidente durante el deploy:** la migración `..._ws_c_movimientos_diarios`
+falló en el primer intento (error `42P07`): `ALTER TABLE ... RENAME TO` no
+renombra el índice de la PK, así que `movimientos_diarios_pkey` seguía ocupado
+al recrear la tabla. La corrida no fue transaccional — el `RENAME` quedó
+aplicado. Se recuperó con `migrate resolve --rolled-back` + una migración
+corregida (commit `ae8a48b`) que libera el nombre de la PK y es idempotente.
+Verificado post-deploy: 217 líneas reagrupadas en 73 cabeceras, legacy dropeada.
+**Lección:** toda migración que renombre una tabla y recree otra con el mismo
+nombre debe renombrar/soltar también el índice de PK y la secuencia.
+
+Detalle original de las cuatro migraciones:
 
 - `20260522040000_ws_c_servicios_externos` — **aditiva**: tablas
   `proveedores_servicio` y `servicios_externos`.
@@ -169,21 +182,19 @@ No hay permisos nuevos: WS-C reusa permisos existentes (`listados.*`,
 `inventario.*`, `mantenimiento.update`, `ot.update`) y WS-E reusa
 `estadisticas.proveedores.view`. **No hace falta correr `seed-permisos.ts`.**
 
-Aplicar (desde la raíz del repo, mismo procedimiento que el Paso 2):
+Se aplicó con (desde la raíz del repo):
 
 ```bash
 set -a && . ./.env.local && set +a
-
-npx prisma migrate status     # confirmar que faltan las 4 de WS-C
 npx prisma migrate deploy
 ```
 
-Verificación:
+Verificado el 2026-05-22:
 
 - `migrate status` → "Database schema is up to date!".
 - `movimientos_diarios_legacy` ya no existe; `movimientos_diarios_lineas`
-  tiene 217 filas (las 217 filas legacy reagrupadas).
-- Existe la tabla `categorias_ot` con al menos la fila "Otros".
+  tiene 217 filas reagrupadas en 73 cabeceras `movimientos_diarios`.
+- Existe la tabla `categorias_ot` con la fila "Otros".
 
 Smoke test: abrir `/listados/proveedores-servicio` y `/listados/categorias-ot`;
 crear una OT con categoría y fecha programada; abrir un mantenimiento y agregar
