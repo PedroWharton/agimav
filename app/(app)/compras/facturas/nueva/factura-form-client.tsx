@@ -104,11 +104,14 @@ export function FacturaFormClient({
   initialProveedorId,
   lineas,
   ocContext,
+  preselectAll = false,
 }: {
   proveedores: FacturaProveedorOption[];
   initialProveedorId: number | null;
   lineas: FacturaRecepcionLinea[];
   ocContext: OcLinkContext | null;
+  /** Pre-tilda todas las líneas (al venir de una o varias OC ya elegidas). */
+  preselectAll?: boolean;
 }) {
   const tFac = useTranslations("compras.facturas");
   const tCommon = useTranslations("listados.common");
@@ -130,15 +133,16 @@ export function FacturaFormClient({
   const lineasKey = useMemo(() => lineas.map((l) => l.id).join(","), [lineas]);
   const [lineState, setLineState] = useState<LineState[]>(() => {
     const base = initialLineState(lineas);
-    // If OC context is present, auto-select all lines (they all belong to
-    // the linked OC).
-    return ocContext ? base.map((l) => ({ ...l, selected: true })) : base;
+    // Coming from one or more already-chosen OCs: auto-select every line.
+    return preselectAll ? base.map((l) => ({ ...l, selected: true })) : base;
   });
   const [prevKey, setPrevKey] = useState(lineasKey);
   if (lineasKey !== prevKey) {
     setPrevKey(lineasKey);
     const base = initialLineState(lineas);
-    setLineState(ocContext ? base.map((l) => ({ ...l, selected: true })) : base);
+    setLineState(
+      preselectAll ? base.map((l) => ({ ...l, selected: true })) : base,
+    );
   }
 
   const [isSaving, startSave] = useTransition();

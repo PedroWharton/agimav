@@ -190,11 +190,27 @@ export function MantenimientosClient({
       header: tM("campos.tipo"),
       enableSorting: true,
       cell: ({ row }) => {
-        const k = row.original.tipo as "correctivo" | "preventivo";
+        const k = row.original.tipo as
+          | "correctivo"
+          | "preventivo"
+          | "revisión";
+        const prox =
+          row.original.tipo === "revisión" && row.original.fechaProgramada
+            ? format(new Date(row.original.fechaProgramada), "dd/MM/yyyy", {
+                locale: es,
+              })
+            : null;
         return (
-          <span className="text-xs text-muted-foreground capitalize">
-            {tTipos(k)}
-          </span>
+          <div className="flex flex-col">
+            <span className="text-xs text-muted-foreground capitalize">
+              {tTipos(k)}
+            </span>
+            {prox ? (
+              <span className="text-[10px] tabular-nums text-muted-foreground">
+                {tM("revision.proximaRevision")}: {prox}
+              </span>
+            ) : null}
+          </div>
         );
       },
     },
@@ -245,13 +261,14 @@ export function MantenimientosClient({
               {tM("filtros.tipo")}:{" "}
               {tipoFilter === ALL
                 ? tM("filtros.todos")
-                : tTipos(tipoFilter as "correctivo" | "preventivo")}
+                : tTipos(tipoFilter as "correctivo" | "preventivo" | "revisión")}
             </span>
           </SelectTrigger>
-          <SelectContent>
+          <SelectContent position="popper" align="start">
             <SelectItem value={ALL}>{tM("filtros.todos")}</SelectItem>
             <SelectItem value="correctivo">{tTipos("correctivo")}</SelectItem>
             <SelectItem value="preventivo">{tTipos("preventivo")}</SelectItem>
+            <SelectItem value="revisión">{tTipos("revisión")}</SelectItem>
           </SelectContent>
         </Select>
 
@@ -287,7 +304,7 @@ export function MantenimientosClient({
                     )}
               </span>
             </SelectTrigger>
-            <SelectContent>
+            <SelectContent position="popper" align="start">
               <SelectItem value={ALL}>{tM("filtros.todos")}</SelectItem>
               {MANT_ESTADOS.map((e) => (
                 <SelectItem key={e} value={e}>

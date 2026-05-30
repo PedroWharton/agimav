@@ -631,6 +631,7 @@
       "tipos": {
         "correctivo": "Correctivo",
         "preventivo": "Preventivo",
+        "revisión": "Revisión",
         "mejora": "Mejora",
         "otro": "Otro"
       },
@@ -1289,8 +1290,14 @@
           "ultimaRecepcion": "Última recepción"
         },
         "ultimaRecepcionInline": "Última rec. {fecha}",
+        "seleccionar": "Seleccionar OC",
+        "seleccionarTodas": "Seleccionar todas",
+        "otroProveedorTooltip": "Solo podés agrupar OC del mismo proveedor en una factura",
+        "seleccionadasResumen": "{count} OC de {proveedor}",
         "acciones": {
-          "crear": "Crear factura"
+          "crear": "Crear factura",
+          "facturarSeleccionadas": "Facturar seleccionadas",
+          "limpiar": "Limpiar"
         },
         "vacio": {
           "titulo": "Sin OCs pendientes de facturar",
@@ -1477,7 +1484,8 @@
     },
     "tipos": {
       "correctivo": "Correctivo",
-      "preventivo": "Preventivo"
+      "preventivo": "Preventivo",
+      "revisión": "Revisión"
     },
     "filtros": {
       "tipo": "Tipo",
@@ -1549,6 +1557,12 @@
     "revision": {
       "programar": "Programar próxima revisión",
       "ayuda": "Al finalizar, se agenda una revisión para la fecha elegida.",
+      "intervaloLabel": "Repetir cada",
+      "intervaloSufijo": "días",
+      "intervaloAyuda": "Una revisión vuelve a Pendiente al finalizarla, reprogramándose con esta frecuencia.",
+      "autoFinalizar": "Es una revisión recurrente: al finalizar, el mismo mantenimiento vuelve a Pendiente con la próxima fecha programada.",
+      "proximaRevision": "Próxima revisión",
+      "cicloHistorial": "Revisión realizada · próxima el {fecha}",
       "fecha": "Fecha",
       "descripcion": "Descripción",
       "panelTitulo": "Revisiones",

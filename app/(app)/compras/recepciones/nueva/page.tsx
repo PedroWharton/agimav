@@ -109,10 +109,19 @@ export default async function NuevaRecepcionPage({
     fechaEmision: oc.fechaEmision.toISOString(),
   };
 
+  const usuarios = (
+    await prisma.usuario.findMany({
+      where: { estado: "activo" },
+      select: { nombre: true },
+      orderBy: { nombre: "asc" },
+    })
+  ).map((u) => u.nombre);
+
   return (
     <RecepcionFormClient
       oc={ocPayload}
       lineas={lineas}
+      usuarios={usuarios}
       defaultRecibidoPor={userNameFromSession(session) ?? ""}
     />
   );

@@ -40,8 +40,13 @@ export const MANT_ESTADO_I18N_KEY: Record<MantEstado, string> = {
   Cancelado: "Cancelado",
 };
 
-export const MANT_TIPOS = ["correctivo", "preventivo"] as const;
+export const MANT_TIPOS = ["correctivo", "preventivo", "revisión"] as const;
 export type MantTipo = (typeof MANT_TIPOS)[number];
+
+/** Una revisión es un mantenimiento recurrente: al finalizarlo vuelve a
+ * Pendiente con la próxima fecha programada (mismo registro, no crea uno
+ * nuevo). El intervalo se guarda en frecuenciaValor (días). */
+export const MANT_TIPO_REVISION: MantTipo = "revisión";
 
 export const MANT_PRIORIDADES = ["Baja", "Media", "Alta"] as const;
 export type MantPrioridad = (typeof MANT_PRIORIDADES)[number];

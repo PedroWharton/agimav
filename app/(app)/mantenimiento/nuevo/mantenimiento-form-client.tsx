@@ -4,7 +4,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useMemo, useState, useTransition } from "react";
 import { toast } from "sonner";
-import { ArrowLeft, Sparkles, Wrench, X } from "lucide-react";
+import { ArrowLeft, RefreshCw, Sparkles, Wrench, X } from "lucide-react";
 import { useTranslations } from "next-intl";
 
 import { Button } from "@/components/ui/button";
@@ -144,6 +144,7 @@ export function MantenimientoFormClient({
     null,
   );
   const [fechaProgramada, setFechaProgramada] = useState("");
+  const [revisionDias, setRevisionDias] = useState<string>("30");
   const [prioridad, setPrioridad] = useState<Prioridad>("media");
   const [repuestos, setRepuestos] = useState<RepuestoLine[]>([]);
   const [errors, setErrors] = useState<Record<string, string>>({});
@@ -240,6 +241,13 @@ export function MantenimientoFormClient({
       description: "Checklist programado por horas o calendario.",
       icon: <Sparkles className="size-3.5" strokeWidth={1.75} />,
     },
+    {
+      value: "revisión",
+      title: tTipos("revisión"),
+      description:
+        "Recurrente: al finalizarla vuelve a Pendiente con la próxima fecha.",
+      icon: <RefreshCw className="size-3.5" strokeWidth={1.75} />,
+    },
   ];
 
   const submit = () => {
@@ -255,6 +263,8 @@ export function MantenimientoFormClient({
         fechaProgramada,
         prioridad: PRIORIDAD_TO_SERVER[prioridad],
         plantillaId,
+        frecuenciaRevisionDias:
+          tipo === "revisión" ? Number(revisionDias) || null : null,
       });
       if (!res.ok) {
         if (res.error === "invalid" && res.fieldErrors) {
@@ -371,6 +381,30 @@ export function MantenimientoFormClient({
               value={tipo}
               onChange={setTipo}
             />
+            {tipo === "revisión" ? (
+              <div className="flex flex-col gap-1.5">
+                <Label htmlFor="revision-dias">
+                  {tM("revision.intervaloLabel")}
+                </Label>
+                <div className="flex items-center gap-2">
+                  <Input
+                    id="revision-dias"
+                    type="number"
+                    min={1}
+                    step={1}
+                    value={revisionDias}
+                    onChange={(e) => setRevisionDias(e.target.value)}
+                    className="w-28"
+                  />
+                  <span className="text-sm text-muted-foreground">
+                    {tM("revision.intervaloSufijo")}
+                  </span>
+                </div>
+                <span className="text-[11px] text-subtle-foreground">
+                  {tM("revision.intervaloAyuda")}
+                </span>
+              </div>
+            ) : null}
             {showPlantillaPicker ? (
               <div className="flex flex-col gap-1.5">
                 <div className="flex items-baseline justify-between gap-2">

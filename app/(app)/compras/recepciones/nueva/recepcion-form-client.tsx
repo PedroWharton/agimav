@@ -13,6 +13,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 
+import { Combobox } from "@/components/app/combobox";
 import { PageHeader } from "@/components/app/page-header";
 import {
   AttachBox,
@@ -56,10 +57,12 @@ function todayISODate(): string {
 export function RecepcionFormClient({
   oc,
   lineas: initialLineas,
+  usuarios,
   defaultRecibidoPor,
 }: {
   oc: RecepcionFormOc;
   lineas: RecepcionFormLinea[];
+  usuarios: string[];
   defaultRecibidoPor: string;
 }) {
   const tRec = useTranslations("compras.recepciones");
@@ -208,6 +211,14 @@ export function RecepcionFormClient({
     });
   }
 
+  const usuarioOptions = useMemo(() => {
+    const names = new Set(usuarios);
+    if (defaultRecibidoPor) names.add(defaultRecibidoPor);
+    return Array.from(names)
+      .sort((a, b) => a.localeCompare(b, "es"))
+      .map((nombre) => ({ value: nombre, label: nombre }));
+  }, [usuarios, defaultRecibidoPor]);
+
   const fechaEmision = useMemo(
     () => new Date(oc.fechaEmision),
     [oc.fechaEmision],
@@ -217,9 +228,9 @@ export function RecepcionFormClient({
     <div className="flex flex-col gap-5 p-6 pb-28">
       <div>
         <Button variant="ghost" size="sm" asChild className="mb-2 -ml-2">
-          <Link href={`/compras/oc/${oc.id}`}>
+          <Link href="/compras/recepciones">
             <ArrowLeft className="size-4" />
-            {oc.numeroOc}
+            {tRec("volver")}
           </Link>
         </Button>
         <PageHeader
@@ -274,11 +285,14 @@ export function RecepcionFormClient({
                 <Label htmlFor="recibidoPor">
                   {tRec("campos.recibidoPor")}
                 </Label>
-                <Input
-                  id="recibidoPor"
+                <Combobox
                   value={recibidoPor}
-                  onChange={(e) => setRecibidoPor(e.target.value)}
+                  onChange={setRecibidoPor}
+                  options={usuarioOptions}
+                  allowCreate={false}
                   disabled={isSaving}
+                  placeholder={tRec("campos.recibidoPor")}
+                  className="h-9 w-full"
                 />
               </div>
             </div>
@@ -368,7 +382,7 @@ export function RecepcionFormClient({
             asChild
             disabled={isSaving}
           >
-            <Link href={`/compras/oc/${oc.id}`}>
+            <Link href="/compras/recepciones">
               {tRec("footer.cancelar")}
             </Link>
           </Button>

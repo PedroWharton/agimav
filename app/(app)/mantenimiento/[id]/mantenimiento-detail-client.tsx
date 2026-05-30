@@ -1308,7 +1308,12 @@ export function MantenimientoDetailClient({
               {tM("avisos.finalizarDescripcion")}
             </DialogDescription>
           </DialogHeader>
-          {finalizarDialog ? (
+          {finalizarDialog && data.tipo === "revisión" ? (
+            <div className="rounded-md border border-border bg-muted/40 p-3 text-sm text-muted-foreground">
+              {tM("revision.autoFinalizar")}
+            </div>
+          ) : null}
+          {finalizarDialog && data.tipo !== "revisión" ? (
             <div className="flex flex-col gap-3">
               <div className="flex items-start gap-2">
                 <Checkbox

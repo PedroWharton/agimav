@@ -16,7 +16,7 @@ export const dynamic = "force-dynamic";
 export default async function NuevaFacturaPage({
   searchParams,
 }: {
-  searchParams: Promise<{ proveedorId?: string; oc?: string }>;
+  searchParams: Promise<{ proveedorId?: string; oc?: string; ocs?: string }>;
 }) {
   const session = await auth();
   requireViewOrRedirect(session, "compras.view");
@@ -24,18 +24,32 @@ export default async function NuevaFacturaPage({
     redirect("/compras/facturas");
   }
 
-  const { proveedorId: rawPid, oc: rawOc } = await searchParams;
-  const ocIdParam = rawOc ? Number.parseInt(rawOc, 10) : null;
-  const ocId = ocIdParam && Number.isFinite(ocIdParam) ? ocIdParam : null;
+  const { proveedorId: rawPid, oc: rawOc, ocs: rawOcs } = await searchParams;
 
-  // If an OC was passed, derive the proveedor from it and restrict the
-  // pre-populated lines to that OC's unbilled recepciones.
+  const singleOcParam = rawOc ? Number.parseInt(rawOc, 10) : null;
+  const singleOcId =
+    singleOcParam && Number.isFinite(singleOcParam) ? singleOcParam : null;
+
+  const multiOcIds = (rawOcs ?? "")
+    .split(",")
+    .map((s) => Number.parseInt(s.trim(), 10))
+    .filter((n) => Number.isFinite(n) && n > 0);
+
+  // Set of OCs this factura is restricted to: either a single `?oc=` or a
+  // multi `?ocs=1,2,3` selection from the pendientes tab. Empty = pick proveedor
+  // freely and load all its unbilled lines.
+  const ocIds =
+    multiOcIds.length > 0 ? multiOcIds : singleOcId != null ? [singleOcId] : [];
+
+  // Derive proveedor from the selected OCs and (for a single OC) build the
+  // match-banner context. With several OCs there is no single OC total to
+  // compare against, so the banner is suppressed.
   let ocContext: OcLinkContext | null = null;
   let derivedProveedorId: number | null = null;
 
-  if (ocId) {
-    const oc = await prisma.ordenCompra.findUnique({
-      where: { id: ocId },
+  if (ocIds.length > 0) {
+    const ocsRows = await prisma.ordenCompra.findMany({
+      where: { id: { in: ocIds } },
       select: {
         id: true,
         numeroOc: true,
@@ -43,13 +57,16 @@ export default async function NuevaFacturaPage({
         totalEstimado: true,
       },
     });
-    if (oc) {
-      derivedProveedorId = oc.proveedorId;
-      ocContext = {
-        id: oc.id,
-        numero: oc.numeroOc ?? `OC-${oc.id}`,
-        total: oc.totalEstimado,
-      };
+    if (ocsRows.length > 0) {
+      derivedProveedorId = ocsRows[0].proveedorId;
+      if (ocsRows.length === 1) {
+        const oc = ocsRows[0];
+        ocContext = {
+          id: oc.id,
+          numero: oc.numeroOc ?? `OC-${oc.id}`,
+          total: oc.totalEstimado,
+        };
+      }
     }
   }
 
@@ -73,7 +90,7 @@ export default async function NuevaFacturaPage({
         ocDetalle: {
           oc: {
             proveedorId,
-            ...(ocId ? { id: ocId } : {}),
+            ...(ocIds.length > 0 ? { id: { in: ocIds } } : {}),
           },
         },
       },
@@ -134,6 +151,7 @@ export default async function NuevaFacturaPage({
       initialProveedorId={proveedorId}
       lineas={unfacturadas}
       ocContext={ocContext}
+      preselectAll={ocIds.length > 0}
     />
   );
 }

@@ -10,6 +10,7 @@ import { FileText } from "lucide-react";
 
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
+import { Checkbox } from "@/components/ui/checkbox";
 
 import { Combobox } from "@/components/app/combobox";
 import { EmptyState } from "@/components/app/states";
@@ -49,6 +50,7 @@ export function FacturasPendientesClient({
 
   const [search, setSearch] = useState("");
   const [provFilter, setProvFilter] = useState<string>(PROV_ALL);
+  const [selectedIds, setSelectedIds] = useState<Set<number>>(new Set());
 
   const filtered = useMemo(() => {
     const q = norm(search.trim());
@@ -62,6 +64,55 @@ export function FacturasPendientesClient({
       return true;
     });
   }, [ocs, search, provFilter]);
+
+  // Una factura agrupa OC de un único proveedor. La primera OC tildada fija
+  // el proveedor; las demás OC quedan deshabilitadas hasta limpiar la selección.
+  const lockProveedor = useMemo(() => {
+    if (selectedIds.size === 0) return null;
+    const first = ocs.find((o) => selectedIds.has(o.id));
+    return first?.proveedor ?? null;
+  }, [ocs, selectedIds]);
+
+  // Proveedor sobre el que opera "seleccionar todas": el bloqueado si ya hay
+  // selección, o el de la primera fila filtrada en caso contrario.
+  const effectiveProveedor = lockProveedor ?? filtered[0]?.proveedor ?? null;
+
+  const selectableFiltered = useMemo(
+    () =>
+      effectiveProveedor
+        ? filtered.filter((oc) => oc.proveedor === effectiveProveedor)
+        : [],
+    [filtered, effectiveProveedor],
+  );
+
+  const allSelectableSelected =
+    selectableFiltered.length > 0 &&
+    selectableFiltered.every((oc) => selectedIds.has(oc.id));
+
+  const selectedProveedor = lockProveedor;
+  const selectedCount = selectedIds.size;
+
+  function toggleOc(id: number, checked: boolean) {
+    setSelectedIds((prev) => {
+      const next = new Set(prev);
+      if (checked) next.add(id);
+      else next.delete(id);
+      return next;
+    });
+  }
+
+  function toggleAll(checked: boolean) {
+    setSelectedIds(() => {
+      if (!checked) return new Set();
+      return new Set(selectableFiltered.map((oc) => oc.id));
+    });
+  }
+
+  function facturarSeleccionadas() {
+    if (selectedIds.size === 0) return;
+    const ids = ocs.filter((o) => selectedIds.has(o.id)).map((o) => o.id);
+    router.push(`/compras/facturas/nueva?ocs=${ids.join(",")}`);
+  }
 
   if (ocs.length === 0) {
     return (
@@ -100,6 +151,14 @@ export function FacturasPendientesClient({
         <table className="w-full min-w-[760px] text-sm">
           <thead className="bg-muted/40 text-xs uppercase tracking-wide text-muted-foreground">
             <tr>
+              <th className="px-3 py-2.5 text-left font-medium w-10">
+                <Checkbox
+                  checked={allSelectableSelected}
+                  onCheckedChange={(c) => toggleAll(!!c)}
+                  disabled={selectableFiltered.length === 0}
+                  aria-label={tFac("pendientes.seleccionarTodas")}
+                />
+              </th>
               <th className="px-3 py-2.5 text-left font-medium w-40">
                 {tFac("pendientes.columnas.oc")}
               </th>
@@ -123,7 +182,7 @@ export function FacturasPendientesClient({
             {filtered.length === 0 ? (
               <tr>
                 <td
-                  colSpan={5}
+                  colSpan={6}
                   className="px-3 py-6 text-center text-sm text-muted-foreground"
                 >
                   {tFac("avisos.vacioFiltrado")}
@@ -136,14 +195,37 @@ export function FacturasPendientesClient({
                 oc.totalLineas > 0
                   ? (facturadas / oc.totalLineas) * 100
                   : 0;
+              const isChecked = selectedIds.has(oc.id);
+              const isDisabled =
+                lockProveedor != null && oc.proveedor !== lockProveedor;
               return (
                 <tr
                   key={oc.id}
-                  className="cursor-pointer border-t border-border transition-colors hover:bg-muted/20"
+                  className={cn(
+                    "cursor-pointer border-t border-border transition-colors hover:bg-muted/20",
+                    isChecked && "bg-sky-50/60 dark:bg-sky-950/20",
+                    isDisabled && "opacity-50",
+                  )}
                   onClick={() =>
                     router.push(`/compras/facturas/nueva?oc=${oc.id}`)
                   }
                 >
+                  <td
+                    className="px-3 py-2.5"
+                    onClick={(e) => e.stopPropagation()}
+                  >
+                    <Checkbox
+                      checked={isChecked}
+                      disabled={isDisabled}
+                      onCheckedChange={(c) => toggleOc(oc.id, !!c)}
+                      aria-label={tFac("pendientes.seleccionar")}
+                      title={
+                        isDisabled
+                          ? tFac("pendientes.otroProveedorTooltip")
+                          : undefined
+                      }
+                    />
+                  </td>
                   <td className="px-3 py-2.5">
                     <Link
                       href={`/compras/oc/${oc.id}`}
@@ -216,6 +298,33 @@ export function FacturasPendientesClient({
           </tbody>
         </table>
       </div>
+
+      {selectedCount > 0 ? (
+        <div className="fixed inset-x-0 bottom-0 z-20 border-t border-border bg-card/95 px-6 py-3 backdrop-blur supports-[backdrop-filter]:bg-card/80">
+          <div className="mx-auto flex max-w-[1600px] items-center justify-between gap-4">
+            <span className="text-sm text-muted-foreground">
+              {tFac("pendientes.seleccionadasResumen", {
+                count: selectedCount,
+                proveedor: selectedProveedor ?? "—",
+              })}
+            </span>
+            <div className="flex items-center gap-2">
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={() => setSelectedIds(new Set())}
+              >
+                {tFac("pendientes.acciones.limpiar")}
+              </Button>
+              <Button type="button" size="sm" onClick={facturarSeleccionadas}>
+                <FileText className="size-4" />
+                {tFac("pendientes.acciones.facturarSeleccionadas")}
+              </Button>
+            </div>
+          </div>
+        </div>
+      ) : null}
     </div>
   );
 }

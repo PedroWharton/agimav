@@ -78,6 +78,15 @@ const createSchema = z.object({
     .optional()
     .nullable()
     .transform((v) => v ?? null),
+  // Intervalo en días para mantenimientos de tipo "revisión": al finalizar
+  // se reprograma a hoy + estos días (mismo registro).
+  frecuenciaRevisionDias: z.coerce
+    .number()
+    .int()
+    .positive()
+    .optional()
+    .nullable()
+    .transform((v) => v ?? null),
 });
 
 const insumoSchema = z.object({
@@ -159,8 +168,14 @@ export async function createMantenimiento(
           fechaFinalizacion: estadoInicial === "Finalizado" ? now : null,
           creadoPor: userName,
           plantillaId: plantilla?.id ?? null,
-          frecuenciaValor: plantilla?.frecuenciaValor ?? null,
-          frecuenciaUnidad: plantilla?.frecuenciaUnidad ?? null,
+          frecuenciaValor:
+            data.tipo === "revisión"
+              ? (data.frecuenciaRevisionDias ?? null)
+              : (plantilla?.frecuenciaValor ?? null),
+          frecuenciaUnidad:
+            data.tipo === "revisión"
+              ? "dias"
+              : (plantilla?.frecuenciaUnidad ?? null),
           horasAcumuladasSnapshot: maq?.horasAcumuladas ?? null,
         },
       });
@@ -375,6 +390,8 @@ export async function transitionEstado(
     select: {
       id: true,
       estado: true,
+      tipo: true,
+      frecuenciaValor: true,
       tallerAsignadoId: true,
       tallerAsignado: { select: { nombre: true } },
       maquinariaId: true,
@@ -383,6 +400,11 @@ export async function transitionEstado(
   });
   if (!existing) return { ok: false, error: "not_found" };
 
+  // Una revisión recurrente no termina: al "finalizar" vuelve a Pendiente con
+  // la próxima fecha (hoy + frecuenciaValor días). Mismo registro.
+  const esRevisionRecurrente =
+    existing.tipo === "revisión" && (existing.frecuenciaValor ?? 0) > 0;
+
   const valid = validateTransition(existing.estado, target);
   if (!valid) return { ok: false, error: "wrong_estado" };
 
@@ -390,7 +412,19 @@ export async function transitionEstado(
   const now = new Date();
 
   try {
-    const updateData: Record<string, unknown> = { estado: target };
+    // Finalizar una revisión recurrente la recicla: vuelve a Pendiente con la
+    // próxima fecha en vez de terminar.
+    const finalizandoRevision = target === "Finalizado" && esRevisionRecurrente;
+    const proximaRevisionFecha = finalizandoRevision
+      ? (() => {
+          const d = new Date(now);
+          d.setDate(d.getDate() + (existing.frecuenciaValor as number));
+          return d;
+        })()
+      : null;
+    const nuevoEstado = finalizandoRevision ? "Pendiente" : target;
+
+    const updateData: Record<string, unknown> = { estado: nuevoEstado };
 
     if (target === "En Reparación - Chacra" || target === "En Reparación - Taller") {
       updateData.fechaInicio = now;
@@ -404,7 +438,11 @@ export async function transitionEstado(
     if (target === "Finalizado" || target === "Cancelado") {
       updateData.fechaFinalizacion = now;
     }
-    if (target === "Finalizado" && parsed.data.programarRevision) {
+    if (finalizandoRevision && proximaRevisionFecha) {
+      // Reinicia el ciclo en el mismo registro.
+      updateData.fechaInicio = null;
+      updateData.fechaProgramada = proximaRevisionFecha;
+    } else if (target === "Finalizado" && parsed.data.programarRevision) {
       updateData.programarRevision = true;
       updateData.fechaProximaRevision = parsed.data.fechaProximaRevision;
       updateData.descripcionRevision = parsed.data.descripcionRevision;
@@ -427,7 +465,7 @@ export async function transitionEstado(
           mantenimientoId: id,
           tipoCambio: "estado",
           valorAnterior: existing.estado,
-          valorNuevo: target,
+          valorNuevo: nuevoEstado,
           usuario: userName,
         },
       });
@@ -451,7 +489,32 @@ export async function transitionEstado(
       if (target === "Finalizado") {
         await commitInsumosConsumption(tx, id, userName);
 
-        if (parsed.data.programarRevision && parsed.data.fechaProximaRevision) {
+        if (finalizandoRevision && proximaRevisionFecha) {
+          // Revisión recurrente: registra el ciclo cumplido y deja la próxima
+          // fecha en el propio mantenimiento (que volvió a Pendiente). No crea
+          // un mantenimiento nuevo.
+          await tx.mantenimientoRevision.create({
+            data: {
+              mantenimientoId: id,
+              fechaProgramada: now,
+              fechaRealizada: now,
+              estado: "realizada",
+            },
+          });
+          await tx.mantenimientoHistorial.create({
+            data: {
+              mantenimientoId: id,
+              tipoCambio: "revision",
+              valorAnterior: null,
+              valorNuevo: null,
+              usuario: userName,
+              detalle: `Revisión realizada · próxima ${proximaRevisionFecha.toLocaleDateString("es-AR")}`,
+            },
+          });
+        } else if (
+          parsed.data.programarRevision &&
+          parsed.data.fechaProximaRevision
+        ) {
           // WS-D: a programmed revision is a row on the same mantenimiento,
           // not a new child record.
           await tx.mantenimientoRevision.create({

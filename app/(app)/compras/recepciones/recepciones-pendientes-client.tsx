@@ -181,10 +181,7 @@ export function RecepcionesPendientesClient({
                   className="border-t border-border transition-colors hover:bg-muted/20"
                 >
                   <td className="px-3 py-2.5">
-                    <Link
-                      href={`/compras/oc/${oc.id}`}
-                      className="flex flex-col underline-offset-2 hover:underline"
-                    >
+                    <div className="flex flex-col">
                       <span className="font-mono text-xs font-medium">
                         {oc.numeroOc}
                       </span>
@@ -193,7 +190,7 @@ export function RecepcionesPendientesClient({
                           locale: es,
                         })}
                       </span>
-                    </Link>
+                    </div>
                   </td>
                   <td className="px-3 py-2.5 text-sm">{oc.proveedor}</td>
                   <td className="px-3 py-2.5">
