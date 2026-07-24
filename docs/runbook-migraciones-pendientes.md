@@ -89,6 +89,15 @@ Smoke test en la app en vivo:
 - Pantalla de precios pendientes (WS-A) carga sin error.
 - Detalle de un mantenimiento → panel "Revisiones" (WS-D) carga y permite agregar una revisión.
 
+## ✅ Fase 9 QA-2 — `oc_detalle_nota` aplicada (HECHO 2026-07-24)
+
+`20260724100000_oc_detalle_nota` (aditiva: `ALTER TABLE ordenes_compra_detalle
+ADD COLUMN nota TEXT` nullable) se aplicó a prod el 2026-07-24 con
+`migrate deploy`. Sin branch de backup (no hay neonctl/API key en este entorno):
+se anotó el timestamp UTC pre-migración para PITR — **2026-07-24T18:36:58Z**.
+Verificado post-deploy: `migrate status` "up to date" (24/24) y la columna
+existe (`information_schema.columns`).
+
 ## El drift de `feat/asistente-ia` — qué hacer
 
 `main` no tiene las 2 migraciones `agente_*`, pero la base sí. `migrate status` no lo
