@@ -11,6 +11,7 @@ import {
   userNameFromSession,
 } from "@/lib/rbac";
 import { MANT_PRIORIDADES, MANT_TIPOS } from "@/lib/mantenimiento/estado";
+import { canAccessUp } from "@/lib/up-scope";
 
 import { FRECUENCIA_UNIDADES } from "./types";
 import type { PlantillaActionResult } from "./types";
@@ -331,6 +332,10 @@ export async function aplicarPlantilla(
     };
   }
   const data = parsed.data;
+
+  if (!(await canAccessUp(session, data.unidadProductivaId ?? null))) {
+    return { ok: false, error: "forbidden" };
+  }
 
   const plantilla = await prisma.plantillaMantenimiento.findUnique({
     where: { id: plantillaId },

@@ -1,6 +1,7 @@
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/db";
 import { hasPermission, requireViewOrRedirect } from "@/lib/rbac";
+import { accessibleUpIds } from "@/lib/up-scope";
 
 import {
   MovimientosClient,
@@ -15,7 +16,20 @@ export default async function MovimientosDiariosPage() {
   requireViewOrRedirect(session, "inventario.view");
   const canManage = hasPermission(session, "inventario.movimiento.create");
 
+  // WS-B3: scoping per-UP. `ups === null` ⇒ sin restricción (admin o sin
+  // asignaciones). Si hay asignaciones, se ven los movimientos de esas UPs
+  // más los sin UP.
+  const ups = await accessibleUpIds(session);
+
   const registros = await prisma.movimientoDiario.findMany({
+    where: ups
+      ? {
+          OR: [
+            { unidadProductivaId: { in: ups } },
+            { unidadProductivaId: null },
+          ],
+        }
+      : {},
     select: {
       id: true,
       fecha: true,

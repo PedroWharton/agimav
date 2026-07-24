@@ -177,6 +177,25 @@ export async function createFactura(
             },
           });
         }
+
+        // Same rule for OT insumos left with a pending price on this item.
+        // Cost rule mirrors saveOtInsumos: with precioPendiente cleared,
+        // costoTotal = cantidad * costoUnitario. No estado filter, matching
+        // the mantenimiento propagation above.
+        const otPendientes = await tx.otInsumo.findMany({
+          where: { itemInventarioId: item.id, precioPendiente: true },
+          select: { id: true, cantidad: true },
+        });
+        for (const pi of otPendientes) {
+          await tx.otInsumo.update({
+            where: { id: pi.id },
+            data: {
+              costoUnitario: netPrice,
+              costoTotal: pi.cantidad * netPrice,
+              precioPendiente: false,
+            },
+          });
+        }
       }
 
       return factura.id;
@@ -187,6 +206,8 @@ export async function createFactura(
     revalidatePath("/compras/recepciones");
     revalidatePath("/listados/inventario");
     revalidatePath("/mantenimiento");
+    revalidatePath("/ordenes-trabajo");
+    revalidatePath("/compras/precios-pendientes");
     return { ok: true, id: facturaId };
   } catch (e) {
     const msg = e instanceof Error ? e.message : "unknown";

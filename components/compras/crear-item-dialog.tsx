@@ -29,8 +29,11 @@ import type { InventarioOption } from "./detalle-lines-editor";
  */
 export function CrearItemDialog({
   onCreated,
+  description,
 }: {
   onCreated: (item: InventarioOption) => void;
+  /** Override for the dialog subtitle (defaults to the requisición copy). */
+  description?: string;
 }) {
   const t = useTranslations("compras.solicitudes.lineas.crearItem");
   const tCommon = useTranslations("listados.common");
@@ -107,7 +110,9 @@ export function CrearItemDialog({
       <DialogContent>
         <DialogHeader>
           <DialogTitle>{t("titulo")}</DialogTitle>
-          <DialogDescription>{t("descripcion")}</DialogDescription>
+          <DialogDescription>
+            {description ?? t("descripcion")}
+          </DialogDescription>
         </DialogHeader>
         <div className="flex flex-col gap-3">
           <div className="flex flex-col gap-1.5">

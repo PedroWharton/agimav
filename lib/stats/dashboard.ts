@@ -29,24 +29,6 @@ export function startOfMonth(d: Date): Date {
   return new Date(d.getFullYear(), d.getMonth(), 1);
 }
 
-function startOfIsoWeek(d: Date): Date {
-  const copy = new Date(d.getFullYear(), d.getMonth(), d.getDate());
-  const day = copy.getDay(); // 0 sunday → 6 saturday
-  const diff = day === 0 ? -6 : 1 - day; // shift to monday
-  copy.setDate(copy.getDate() + diff);
-  return copy;
-}
-
-function isoWeekKey(d: Date): string {
-  // ISO-ish: YYYY-W## based on the Monday of the week.
-  const monday = startOfIsoWeek(d);
-  const year = monday.getFullYear();
-  const jan1 = new Date(year, 0, 1);
-  const diff = (monday.getTime() - jan1.getTime()) / DAY_MS;
-  const week = Math.floor(diff / 7) + 1;
-  return `${year}-W${String(week).padStart(2, "0")}`;
-}
-
 // ─── 1. KPI strip ────────────────────────────────────────────────────────
 
 export type DashboardKpis = {
@@ -86,6 +68,8 @@ export async function loadKpis(): Promise<DashboardKpis> {
     ocsTotales,
     facturasMes,
     facturasSerie,
+    cierresMes,
+    cierresSerie,
     mantenimientos90d,
   ] = await Promise.all([
     // Maquinaria.estado is lowercase ("activo") while mantenimiento/OT/OC
@@ -118,10 +102,43 @@ export async function loadKpis(): Promise<DashboardKpis> {
       GROUP BY mes
       ORDER BY mes ASC
     `,
+    // Gasto real no facturado (WS-A): recepciones cerradas sin factura, con
+    // precio registrado al cierre, fechadas por fecha_cierre. Sin doble
+    // conteo: una recepción cerrada sin factura queda excluida del flujo de
+    // facturación (facturas/nueva filtra cerradaSinFactura=false y crear
+    // factura rechaza líneas ya facturadas), y las líneas facturadas antes
+    // del cierre quedan fuera vía rd.facturado = false — su gasto ya entra
+    // por el total de la factura.
+    prisma.$queryRaw<{ total: number; count: number }[]>`
+      SELECT COALESCE(SUM(rd.cantidad_recibida * rd.precio_unitario), 0)::float as total,
+             COUNT(DISTINCT r.id)::int as count
+      FROM recepciones r
+      JOIN recepciones_detalle rd ON rd.recepcion_id = r.id
+      WHERE r.cerrada_sin_factura = true
+        AND r.fecha_cierre >= ${monthStart}
+        AND rd.facturado = false
+        AND rd.precio_unitario IS NOT NULL
+    `,
+    prisma.$queryRaw<{ mes: string; total: number }[]>`
+      SELECT to_char(date_trunc('month', r.fecha_cierre), 'YYYY-MM') as mes,
+             COALESCE(SUM(rd.cantidad_recibida * rd.precio_unitario), 0)::float as total
+      FROM recepciones r
+      JOIN recepciones_detalle rd ON rd.recepcion_id = r.id
+      WHERE r.cerrada_sin_factura = true
+        AND r.fecha_cierre >= ${twelveAgoStart}
+        AND rd.facturado = false
+        AND rd.precio_unitario IS NOT NULL
+      GROUP BY mes
+      ORDER BY mes ASC
+    `,
     prisma.mantenimiento.count({ where: { fechaCreacion: { gte: ninetyAgo } } }),
   ]);
 
+  // Serie mensual = facturas + cierres sin factura (mismo criterio que el KPI).
   const serieMap = new Map(facturasSerie.map((r) => [r.mes, r.total]));
+  for (const r of cierresSerie) {
+    serieMap.set(r.mes, (serieMap.get(r.mes) ?? 0) + r.total);
+  }
   const serie: { mes: string; total: number }[] = [];
   for (let i = 11; i >= 0; i--) {
     const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
@@ -142,8 +159,9 @@ export async function loadKpis(): Promise<DashboardKpis> {
     inventarioTotales,
     ocsAbiertas,
     ocsTotales,
-    facturacionMesTotal: facturasMes._sum.total ?? 0,
-    facturacionMesCount: facturasMes._count,
+    facturacionMesTotal:
+      (facturasMes._sum.total ?? 0) + (cierresMes[0]?.total ?? 0),
+    facturacionMesCount: facturasMes._count + (cierresMes[0]?.count ?? 0),
     facturacionMesSerie: serie,
     mantenimientosUltimos90d: mantenimientos90d,
   };
@@ -252,60 +270,7 @@ export async function loadBacklogPorMaquina(
   });
 }
 
-// ─── 5. OTIF proveedores (HorizontalBars + objective) ────────────────────
-//
-// OTIF-ish: for OCs emitted in the last 90 days, how much of the requested
-// quantity was actually received? Full OTIF would also require fechaPromesa,
-// which legacy doesn't track, so this is effectively the "completeness" leg
-// of OTIF — good enough to spot proveedores that chronically under-deliver.
-
-export type OtifRow = {
-  proveedorId: number;
-  nombre: string;
-  pct: number;
-  solicitado: number;
-  recibido: number;
-};
-
-export async function loadOtifProveedores(limit = 6): Promise<OtifRow[]> {
-  const since = daysAgo(90);
-  const rows = await prisma.$queryRaw<
-    {
-      proveedor_id: number;
-      nombre: string;
-      solicitado: number;
-      recibido: number;
-    }[]
-  >`
-    SELECT
-      oc.proveedor_id,
-      p.nombre,
-      COALESCE(SUM(ocd.cantidad_solicitada), 0)::float as solicitado,
-      COALESCE(SUM(ocd.cantidad_recibida), 0)::float as recibido
-    FROM ordenes_compra oc
-    JOIN proveedores p ON p.id = oc.proveedor_id
-    JOIN ordenes_compra_detalle ocd ON ocd.oc_id = oc.id
-    WHERE oc.fecha_emision >= ${since}
-      AND oc.estado <> 'Cancelada'
-    GROUP BY oc.proveedor_id, p.nombre
-    HAVING COALESCE(SUM(ocd.cantidad_solicitada), 0) > 0
-    ORDER BY COALESCE(SUM(ocd.cantidad_recibida), 0) / NULLIF(COALESCE(SUM(ocd.cantidad_solicitada), 0), 0) DESC NULLS LAST
-    LIMIT ${limit}
-  `;
-
-  return rows.map((r) => ({
-    proveedorId: r.proveedor_id,
-    nombre: r.nombre,
-    solicitado: r.solicitado,
-    recibido: r.recibido,
-    pct:
-      r.solicitado > 0
-        ? Math.min(100, (r.recibido / r.solicitado) * 100)
-        : 0,
-  }));
-}
-
-// ─── 6. Productividad técnicos (HorizontalBars) ──────────────────────────
+// ─── 5. Productividad técnicos (HorizontalBars) ──────────────────────────
 
 export type TecnicoRow = {
   responsableId: number;
@@ -342,12 +307,14 @@ export async function loadProductividadTecnicos(
   });
 }
 
-// ─── 7. Disponibilidad & horas taller (dual-axis) ────────────────────────
+// ─── 6. Disponibilidad & horas taller (dual-axis) ────────────────────────
 //
 // Legacy `estado='activo'` is monolithic (no history of state changes), so a
 // true disponibilidad % time-series isn't reconstructable. We substitute:
 //   • bars: mantenimientos creados/mes (proxy for carga de taller)
-//   • line: gasto/mes (ARS) — already computed for KPI serie
+//   • line: gasto/mes (ARS) — same definition as the KPI serie: facturas +
+//     recepciones cerradas sin factura (see loadKpis for the no-double-count
+//     rationale)
 // The chart title is reworded to "Carga de taller & gasto" on screen.
 
 export type TallerTrendPoint = {
@@ -363,7 +330,7 @@ export async function loadTallerTrend(): Promise<TallerTrendPoint[]> {
     now.getMonth() - 11,
     1,
   );
-  const [mant, facturas] = await Promise.all([
+  const [mant, facturas, cierres] = await Promise.all([
     prisma.$queryRaw<{ mes: string; count: number }[]>`
       SELECT to_char(date_trunc('month', fecha_creacion), 'YYYY-MM') as mes,
              COUNT(*)::int as count
@@ -380,10 +347,25 @@ export async function loadTallerTrend(): Promise<TallerTrendPoint[]> {
       GROUP BY mes
       ORDER BY mes ASC
     `,
+    prisma.$queryRaw<{ mes: string; total: number }[]>`
+      SELECT to_char(date_trunc('month', r.fecha_cierre), 'YYYY-MM') as mes,
+             COALESCE(SUM(rd.cantidad_recibida * rd.precio_unitario), 0)::float as total
+      FROM recepciones r
+      JOIN recepciones_detalle rd ON rd.recepcion_id = r.id
+      WHERE r.cerrada_sin_factura = true
+        AND r.fecha_cierre >= ${twelveAgoStart}
+        AND rd.facturado = false
+        AND rd.precio_unitario IS NOT NULL
+      GROUP BY mes
+      ORDER BY mes ASC
+    `,
   ]);
 
   const mantMap = new Map(mant.map((r) => [r.mes, Number(r.count)]));
   const factMap = new Map(facturas.map((r) => [r.mes, r.total]));
+  for (const r of cierres) {
+    factMap.set(r.mes, (factMap.get(r.mes) ?? 0) + r.total);
+  }
   const out: TallerTrendPoint[] = [];
   for (let i = 11; i >= 0; i--) {
     const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
@@ -397,7 +379,7 @@ export async function loadTallerTrend(): Promise<TallerTrendPoint[]> {
   return out;
 }
 
-// ─── 8. Gasto por rubro (StackedBars) ────────────────────────────────────
+// ─── 7. Gasto por rubro (StackedBars) ────────────────────────────────────
 //
 // Gasto mensual segmentado por `inventario.categoria`. We trace:
 //   facturas → factura_detalle → recepciones_detalle → ordenes_compra_detalle
@@ -517,86 +499,3 @@ export async function loadGastoPorRubro(
   return { data, order };
 }
 
-// ─── 9. Heatmap horas parada ─────────────────────────────────────────────
-//
-// Legacy doesn't track downtime in hours. Best available proxy:
-// mantenimientos correctivos per máquina × semana. We use correctivo count
-// (density of incidents) as the heatmap value; label the scale accordingly.
-
-export type HeatmapCell = { row: string; col: string; value: number };
-export type HeatmapData = {
-  rows: string[];
-  cols: string[];
-  cells: HeatmapCell[];
-};
-
-export async function loadHorasParadaHeatmap(
-  weeks = 12,
-  topMachines = 5,
-): Promise<HeatmapData> {
-  const since = daysAgo(weeks * 7);
-
-  // 1) Top máquinas by correctivo count in the window.
-  const top = await prisma.mantenimiento.groupBy({
-    by: ["maquinariaId"],
-    where: {
-      fechaCreacion: { gte: since },
-      tipo: "correctivo",
-    },
-    _count: { _all: true },
-    orderBy: { _count: { maquinariaId: "desc" } },
-    take: topMachines,
-  });
-  if (top.length === 0) {
-    return { rows: [], cols: [], cells: [] };
-  }
-  const maquinas = await prisma.maquinaria.findMany({
-    where: { id: { in: top.map((t) => t.maquinariaId) } },
-    select: { id: true, nroSerie: true },
-  });
-  const labelById = new Map(
-    maquinas.map((m) => [m.id, m.nroSerie ?? `#${m.id}`]),
-  );
-
-  // 2) Build week column keys (last `weeks` mondays, oldest → newest).
-  const now = new Date();
-  const cols: string[] = [];
-  const mondayKeys: string[] = [];
-  for (let i = weeks - 1; i >= 0; i--) {
-    const d = new Date(now.getTime() - i * 7 * DAY_MS);
-    const key = isoWeekKey(d);
-    mondayKeys.push(key);
-    cols.push(`s${key.slice(-2)}`);
-  }
-
-  // 3) Per-row mantenimientos fetched and grouped in JS; small data set.
-  const mants = await prisma.mantenimiento.findMany({
-    where: {
-      fechaCreacion: { gte: since },
-      tipo: "correctivo",
-      maquinariaId: { in: top.map((t) => t.maquinariaId) },
-    },
-    select: { maquinariaId: true, fechaCreacion: true },
-  });
-
-  const counts = new Map<string, number>();
-  for (const m of mants) {
-    const k = `${m.maquinariaId}|${isoWeekKey(m.fechaCreacion)}`;
-    counts.set(k, (counts.get(k) ?? 0) + 1);
-  }
-
-  const rows = top.map((t) => labelById.get(t.maquinariaId)!);
-  const cells: HeatmapCell[] = [];
-  for (const t of top) {
-    const rowLabel = labelById.get(t.maquinariaId)!;
-    mondayKeys.forEach((weekKey, i) => {
-      cells.push({
-        row: rowLabel,
-        col: cols[i]!,
-        value: counts.get(`${t.maquinariaId}|${weekKey}`) ?? 0,
-      });
-    });
-  }
-
-  return { rows, cols, cells };
-}

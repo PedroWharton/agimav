@@ -79,6 +79,7 @@ export function SolicitudesClient({
   unidadesProductivas,
   currentUserName,
   kpis,
+  initialSearch = "",
 }: {
   rows: SolicitudRow[];
   unidadesProductivas: string[];
@@ -86,6 +87,8 @@ export function SolicitudesClient({
   canApprove: boolean;
   currentUserName: string | null;
   kpis: SolicitudesKpis;
+  /** Pre-carga la búsqueda (ej. ?solicitante=... desde estadísticas). */
+  initialSearch?: string;
 }) {
   const t = useTranslations();
   const tReq = useTranslations("compras.solicitudes");
@@ -93,7 +96,7 @@ export function SolicitudesClient({
   const router = useRouter();
 
   const [tab, setTab] = useState<TabValue>("activas");
-  const [search, setSearch] = useState("");
+  const [search, setSearch] = useState(initialSearch);
   const [estadoFilter, setEstadoFilter] = useState<string>(ESTADO_ALL);
   const [upFilter, setUpFilter] = useState<string>(UP_ALL);
   const [includeRechazadas, setIncludeRechazadas] = useState(false);

@@ -3,27 +3,24 @@ import { prisma } from "@/lib/db";
 import { requireViewOrRedirect } from "@/lib/rbac";
 import { accessibleUpIds } from "@/lib/up-scope";
 import { formatOTNumber } from "@/lib/ot/ot-number";
-import type { CalendarEvent } from "@/components/ordenes/week-calendar";
+import type { DayCalendarEvent } from "@/components/ordenes/week-day-calendar";
 
 import { OrdenesCalendarClient, type OtEventRow } from "./ordenes-calendar-client";
 
 export const dynamic = "force-dynamic";
 
 /**
- * OT → CalendarEvent mapping:
+ * OT → DayCalendarEvent mapping:
  *
  * WS-C added `fechaProgramada` (scheduled date) and `duracionDias` to the
- * OrdenTrabajo model. The calendar now plots each OT by `fechaProgramada`
- * when set, falling back to `fechaCreacion`. An OT with a scheduled date
- * renders as a full-day block ("día completo"); otherwise a 2h placeholder.
+ * OrdenTrabajo model. The calendar plots each OT as a full-day bar starting
+ * at `fechaProgramada` (falling back to `fechaCreacion`) and spanning
+ * `duracionDias` days (null/0 ⇒ 1). No intra-day times anywhere.
  *
  * All OTs map to tipo="mant" (the CalendarEventTipo closest to OT work).
  * The other tipos (inv/comp/log/ins) are reserved for future cross-module
  * events so the primitive stays generic.
  */
-
-const DEFAULT_DURATION_HOURS = 2;
-const FULL_DAY_HOURS = 8;
 
 function parseMondayParam(raw: string | string[] | undefined): Date {
   const candidate = Array.isArray(raw) ? raw[0] : raw;
@@ -72,11 +69,15 @@ export default async function OrdenesTrabajoListPage({
   // más las sin UP; `null` ⇒ sin restricción.
   const ups = await accessibleUpIds(session);
 
-  // La OT cae en la semana por su fecha programada; si no tiene, por la de
-  // creación.
+  // La OT cae en la semana si su barra [fechaProgramada, fechaProgramada +
+  // duracionDias) toca la semana. Prisma no puede expresar `fecha + duración`
+  // en el where, así que la query trae las candidatas (programadas antes del
+  // fin de semana visible) y el recorte exacto por duración se hace en JS —
+  // el volumen de OTs es chico (decenas), no vale SQL crudo. Las OTs sin
+  // fecha programada caen en la semana por su fecha de creación, como antes.
   const enLaSemana = {
     OR: [
-      { fechaProgramada: { gte: weekMonday, lt: weekEnd } },
+      { fechaProgramada: { lt: weekEnd } },
       {
         fechaProgramada: null,
         fechaCreacion: { gte: weekMonday, lt: weekEnd },
@@ -115,37 +116,55 @@ export default async function OrdenesTrabajoListPage({
     orderBy: { fechaCreacion: "asc" },
   });
 
-  const events: OtEventRow[] = rows.map((o) => {
+  const MS_PER_DAY = 24 * 60 * 60 * 1000;
+
+  const events: OtEventRow[] = [];
+  for (const o of rows) {
+    // `fechaProgramada` se guarda como medianoche UTC de la fecha elegida en
+    // el form ⇒ la fecha calendario es la porción UTC del timestamp.
+    const startIso = (o.fechaProgramada ?? o.fechaCreacion)
+      .toISOString()
+      .slice(0, 10);
+    const durationDays = Math.max(1, Math.ceil(o.duracionDias ?? 1));
+
+    // Recorte exacto: la barra [offset, offset + duración - 1] tiene que
+    // tocar los días visibles [0, 6].
+    const [y, m, d] = startIso.split("-").map(Number);
+    const startLocal = new Date(y, m - 1, d);
+    const offset = Math.round(
+      (startLocal.getTime() - weekMonday.getTime()) / MS_PER_DAY,
+    );
+    if (offset > 6 || offset + durationDays - 1 < 0) continue;
+
     const label = o.numeroOt ?? formatOTNumber(o.id);
     const title = `${label} · ${o.titulo}`;
     const subtitleParts = [o.responsable?.nombre, o.unidadProductiva?.nombre].filter(
       Boolean,
     );
-    const event: CalendarEvent = {
+    const event: DayCalendarEvent = {
       id: o.id,
       title,
       subtitle: subtitleParts.join(" · ") || undefined,
-      start: (o.fechaProgramada ?? o.fechaCreacion).toISOString(),
-      durationHours:
-        o.fechaProgramada != null ? FULL_DAY_HOURS : DEFAULT_DURATION_HOURS,
+      startDate: startIso,
+      durationDays,
       tipo: "mant",
       href: `/ordenes-trabajo/${o.id}`,
     };
-    return {
+    events.push({
       event,
       responsableId: o.responsable?.id ?? null,
       responsable: o.responsable?.nombre ?? null,
       maquinaTitle: o.unidadProductiva?.nombre ?? o.titulo,
       estado: o.estado,
       prioridad: o.prioridad,
-    };
-  });
+    });
+  }
 
   return (
     <OrdenesCalendarClient
       weekStart={toIsoDate(weekMonday)}
       events={events}
-      totalOts={rows.length}
+      totalOts={events.length}
     />
   );
 }

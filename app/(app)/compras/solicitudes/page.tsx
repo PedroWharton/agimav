@@ -8,12 +8,18 @@ import {
   type SolicitudesKpis,
 } from "./solicitudes-client";
 
-export default async function SolicitudesPage() {
+export default async function SolicitudesPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ solicitante?: string }>;
+}) {
   const session = await auth();
   requireViewOrRedirect(session, "compras.view");
   const canCreate = hasPermission(session, "compras.requisicion.create");
   const canApprove = hasPermission(session, "compras.requisicion.approve");
   const currentUser = userNameFromSession(session);
+  // Trazabilidad desde estadísticas: ?solicitante=... inicializa la búsqueda.
+  const { solicitante } = await searchParams;
 
   const [reqs, unidadesProductivas] = await Promise.all([
     prisma.requisicion.findMany({
@@ -77,6 +83,7 @@ export default async function SolicitudesPage() {
       canApprove={canApprove}
       currentUserName={currentUser}
       kpis={kpis}
+      initialSearch={solicitante?.trim() ?? ""}
     />
   );
 }

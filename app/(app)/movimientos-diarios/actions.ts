@@ -10,6 +10,7 @@ import {
   userIdFromSession,
   userNameFromSession,
 } from "@/lib/rbac";
+import { canAccessUp } from "@/lib/up-scope";
 
 import type { ActionResult } from "./types";
 
@@ -55,6 +56,13 @@ const crearSchema = z.object({
   usuario: optionalText(120),
   sector: optionalText(120),
   localidad: optionalText(120),
+  unidadProductivaId: z.coerce
+    .number()
+    .int()
+    .positive()
+    .optional()
+    .nullable()
+    .transform((v) => v ?? null),
   observaciones: optionalText(1000),
   lineas: z.array(lineaSchema).min(1, "Agregá al menos una línea"),
 });
@@ -78,6 +86,12 @@ export async function crearMovimientoDiario(
     };
   }
   const data = parsed.data;
+
+  // WS-B3: si el movimiento trae UP, tiene que ser una accesible.
+  if (!(await canAccessUp(session, data.unidadProductivaId))) {
+    return { ok: false, error: "forbidden" };
+  }
+
   const usuarioMov = userNameFromSession(session) ?? "Sistema";
   const fecha = new Date(data.fecha);
 
@@ -89,6 +103,7 @@ export async function crearMovimientoDiario(
           usuario: data.usuario,
           sector: data.sector,
           localidad: data.localidad,
+          unidadProductivaId: data.unidadProductivaId,
           observaciones: data.observaciones,
           createdById: userIdFromSession(session),
         },
@@ -181,9 +196,16 @@ export async function devolverHerramienta(
       unidadMedida: true,
       movimientoId: true,
       itemInventarioId: true,
+      movimiento: { select: { unidadProductivaId: true } },
     },
   });
   if (!linea) return { ok: false, error: "not_found" };
+
+  // WS-B3: no se puede mutar un movimiento de una UP fuera de scope.
+  if (!(await canAccessUp(session, linea.movimiento.unidadProductivaId))) {
+    return { ok: false, error: "forbidden" };
+  }
+
   if (linea.tipo !== "herramienta" || linea.devuelto) {
     return { ok: false, error: "wrong_estado" };
   }
@@ -251,6 +273,7 @@ export async function eliminarMovimientoDiario(
     where: { id },
     select: {
       id: true,
+      unidadProductivaId: true,
       lineas: {
         select: {
           id: true,
@@ -264,6 +287,11 @@ export async function eliminarMovimientoDiario(
     },
   });
   if (!registro) return { ok: false, error: "not_found" };
+
+  // WS-B3: no se puede eliminar un movimiento de una UP fuera de scope.
+  if (!(await canAccessUp(session, registro.unidadProductivaId))) {
+    return { ok: false, error: "forbidden" };
+  }
 
   const usuarioMov = userNameFromSession(session) ?? "Sistema";
 

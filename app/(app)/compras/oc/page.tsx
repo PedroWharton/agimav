@@ -1,6 +1,6 @@
 import { prisma } from "@/lib/db";
 import { auth } from "@/lib/auth";
-import { requireViewOrRedirect } from "@/lib/rbac";
+import { hasPermission, requireViewOrRedirect } from "@/lib/rbac";
 
 import { OcPageClient } from "./oc-page-client";
 import type { OcRow } from "./oc-list-client";
@@ -12,8 +12,9 @@ import type {
 export default async function OcListPage() {
   const session = await auth();
   requireViewOrRedirect(session, "compras.view");
+  const canCreateInventario = hasPermission(session, "inventario.create");
 
-  const [ocs, pendientes, proveedores] = await Promise.all([
+  const [ocs, pendientes, proveedores, inventario] = await Promise.all([
     prisma.ordenCompra.findMany({
       select: {
         id: true,
@@ -55,6 +56,15 @@ export default async function OcListPage() {
       where: { estado: "activo" },
       select: { id: true, nombre: true },
       orderBy: { nombre: "asc" },
+    }),
+    prisma.inventario.findMany({
+      select: {
+        id: true,
+        codigo: true,
+        descripcion: true,
+        unidadMedida: true,
+      },
+      orderBy: [{ codigo: "asc" }, { descripcion: "asc" }],
     }),
   ]);
 
@@ -155,6 +165,13 @@ export default async function OcListPage() {
       emitidasProveedores={proveedoresList}
       pendientes={aggregated}
       proveedorOptions={proveedorOptions}
+      inventarioOptions={inventario.map((i) => ({
+        id: i.id,
+        codigo: i.codigo ?? "",
+        descripcion: i.descripcion ?? "",
+        unidadMedida: i.unidadMedida,
+      }))}
+      canCreateInventario={canCreateInventario}
     />
   );
 }

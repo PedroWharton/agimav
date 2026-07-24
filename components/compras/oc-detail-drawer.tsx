@@ -244,7 +244,14 @@ function buildTabs(
                   <td className="px-2 py-2 font-mono text-xs">
                     {l.itemCodigo || "—"}
                   </td>
-                  <td className="px-2 py-2">{l.itemDescripcion || "—"}</td>
+                  <td className="px-2 py-2">
+                    <div>{l.itemDescripcion || "—"}</div>
+                    {l.nota ? (
+                      <div className="mt-0.5 text-xs text-muted-foreground">
+                        {l.nota}
+                      </div>
+                    ) : null}
+                  </td>
                   <td className="px-2 py-2 text-right tabular-nums">
                     {l.cantidadSolicitada}
                     {l.unidadMedida ? (

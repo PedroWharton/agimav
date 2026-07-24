@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { getTranslations } from "next-intl/server";
-import { ArrowLeft, Users, Wallet, ClipboardList, Info } from "lucide-react";
+import { ArrowLeft, Users, Wallet, ClipboardList, Info, X } from "lucide-react";
 
 import { auth } from "@/lib/auth";
 import { hasPermission } from "@/lib/rbac";
@@ -16,8 +16,9 @@ import {
 import { KpiCard } from "@/components/stats/kpi-card";
 import { RangeSelect } from "@/components/stats/range-select";
 import { formatCurrencyARS, formatCurrencyShort } from "@/lib/stats/format";
+import { EstadoChip } from "@/components/compras/estado-chip";
 
-import { computeGastoPorUsuario } from "./actions";
+import { computeDetalleUsuario, computeGastoPorUsuario } from "./actions";
 import { USR_RANGES, type UsrRange } from "./types";
 import { UsuariosExportButton } from "./usuarios-export-button";
 
@@ -35,7 +36,7 @@ function formatDate(d: Date | null) {
 export default async function UsuariosStatsPage({
   searchParams,
 }: {
-  searchParams: Promise<{ range?: string }>;
+  searchParams: Promise<{ range?: string; usuario?: string }>;
 }) {
   const session = await auth();
   if (!session?.user) redirect("/login");
@@ -52,8 +53,15 @@ export default async function UsuariosStatsPage({
     ? (sp.range as UsrRange)
     : "ytd";
 
-  const { rows, totalGasto, usuariosConGasto, requisicionesTotal } =
-    await computeGastoPorUsuario(range);
+  const usuarioSeleccionado = (sp.usuario ?? "").trim();
+
+  const [{ rows, totalGasto, usuariosConGasto, requisicionesTotal }, detalle] =
+    await Promise.all([
+      computeGastoPorUsuario(range),
+      usuarioSeleccionado
+        ? computeDetalleUsuario(usuarioSeleccionado, range)
+        : Promise.resolve(null),
+    ]);
 
   const rangoOptions = USR_RANGES.map((r) => ({
     value: r,
@@ -167,9 +175,21 @@ export default async function UsuariosStatsPage({
                       {rows.map((r) => (
                         <tr
                           key={r.nombre}
-                          className="border-t border-border hover:bg-muted/40"
+                          className={
+                            r.nombre === usuarioSeleccionado
+                              ? "border-t border-border bg-sky-50 dark:bg-sky-950/30"
+                              : "border-t border-border hover:bg-muted/40"
+                          }
                         >
-                          <td className="px-3 py-2 font-medium">{r.nombre}</td>
+                          <td className="px-3 py-2 font-medium">
+                            <Link
+                              href={`/estadisticas/usuarios?range=${range}&usuario=${encodeURIComponent(r.nombre)}`}
+                              className="underline-offset-2 hover:text-sky-700 hover:underline dark:hover:text-sky-300"
+                              title={t("usuarios.detalle.verDetalle")}
+                            >
+                              {r.nombre}
+                            </Link>
+                          </td>
                           <td className="px-3 py-2 text-right tabular-nums">
                             {r.facturas}
                           </td>
@@ -230,6 +250,145 @@ export default async function UsuariosStatsPage({
           </div>
         </div>
       )}
+
+      {detalle ? (
+        <ChartCard
+          title={t("usuarios.detalle.titulo", { nombre: detalle.nombre })}
+          subtitle={t("usuarios.detalle.subtitulo")}
+          linkHref={`/compras/solicitudes?solicitante=${encodeURIComponent(detalle.nombre)}`}
+          linkLabel={t("usuarios.detalle.verSolicitudes")}
+        >
+          <div className="grid grid-cols-1 gap-5 lg:grid-cols-2">
+            <section className="flex flex-col gap-2">
+              <h4 className="text-xs font-semibold uppercase text-muted-foreground">
+                {t("usuarios.detalle.facturasTitulo", {
+                  count: detalle.facturas.length,
+                })}
+              </h4>
+              {detalle.facturas.length === 0 ? (
+                <InlineState>{t("usuarios.detalle.sinFacturas")}</InlineState>
+              ) : (
+                <div className="overflow-hidden rounded-lg border border-border">
+                  <div className="max-h-[320px] overflow-auto">
+                    <table className="min-w-full text-sm">
+                      <thead className="sticky top-0 z-10 bg-muted text-xs uppercase text-muted-foreground">
+                        <tr>
+                          <th scope="col" className="px-3 py-2 text-left">
+                            {t("usuarios.detalle.columnas.numero")}
+                          </th>
+                          <th scope="col" className="px-3 py-2 text-left">
+                            {t("usuarios.detalle.columnas.proveedor")}
+                          </th>
+                          <th scope="col" className="px-3 py-2 text-left">
+                            {t("usuarios.detalle.columnas.fecha")}
+                          </th>
+                          <th scope="col" className="px-3 py-2 text-right">
+                            {t("usuarios.detalle.columnas.total")}
+                          </th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {detalle.facturas.map((f) => (
+                          <tr
+                            key={f.id}
+                            className="border-t border-border hover:bg-muted/40"
+                          >
+                            <td className="px-3 py-2 font-mono text-xs">
+                              {f.numeroFactura}
+                            </td>
+                            <td className="px-3 py-2">{f.proveedor}</td>
+                            <td className="px-3 py-2 text-xs text-muted-foreground">
+                              {formatDate(f.fechaFactura)}
+                            </td>
+                            <td className="px-3 py-2 text-right font-medium tabular-nums">
+                              {formatCurrencyARS(f.total)}
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                      <tfoot className="bg-muted/30 text-xs">
+                        <tr>
+                          <td className="px-3 py-2 font-medium" colSpan={3}>
+                            {t("usuarios.totalGeneral")}
+                          </td>
+                          <td className="px-3 py-2 text-right font-semibold tabular-nums">
+                            {formatCurrencyARS(detalle.totalFacturado)}
+                          </td>
+                        </tr>
+                      </tfoot>
+                    </table>
+                  </div>
+                </div>
+              )}
+            </section>
+
+            <section className="flex flex-col gap-2">
+              <h4 className="text-xs font-semibold uppercase text-muted-foreground">
+                {t("usuarios.detalle.requisicionesTitulo", {
+                  count: detalle.requisiciones.length,
+                })}
+              </h4>
+              {detalle.requisiciones.length === 0 ? (
+                <InlineState>
+                  {t("usuarios.detalle.sinRequisiciones")}
+                </InlineState>
+              ) : (
+                <div className="overflow-hidden rounded-lg border border-border">
+                  <div className="max-h-[320px] overflow-auto">
+                    <table className="min-w-full text-sm">
+                      <thead className="sticky top-0 z-10 bg-muted text-xs uppercase text-muted-foreground">
+                        <tr>
+                          <th scope="col" className="px-3 py-2 text-left">
+                            {t("usuarios.detalle.columnas.numero")}
+                          </th>
+                          <th scope="col" className="px-3 py-2 text-left">
+                            {t("usuarios.detalle.columnas.fecha")}
+                          </th>
+                          <th scope="col" className="px-3 py-2 text-left">
+                            {t("usuarios.detalle.columnas.estado")}
+                          </th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {detalle.requisiciones.map((r) => (
+                          <tr
+                            key={r.id}
+                            className="border-t border-border hover:bg-muted/40"
+                          >
+                            <td className="px-3 py-2 font-mono text-xs">
+                              <Link
+                                href={`/compras/solicitudes/${r.id}`}
+                                className="underline-offset-2 hover:text-sky-700 hover:underline dark:hover:text-sky-300"
+                              >
+                                #{r.id}
+                              </Link>
+                            </td>
+                            <td className="px-3 py-2 text-xs text-muted-foreground">
+                              {formatDate(r.fechaCreacion)}
+                            </td>
+                            <td className="px-3 py-2">
+                              <EstadoChip estado={r.estado} />
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              )}
+            </section>
+          </div>
+
+          <div className="mt-4 flex justify-end">
+            <Button variant="ghost" size="sm" asChild>
+              <Link href={`/estadisticas/usuarios?range=${range}`}>
+                <X className="size-4" />
+                {t("usuarios.detalle.cerrar")}
+              </Link>
+            </Button>
+          </div>
+        </ChartCard>
+      ) : null}
     </div>
   );
 }

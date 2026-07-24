@@ -4,21 +4,35 @@ import { useMemo, useState, useTransition } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
-import { Flame, Send, StickyNote } from "lucide-react";
+import { Flame, Replace, Send, StickyNote } from "lucide-react";
 import { toast } from "sonner";
 
 import { cn } from "@/lib/utils";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
 
 import { Combobox } from "@/components/app/combobox";
 import { ConfirmDialog } from "@/components/app/confirm-dialog";
 import { EmptyState } from "@/components/app/states";
 import { Toolbar } from "@/components/app/toolbar";
 import { NumberInput } from "@/components/app/number-input";
+import { CrearItemDialog } from "@/components/compras/crear-item-dialog";
+import type { InventarioOption } from "@/components/compras/detalle-lines-editor";
 
-import { emitirOcsAgrupadas } from "./actions";
+import { cambiarItemPendiente, emitirOcsAgrupadas } from "./actions";
 
 export type AggregatedItemRow = {
   itemId: number;
@@ -50,12 +64,30 @@ function norm(s: unknown): string {
     .toLowerCase();
 }
 
+/** Moves the state stored under `from` to `to` (unless `to` already has state). */
+function remapKey<T>(
+  rec: Record<number, T>,
+  from: number,
+  to: number,
+): Record<number, T> {
+  if (!(from in rec)) return rec;
+  const next = { ...rec };
+  const value = next[from];
+  delete next[from];
+  if (!(to in next)) next[to] = value;
+  return next;
+}
+
 export function OcPendientesClient({
   rows,
   proveedorOptions,
+  inventarioOptions,
+  canCreateInventario,
 }: {
   rows: AggregatedItemRow[];
   proveedorOptions: ProveedorOption[];
+  inventarioOptions: InventarioOption[];
+  canCreateInventario?: boolean;
 }) {
   const tOc = useTranslations("compras.oc");
   const tCommon = useTranslations("listados.common");
@@ -84,9 +116,30 @@ export function OcPendientesClient({
       return init;
     },
   );
+  // Per-line nota for the OC. Sparse: rows without an entry fall back to the
+  // requisición notes (deduped) so the prefill survives router.refresh().
+  const [notaByItem, setNotaByItem] = useState<Record<number, string>>({});
+  // Header observaciones for each OC about to be emitted (keyed by proveedor).
+  const [obsByProveedor, setObsByProveedor] = useState<Record<number, string>>(
+    {},
+  );
   const [selected, setSelected] = useState<Set<number>>(new Set());
   const [bulkProveedor, setBulkProveedor] = useState<string>("");
   const [isEmitting, startEmit] = useTransition();
+
+  const rowByItem = useMemo(() => {
+    const m = new Map<number, AggregatedItemRow>();
+    for (const r of rows) m.set(r.itemId, r);
+    return m;
+  }, [rows]);
+
+  function notaPrefill(itemId: number): string {
+    return rowByItem.get(itemId)?.notas.join(" · ") ?? "";
+  }
+
+  function notaValue(itemId: number): string {
+    return notaByItem[itemId] ?? notaPrefill(itemId);
+  }
 
   const proveedorComboOptions = useMemo(
     () => proveedorOptions.map((p) => ({ value: String(p.id), label: p.nombre })),
@@ -146,6 +199,26 @@ export function OcPendientesClient({
     setProveedorByItem((prev) => ({ ...prev, [itemId]: proveedorId }));
   }
 
+  /**
+   * After a line's item is substituted server-side, carry the per-line state
+   * (proveedor/cantidad/precio/nota/selección) over to the new itemId so the
+   * refreshed row keeps what the user already loaded.
+   */
+  function handleItemSwapped(oldItemId: number, newItemId: number) {
+    setProveedorByItem((prev) => remapKey(prev, oldItemId, newItemId));
+    setCantidadByItem((prev) => remapKey(prev, oldItemId, newItemId));
+    setPrecioByItem((prev) => remapKey(prev, oldItemId, newItemId));
+    setNotaByItem((prev) => remapKey(prev, oldItemId, newItemId));
+    setSelected((prev) => {
+      if (!prev.has(oldItemId)) return prev;
+      const next = new Set(prev);
+      next.delete(oldItemId);
+      next.add(newItemId);
+      return next;
+    });
+    router.refresh();
+  }
+
   function applyBulkProveedor(value: string) {
     setBulkProveedor(value);
     if (!value) return;
@@ -163,6 +236,11 @@ export function OcPendientesClient({
       .map((itemId) => {
         const cant = cantidadByItem[itemId];
         const precio = precioByItem[itemId];
+        const nota = (
+          notaByItem[itemId] ??
+          rowByItem.get(itemId)?.notas.join(" · ") ??
+          ""
+        ).trim();
         return {
           itemId,
           proveedorId: proveedorByItem[itemId] ?? null,
@@ -170,6 +248,7 @@ export function OcPendientesClient({
           // El precio es opcional al emitir la OC: un ítem sin precio se emite
           // en 0 y queda pendiente hasta que la factura cargue el costo real.
           precioUnitario: typeof precio === "number" ? precio : 0,
+          nota: nota ? nota : undefined,
         };
       })
       .filter(
@@ -180,10 +259,18 @@ export function OcPendientesClient({
           proveedorId: number;
           cantidad: number;
           precioUnitario: number;
+          nota: string | undefined;
         } =>
           a.proveedorId != null && a.cantidad != null && a.cantidad > 0,
       );
-  }, [selected, proveedorByItem, cantidadByItem, precioByItem]);
+  }, [
+    selected,
+    proveedorByItem,
+    cantidadByItem,
+    precioByItem,
+    notaByItem,
+    rowByItem,
+  ]);
 
   const missingProveedor =
     Array.from(selected).filter((id) => !proveedorByItem[id]).length;
@@ -208,6 +295,12 @@ export function OcPendientesClient({
     startEmit(async () => {
       const result = await emitirOcsAgrupadas({
         asignaciones: readyAsignaciones,
+        observacionesPorProveedor: Array.from(ocsCountByProveedor.keys())
+          .map((proveedorId) => ({
+            proveedorId,
+            observaciones: (obsByProveedor[proveedorId] ?? "").trim(),
+          }))
+          .filter((o) => o.observaciones.length > 0),
       });
       if (result.ok) {
         toast.success(
@@ -217,6 +310,8 @@ export function OcPendientesClient({
         );
         setSelected(new Set());
         setBulkProveedor("");
+        setObsByProveedor({});
+        setNotaByItem({});
         setPrecioByItem((prev) => {
           const next: Record<number, number | ""> = {};
           for (const k of Object.keys(prev)) next[Number(k)] = "";
@@ -379,8 +474,46 @@ export function OcPendientesClient({
         </div>
       ) : null}
 
+      {selected.size > 0 && ocsCountByProveedor.size > 0 ? (
+        <div className="flex flex-col gap-3 rounded-lg border border-border bg-card px-4 py-3">
+          <div>
+            <div className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+              {tOc("pendientes.observaciones.titulo")}
+            </div>
+            <p className="mt-0.5 text-xs text-muted-foreground">
+              {tOc("pendientes.observaciones.ayuda")}
+            </p>
+          </div>
+          <div className="grid gap-3 sm:grid-cols-2">
+            {Array.from(ocsCountByProveedor.keys()).map((pid) => (
+              <div key={pid} className="flex flex-col gap-1.5">
+                <Label
+                  htmlFor={`oc-obs-${pid}`}
+                  className="text-xs font-medium"
+                >
+                  {proveedorById.get(pid) ?? `#${pid}`}
+                </Label>
+                <Textarea
+                  id={`oc-obs-${pid}`}
+                  rows={2}
+                  value={obsByProveedor[pid] ?? ""}
+                  onChange={(e) =>
+                    setObsByProveedor((prev) => ({
+                      ...prev,
+                      [pid]: e.target.value,
+                    }))
+                  }
+                  placeholder={tOc("pendientes.observaciones.placeholder")}
+                  className="min-h-0 resize-y text-sm"
+                />
+              </div>
+            ))}
+          </div>
+        </div>
+      ) : null}
+
       <div className="overflow-x-auto rounded-md border border-border">
-        <table className="w-full min-w-[1080px] text-sm">
+        <table className="w-full min-w-[1280px] text-sm">
           <thead className="bg-muted/40 text-xs uppercase tracking-wide text-muted-foreground">
             <tr>
               <th className="px-3 py-2.5 text-left font-medium w-10">
@@ -408,13 +541,16 @@ export function OcPendientesClient({
               <th className="px-3 py-2.5 text-left font-medium w-[260px]">
                 {tOc("pendientes.columnas.proveedor")}
               </th>
+              <th className="px-3 py-2.5 text-left font-medium w-[220px]">
+                {tOc("pendientes.columnas.nota")}
+              </th>
             </tr>
           </thead>
           <tbody>
             {filteredRows.length === 0 ? (
               <tr>
                 <td
-                  colSpan={7}
+                  colSpan={8}
                   className="px-3 py-6 text-center text-sm text-muted-foreground"
                 >
                   {tOc("avisos.vacioFiltrado")}
@@ -448,15 +584,6 @@ export function OcPendientesClient({
                         <span className="truncate text-sm font-medium">
                           {r.itemDescripcion || "—"}
                         </span>
-                        {r.notas.map((nota, i) => (
-                          <span
-                            key={i}
-                            className="mt-0.5 flex items-start gap-1 text-[11px] text-muted-foreground"
-                          >
-                            <StickyNote className="mt-0.5 size-3 shrink-0" />
-                            <span>{nota}</span>
-                          </span>
-                        ))}
                       </div>
                       {r.urgente ? (
                         <Badge
@@ -467,6 +594,12 @@ export function OcPendientesClient({
                           {tOc("pendientes.urgente")}
                         </Badge>
                       ) : null}
+                      <CambiarItemDialog
+                        row={r}
+                        inventarioOptions={inventarioOptions}
+                        canCreateInventario={canCreateInventario}
+                        onSwapped={handleItemSwapped}
+                      />
                     </div>
                   </td>
                   <td className="px-3 py-2 align-middle text-right">
@@ -549,6 +682,22 @@ export function OcPendientesClient({
                       className="h-9"
                     />
                   </td>
+                  <td className="px-3 py-2 align-middle">
+                    <div className="flex items-center gap-1.5">
+                      <StickyNote className="size-3.5 shrink-0 text-muted-foreground" />
+                      <Input
+                        value={notaValue(r.itemId)}
+                        onChange={(e) =>
+                          setNotaByItem((prev) => ({
+                            ...prev,
+                            [r.itemId]: e.target.value,
+                          }))
+                        }
+                        className="h-9"
+                        aria-label={tOc("pendientes.columnas.nota")}
+                      />
+                    </div>
+                  </td>
                 </tr>
               );
             })}
@@ -556,5 +705,148 @@ export function OcPendientesClient({
         </table>
       </div>
     </div>
+  );
+}
+
+/**
+ * Per-line item substitution for the pendientes tab. Lets the buyer point the
+ * line to another inventory item (or to one created on the spot via
+ * {@link CrearItemDialog}, mirroring the requisición editor pattern); the
+ * server action re-points every pending requisición line of the row's item.
+ */
+function CambiarItemDialog({
+  row,
+  inventarioOptions,
+  canCreateInventario,
+  onSwapped,
+}: {
+  row: AggregatedItemRow;
+  inventarioOptions: InventarioOption[];
+  canCreateInventario?: boolean;
+  onSwapped: (oldItemId: number, newItemId: number) => void;
+}) {
+  const tOc = useTranslations("compras.oc");
+  const tCommon = useTranslations("listados.common");
+  const router = useRouter();
+  const [open, setOpen] = useState(false);
+  const [value, setValue] = useState("");
+  // Items created inline via CrearItemDialog, merged on top of the server-fed
+  // options so they're immediately pickable without a page reload.
+  const [extraOptions, setExtraOptions] = useState<InventarioOption[]>([]);
+  const [pending, startTransition] = useTransition();
+
+  const comboOptions = useMemo(
+    () =>
+      [...inventarioOptions, ...extraOptions]
+        .filter((opt) => opt.id !== row.itemId)
+        .map((opt) => ({
+          value: String(opt.id),
+          label: opt.codigo
+            ? `${opt.codigo} · ${opt.descripcion}`
+            : opt.descripcion,
+        })),
+    [inventarioOptions, extraOptions, row.itemId],
+  );
+
+  function handleItemCreated(item: InventarioOption) {
+    setExtraOptions((prev) =>
+      prev.some((o) => o.id === item.id) ? prev : [...prev, item],
+    );
+    setValue(String(item.id));
+  }
+
+  function handleConfirm() {
+    const nuevoItemId = Number(value);
+    if (!Number.isInteger(nuevoItemId) || nuevoItemId <= 0) return;
+    startTransition(async () => {
+      const res = await cambiarItemPendiente({
+        itemId: row.itemId,
+        nuevoItemId,
+      });
+      if (res.ok) {
+        toast.success(tOc("pendientes.cambiarItem.toastOk"));
+        setOpen(false);
+        setValue("");
+        onSwapped(row.itemId, nuevoItemId);
+      } else if (res.error === "forbidden") {
+        toast.error(tCommon("errorForbidden"));
+      } else if (res.error === "item_drained") {
+        toast.error(tOc("pendientes.avisos.itemDrained"));
+        router.refresh();
+      } else {
+        toast.error(tCommon("errorGuardar"));
+      }
+    });
+  }
+
+  return (
+    <Dialog
+      open={open}
+      onOpenChange={(next) => {
+        if (pending) return;
+        setOpen(next);
+        if (!next) setValue("");
+      }}
+    >
+      <DialogTrigger asChild>
+        <Button
+          type="button"
+          variant="ghost"
+          size="icon"
+          className="size-7 shrink-0 text-muted-foreground"
+          aria-label={tOc("pendientes.cambiarItem.accion")}
+          title={tOc("pendientes.cambiarItem.accion")}
+        >
+          <Replace className="size-3.5" />
+        </Button>
+      </DialogTrigger>
+      <DialogContent>
+        <DialogHeader>
+          <DialogTitle>{tOc("pendientes.cambiarItem.titulo")}</DialogTitle>
+          <DialogDescription>
+            {tOc("pendientes.cambiarItem.descripcion", {
+              item:
+                row.itemDescripcion || row.itemCodigo || `#${row.itemId}`,
+            })}
+          </DialogDescription>
+        </DialogHeader>
+        <div className="flex flex-col gap-3">
+          <Combobox
+            value={value}
+            onChange={setValue}
+            options={comboOptions}
+            placeholder={tOc("pendientes.cambiarItem.placeholder")}
+            allowCreate={false}
+          />
+          {canCreateInventario ? (
+            <div>
+              <CrearItemDialog
+                description={tOc("pendientes.crearItem.descripcion")}
+                onCreated={handleItemCreated}
+              />
+            </div>
+          ) : null}
+        </div>
+        <DialogFooter>
+          <Button
+            type="button"
+            variant="outline"
+            onClick={() => setOpen(false)}
+            disabled={pending}
+          >
+            {tCommon("cancelar")}
+          </Button>
+          <Button
+            type="button"
+            onClick={handleConfirm}
+            disabled={pending || !value}
+          >
+            {pending
+              ? tCommon("guardando")
+              : tOc("pendientes.cambiarItem.confirmar")}
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
   );
 }

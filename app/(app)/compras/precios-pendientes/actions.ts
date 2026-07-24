@@ -77,3 +77,56 @@ export async function resolverPrecioInsumo(
     return { ok: false, error: "unknown" };
   }
 }
+
+/**
+ * Manually resolves the pending price of an OT insumo. Mirrors
+ * resolverPrecioInsumo: same permission, same cost rule as saveOtInsumos
+ * (costoTotal = precioPendiente ? 0 : cantidad * costoUnitario — resolving
+ * clears the flag, so costoTotal = cantidad * costoUnitario). Like the
+ * mantenimiento resolver, it does not filter by the parent's estado: fixing a
+ * cost left at 0 on a closed OT is a data correction, not an OT edit.
+ */
+export async function resolverPrecioOtInsumo(
+  raw: unknown,
+): Promise<ResolverPrecioResult> {
+  const session = await auth();
+  try {
+    requirePermission(session, "compras.factura.create");
+  } catch {
+    return { ok: false, error: "forbidden" };
+  }
+
+  const parsed = resolverSchema.safeParse(raw);
+  if (!parsed.success) return { ok: false, error: "invalid" };
+  const { insumoId, costoUnitario } = parsed.data;
+
+  try {
+    const insumo = await prisma.otInsumo.findUnique({
+      where: { id: insumoId },
+      select: {
+        id: true,
+        otId: true,
+        cantidad: true,
+        precioPendiente: true,
+      },
+    });
+    if (!insumo) return { ok: false, error: "not_found" };
+    if (!insumo.precioPendiente) return { ok: false, error: "invalid" };
+
+    await prisma.otInsumo.update({
+      where: { id: insumoId },
+      data: {
+        costoUnitario,
+        costoTotal: insumo.cantidad * costoUnitario,
+        precioPendiente: false,
+      },
+    });
+
+    revalidatePath("/compras/precios-pendientes");
+    revalidatePath("/ordenes-trabajo");
+    revalidatePath(`/ordenes-trabajo/${insumo.otId}`);
+    return { ok: true };
+  } catch {
+    return { ok: false, error: "unknown" };
+  }
+}

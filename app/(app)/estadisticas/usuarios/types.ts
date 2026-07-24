@@ -18,3 +18,24 @@ export type UsrResult = {
 };
 
 export type ExportResult = { base64: string; filename: string };
+
+export type UsrDetalleFactura = {
+  id: number;
+  numeroFactura: string;
+  proveedor: string;
+  fechaFactura: Date;
+  total: number;
+};
+
+export type UsrDetalleRequisicion = {
+  id: number;
+  fechaCreacion: Date;
+  estado: string;
+};
+
+export type UsrDetalle = {
+  nombre: string;
+  facturas: UsrDetalleFactura[];
+  requisiciones: UsrDetalleRequisicion[];
+  totalFacturado: number;
+};

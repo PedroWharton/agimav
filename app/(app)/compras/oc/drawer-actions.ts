@@ -6,6 +6,8 @@ export type OcDrawerLinea = {
   id: number;
   itemCodigo: string;
   itemDescripcion: string;
+  /** OC line note (falls back to the requisición note for legacy OCs). */
+  nota: string | null;
   unidadMedida: string | null;
   cantidadSolicitada: number;
   cantidadRecibida: number;
@@ -136,6 +138,7 @@ export async function fetchOcDrawerData(id: number): Promise<OcDrawerData | null
       id: d.id,
       itemCodigo: d.requisicionDetalle.item.codigo ?? "",
       itemDescripcion: d.requisicionDetalle.item.descripcion ?? "",
+      nota: d.nota ?? d.requisicionDetalle.notasItem,
       unidadMedida: d.requisicionDetalle.item.unidadMedida,
       cantidadSolicitada: d.cantidadSolicitada,
       cantidadRecibida: d.cantidadRecibida,

@@ -88,6 +88,17 @@ export function isActivo(estado: string): boolean {
   return (MANT_ESTADOS_ACTIVOS as string[]).includes(estado);
 }
 
+/** Estado canónico de una revisión cumplida. Escrituras nuevas usan siempre
+ * "hecha"; filas legacy en prod pueden traer "realizada" — para leer usá
+ * `isRevisionHecha()`, que acepta ambas. */
+export const REVISION_ESTADO_HECHA = "hecha";
+
+export const REVISION_ESTADO_PENDIENTE = "pendiente";
+
+export function isRevisionHecha(estado: string): boolean {
+  return estado === "hecha" || estado === "realizada";
+}
+
 export const HISTORIAL_TIPOS = [
   "estado",
   "insumo",

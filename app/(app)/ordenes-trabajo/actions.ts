@@ -2,6 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
+import type { Session } from "next-auth";
 
 import { prisma } from "@/lib/db";
 import { auth } from "@/lib/auth";
@@ -9,10 +10,35 @@ import {
   requirePermission,
   userNameFromSession,
 } from "@/lib/rbac";
+import { canAccessUp } from "@/lib/up-scope";
 import { formatOTNumber } from "@/lib/ot/ot-number";
 
 import { OT_PRIORIDADES, otIsActiva, otIsTerminal } from "./types";
 import type { OtActionResult } from "./types";
+
+/**
+ * WS-B3 — guard de scope per-UP para mutaciones de OT. Carga la OT target y
+ * valida que el usuario pueda acceder a su Unidad Productiva (mismo criterio
+ * que el detalle: fuera de scope ⇒ `forbidden`). Devuelve la OT mínima que
+ * las actions necesitan para sus chequeos de estado.
+ */
+async function findOtScoped(
+  session: Session | null,
+  id: number,
+): Promise<
+  | { ok: true; ot: { id: number; estado: string } }
+  | { ok: false; error: "not_found" | "forbidden" }
+> {
+  const ot = await prisma.ordenTrabajo.findUnique({
+    where: { id },
+    select: { id: true, estado: true, unidadProductivaId: true },
+  });
+  if (!ot) return { ok: false, error: "not_found" };
+  if (!(await canAccessUp(session, ot.unidadProductivaId))) {
+    return { ok: false, error: "forbidden" };
+  }
+  return { ok: true, ot: { id: ot.id, estado: ot.estado } };
+}
 
 function fieldErrorsFromZod(err: z.ZodError): Record<string, string> {
   const out: Record<string, string> = {};
@@ -83,6 +109,12 @@ export async function createOT(
     };
   }
   const data = parsed.data;
+
+  // WS-B3: si la OT nueva trae UP, tiene que ser una accesible para el usuario.
+  if (!(await canAccessUp(session, data.unidadProductivaId))) {
+    return { ok: false, error: "forbidden" };
+  }
+
   const userName = userNameFromSession(session);
 
   try {
@@ -127,12 +159,9 @@ export async function updateOT(
     return { ok: false, error: "forbidden" };
   }
 
-  const existing = await prisma.ordenTrabajo.findUnique({
-    where: { id },
-    select: { id: true, estado: true },
-  });
-  if (!existing) return { ok: false, error: "not_found" };
-  if (otIsTerminal(existing.estado)) {
+  const found = await findOtScoped(session, id);
+  if (!found.ok) return { ok: false, error: found.error };
+  if (otIsTerminal(found.ot.estado)) {
     return { ok: false, error: "wrong_estado" };
   }
 
@@ -145,6 +174,11 @@ export async function updateOT(
     };
   }
   const data = parsed.data;
+
+  // WS-B3: tampoco se puede mover la OT hacia una UP fuera de scope.
+  if (!(await canAccessUp(session, data.unidadProductivaId))) {
+    return { ok: false, error: "forbidden" };
+  }
 
   try {
     await prisma.ordenTrabajo.update({
@@ -197,12 +231,9 @@ export async function saveOtInsumos(
     return { ok: false, error: "forbidden" };
   }
 
-  const ot = await prisma.ordenTrabajo.findUnique({
-    where: { id },
-    select: { id: true, estado: true },
-  });
-  if (!ot) return { ok: false, error: "not_found" };
-  if (otIsTerminal(ot.estado)) {
+  const found = await findOtScoped(session, id);
+  if (!found.ok) return { ok: false, error: found.error };
+  if (otIsTerminal(found.ot.estado)) {
     return { ok: false, error: "wrong_estado" };
   }
 
@@ -282,12 +313,9 @@ export async function cerrarOT(id: number): Promise<OtActionResult> {
   }
   const userName = userNameFromSession(session) ?? "";
 
-  const ot = await prisma.ordenTrabajo.findUnique({
-    where: { id },
-    select: { id: true, estado: true },
-  });
-  if (!ot) return { ok: false, error: "not_found" };
-  if (!otIsActiva(ot.estado)) {
+  const found = await findOtScoped(session, id);
+  if (!found.ok) return { ok: false, error: found.error };
+  if (!otIsActiva(found.ot.estado)) {
     return { ok: false, error: "wrong_estado" };
   }
 
@@ -357,12 +385,9 @@ export async function cancelarOT(id: number): Promise<OtActionResult> {
     return { ok: false, error: "forbidden" };
   }
 
-  const ot = await prisma.ordenTrabajo.findUnique({
-    where: { id },
-    select: { id: true, estado: true },
-  });
-  if (!ot) return { ok: false, error: "not_found" };
-  if (!otIsActiva(ot.estado)) {
+  const found = await findOtScoped(session, id);
+  if (!found.ok) return { ok: false, error: found.error };
+  if (!otIsActiva(found.ot.estado)) {
     return { ok: false, error: "wrong_estado" };
   }
 

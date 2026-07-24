@@ -10,6 +10,13 @@ export type OcActionResult =
         | "unknown";
     };
 
+export type CambiarItemPendienteResult =
+  | { ok: true; lineas: number }
+  | {
+      ok: false;
+      error: "forbidden" | "invalid" | "item_drained" | "unknown";
+    };
+
 export type EmitirOcsResult =
   | { ok: true; ocIds: number[] }
   | {

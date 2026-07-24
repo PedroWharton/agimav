@@ -7,7 +7,13 @@ import { prisma } from "@/lib/db";
 import { requirePermission } from "@/lib/rbac";
 import { rangeToGte } from "@/lib/stats/range";
 
-import type { ExportResult, UsrRange, UsrResult, UsrRow } from "./types";
+import type {
+  ExportResult,
+  UsrDetalle,
+  UsrRange,
+  UsrResult,
+  UsrRow,
+} from "./types";
 
 /** Normaliza un nombre para mergear facturas y requisiciones del mismo usuario. */
 function normName(s: string): string {
@@ -120,6 +126,85 @@ export async function computeGastoPorUsuario(
     totalGasto,
     usuariosConGasto: rows.filter((r) => r.gasto > 0).length,
     requisicionesTotal: rows.reduce((a, r) => a + r.requisiciones, 0),
+  };
+}
+
+/**
+ * Drilldown de un usuario: las facturas y requisiciones concretas que componen
+ * su fila en computeGastoPorUsuario. Usa el MISMO matching por nombre
+ * normalizado (normName) que la agregación para no divergir; el filtro se hace
+ * en JS porque Postgres no tiene unaccent habilitado y los volúmenes son
+ * chicos (decenas de facturas / requisiciones por período).
+ */
+export async function computeDetalleUsuario(
+  nombre: string,
+  range: UsrRange,
+): Promise<UsrDetalle> {
+  const session = await auth();
+  requirePermission(session, "estadisticas.proveedores.view");
+
+  const key = normName(nombre);
+  const vacio: UsrDetalle = {
+    nombre: nombre.trim(),
+    facturas: [],
+    requisiciones: [],
+    totalFacturado: 0,
+  };
+  if (!key) return vacio;
+
+  const gte = rangeToGte(range);
+
+  const [facturas, requisiciones] = await Promise.all([
+    prisma.factura.findMany({
+      where: {
+        usuario: { not: null },
+        ...(gte ? { fechaFactura: { gte } } : {}),
+      },
+      select: {
+        id: true,
+        numeroFactura: true,
+        fechaFactura: true,
+        total: true,
+        usuario: true,
+        proveedor: { select: { nombre: true } },
+      },
+      orderBy: { fechaFactura: "desc" },
+    }),
+    prisma.requisicion.findMany({
+      where: gte ? { fechaCreacion: { gte } } : undefined,
+      select: {
+        id: true,
+        fechaCreacion: true,
+        estado: true,
+        solicitante: true,
+      },
+      orderBy: { fechaCreacion: "desc" },
+    }),
+  ]);
+
+  const facturasUsuario = facturas
+    .filter((f) => normName(f.usuario ?? "") === key)
+    .map((f) => ({
+      id: f.id,
+      numeroFactura: f.numeroFactura,
+      proveedor: f.proveedor.nombre,
+      fechaFactura: f.fechaFactura,
+      total: f.total,
+    }));
+
+  const requisicionesUsuario = requisiciones
+    .filter((r) => normName(r.solicitante ?? "") === key)
+    .map((r) => ({
+      id: r.id,
+      fechaCreacion: r.fechaCreacion,
+      estado: r.estado,
+    }));
+
+  return {
+    ...vacio,
+    facturas: facturasUsuario,
+    requisiciones: requisicionesUsuario,
+    totalFacturado: facturasUsuario.reduce((a, f) => a + f.total, 0),
   };
 }
 

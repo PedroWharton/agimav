@@ -604,6 +604,7 @@ model OrdenCompraDetalle {
   cantidadRecibida       Float    @default(0) @map("cantidad_recibida")
   precioUnitario         Float    @default(0) @map("precio_unitario")
   total                  Float    @default(0)
+  nota                   String?
 
   recepcionDetalle RecepcionDetalle[]
 

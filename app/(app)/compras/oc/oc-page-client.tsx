@@ -7,6 +7,8 @@ import { Badge } from "@/components/ui/badge";
 
 import { PageHeader } from "@/components/app/page-header";
 
+import type { InventarioOption } from "@/components/compras/detalle-lines-editor";
+
 import { OcListClient, type OcRow } from "./oc-list-client";
 import {
   OcPendientesClient,
@@ -19,11 +21,15 @@ export function OcPageClient({
   emitidasProveedores,
   pendientes,
   proveedorOptions,
+  inventarioOptions,
+  canCreateInventario,
 }: {
   emitidasRows: OcRow[];
   emitidasProveedores: string[];
   pendientes: AggregatedItemRow[];
   proveedorOptions: ProveedorOption[];
+  inventarioOptions: InventarioOption[];
+  canCreateInventario?: boolean;
 }) {
   const tOc = useTranslations("compras.oc");
   const pendientesCount = pendientes.length;
@@ -55,6 +61,8 @@ export function OcPageClient({
           <OcPendientesClient
             rows={pendientes}
             proveedorOptions={proveedorOptions}
+            inventarioOptions={inventarioOptions}
+            canCreateInventario={canCreateInventario}
           />
         </TabsContent>
         <TabsContent value="emitidas" className="mt-0">

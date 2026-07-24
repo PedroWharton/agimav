@@ -31,7 +31,8 @@ export type OcDetailLinea = {
   id: number;
   itemCodigo: string;
   itemDescripcion: string;
-  notasItem: string | null;
+  /** OC line note (falls back to the requisición note for legacy OCs). */
+  nota: string | null;
   unidadMedida: string | null;
   cantidadSolicitada: number;
   cantidadRecibida: number;
@@ -313,10 +314,10 @@ export function OcDetailClient({
                             <span className="text-sm">
                               {l.itemDescripcion || "—"}
                             </span>
-                            {l.notasItem ? (
+                            {l.nota ? (
                               <span className="mt-0.5 flex items-start gap-1 text-[11px] text-muted-foreground">
                                 <StickyNote className="mt-0.5 size-3 shrink-0" />
-                                <span>{l.notasItem}</span>
+                                <span>{l.nota}</span>
                               </span>
                             ) : null}
                           </div>

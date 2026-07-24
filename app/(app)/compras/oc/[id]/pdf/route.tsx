@@ -51,6 +51,7 @@ export async function GET(
                   id: true,
                   solicitante: true,
                   unidadProductiva: true,
+                  numeroOrdenInterna: true,
                 },
               },
             },
@@ -85,6 +86,7 @@ export async function GET(
           numero: `#${solicitudOrigen.id}`,
           solicitante: solicitudOrigen.solicitante,
           unidadProductiva: solicitudOrigen.unidadProductiva,
+          numeroOrdenInterna: solicitudOrigen.numeroOrdenInterna,
         }
       : null,
     lineas: oc.detalle.map((d, idx) => ({
@@ -95,6 +97,7 @@ export async function GET(
       unidadMedida: d.requisicionDetalle.item.unidadMedida,
       precioUnitario: d.precioUnitario,
       total: d.total,
+      nota: d.nota,
     })),
     subtotal,
   };

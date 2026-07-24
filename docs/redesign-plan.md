@@ -258,6 +258,12 @@ L-D columns, hours 8-18 rows (48px each), header row 32px. Events absolutely pos
 
 This is the largest net-new component. Keep it dumb — events come from server, no drag/drop yet.
 
+> **Superseded for OT (Phase 9):** `/ordenes-trabajo` now uses the day-based
+> `components/ordenes/week-day-calendar.tsx` — full-day bars spanning
+> `duracionDias` days, no hour axis / HH:mm anywhere. See
+> `docs/ux-spec/6-ordenes-trabajo.md`. The hourly grid above remains only in
+> the `_demos/week-calendar` demo.
+
 ### 4.9 Catalog tile (new: `components/listados/catalog-tile.tsx`)
 
 Icon (lucide), count (large), label, meta line, chevron on hover. Used 7× on listados index. Group container is a `section` with a `<h2>` header.

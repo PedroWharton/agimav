@@ -5,7 +5,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { ChevronLeft, ChevronRight, Plus } from "lucide-react";
-import { format } from "date-fns";
+import { addDays, format } from "date-fns";
 import { es } from "date-fns/locale";
 
 import { Button } from "@/components/ui/button";
@@ -24,15 +24,17 @@ import { PageHeader } from "@/components/app/page-header";
 import { CalendarLegend } from "@/components/ordenes/calendar-legend";
 import { MiniMonth } from "@/components/ordenes/mini-month";
 import {
-  type CalendarEvent,
   type CalendarEventTipo,
   TIPO_STYLES,
-  WeekCalendar,
 } from "@/components/ordenes/week-calendar";
+import {
+  type DayCalendarEvent,
+  WeekDayCalendar,
+} from "@/components/ordenes/week-day-calendar";
 import { cn } from "@/lib/utils";
 
 export type OtEventRow = {
-  event: CalendarEvent;
+  event: DayCalendarEvent;
   responsableId: number | null;
   responsable: string | null;
   maquinaTitle: string;
@@ -137,9 +139,7 @@ export function OrdenesCalendarClient({
 
   const upcomingEvents = useMemo(() => {
     return [...filteredEvents]
-      .sort(
-        (a, b) => new Date(a.start).getTime() - new Date(b.start).getTime(),
-      )
+      .sort((a, b) => a.startDate.localeCompare(b.startDate))
       .slice(0, 10);
   }, [filteredEvents]);
 
@@ -326,7 +326,7 @@ export function OrdenesCalendarClient({
             visibleTipos={Array.from(visibleTipos) as CalendarEventTipo[]}
           />
 
-          <WeekCalendar weekStart={weekStart} events={filteredEvents} />
+          <WeekDayCalendar weekStart={weekStart} events={filteredEvents} />
         </div>
 
         {/* RIGHT: upcoming list */}
@@ -373,9 +373,7 @@ export function OrdenesCalendarClient({
                           </p>
                         ) : null}
                         <p className="mt-0.5 font-mono text-[10px] uppercase tracking-wide text-muted-foreground">
-                          {format(new Date(ev.start), "EEE dd MMM · HH:mm", {
-                            locale: es,
-                          })}
+                          {formatEventDates(ev)}
                         </p>
                       </div>
                     </Link>
@@ -388,6 +386,18 @@ export function OrdenesCalendarClient({
       </div>
     </div>
   );
+}
+
+/**
+ * Fecha (sin horario) de un evento de día completo: "lun 20 jul", o el rango
+ * "lun 20 jul – mié 22 jul" cuando abarca más de un día.
+ */
+function formatEventDates(ev: DayCalendarEvent): string {
+  const start = parseIsoDate(ev.startDate);
+  const fmt = (d: Date) => format(d, "EEE dd MMM", { locale: es });
+  const days = Math.max(1, Math.ceil(ev.durationDays));
+  if (days === 1) return fmt(start);
+  return `${fmt(start)} – ${fmt(addDays(start, days - 1))}`;
 }
 
 function formatRange(

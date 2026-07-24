@@ -14,6 +14,7 @@ export type OcPdfLine = {
   unidadMedida: string | null;
   precioUnitario: number;
   total: number;
+  nota: string | null;
 };
 
 export type OcPdfData = {
@@ -37,6 +38,7 @@ export type OcPdfData = {
     numero: string;
     solicitante: string;
     unidadProductiva: string;
+    numeroOrdenInterna: string | null;
   } | null;
   lineas: OcPdfLine[];
   subtotal: number;
@@ -113,6 +115,12 @@ const styles = StyleSheet.create({
   colUnid: { width: "8%" },
   colPrecio: { width: "10%", textAlign: "right" },
   colTotal: { width: "10%", textAlign: "right" },
+  lineaNota: {
+    borderBottom: "0.5pt solid #e2e8f0",
+    paddingBottom: 4,
+    paddingHorizontal: 4,
+    paddingLeft: 24,
+  },
   totalsRow: {
     flexDirection: "row",
     justifyContent: "flex-end",
@@ -203,6 +211,11 @@ export function OcPdf({ data }: { data: OcPdfData }) {
                 <Text style={styles.muted}>
                   {data.solicitud.unidadProductiva}
                 </Text>
+                {data.solicitud.numeroOrdenInterna ? (
+                  <Text style={styles.muted}>
+                    Orden interna {data.solicitud.numeroOrdenInterna}
+                  </Text>
+                ) : null}
               </>
             ) : null}
           </View>
@@ -226,16 +239,28 @@ export function OcPdf({ data }: { data: OcPdfData }) {
             <Text style={[styles.th, styles.colTotal]}>Subtotal</Text>
           </View>
           {data.lineas.map((l) => (
-            <View key={l.orden} style={styles.tr} wrap={false}>
-              <Text style={styles.colOrden}>{l.orden}</Text>
-              <Text style={styles.colCodigo}>{l.codigo || "—"}</Text>
-              <Text style={styles.colDesc}>{l.descripcion || "—"}</Text>
-              <Text style={styles.colCant}>{l.cantidad}</Text>
-              <Text style={styles.colUnid}>{l.unidadMedida ?? ""}</Text>
-              <Text style={styles.colPrecio}>
-                {formatARS(l.precioUnitario)}
-              </Text>
-              <Text style={styles.colTotal}>{formatARS(l.total)}</Text>
+            <View key={l.orden} wrap={false}>
+              <View
+                style={[
+                  styles.tr,
+                  l.nota ? { borderBottom: "0pt" } : {},
+                ]}
+              >
+                <Text style={styles.colOrden}>{l.orden}</Text>
+                <Text style={styles.colCodigo}>{l.codigo || "—"}</Text>
+                <Text style={styles.colDesc}>{l.descripcion || "—"}</Text>
+                <Text style={styles.colCant}>{l.cantidad}</Text>
+                <Text style={styles.colUnid}>{l.unidadMedida ?? ""}</Text>
+                <Text style={styles.colPrecio}>
+                  {formatARS(l.precioUnitario)}
+                </Text>
+                <Text style={styles.colTotal}>{formatARS(l.total)}</Text>
+              </View>
+              {l.nota ? (
+                <View style={styles.lineaNota}>
+                  <Text style={styles.muted}>Nota: {l.nota}</Text>
+                </View>
+              ) : null}
             </View>
           ))}
         </View>

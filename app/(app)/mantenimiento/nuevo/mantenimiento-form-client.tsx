@@ -8,6 +8,7 @@ import { ArrowLeft, RefreshCw, Sparkles, Wrench, X } from "lucide-react";
 import { useTranslations } from "next-intl";
 
 import { Button } from "@/components/ui/button";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
@@ -149,6 +150,17 @@ export function MantenimientoFormClient({
   const [repuestos, setRepuestos] = useState<RepuestoLine[]>([]);
   const [errors, setErrors] = useState<Record<string, string>>({});
 
+  // Datos de cierre — solo aplican cuando el estado inicial es Finalizado.
+  const [fechaFinalizacion, setFechaFinalizacion] = useState(() =>
+    toISODate(new Date()),
+  );
+  const [observacionCierre, setObservacionCierre] = useState("");
+  const [programarRevision, setProgramarRevision] = useState(false);
+  const [fechaProximaRevision, setFechaProximaRevision] = useState("");
+  const [descripcionRevision, setDescripcionRevision] = useState("");
+
+  const esFinalizado = estadoInicial === "Finalizado";
+
   const showPlantillaPicker = plantillas.length > 0;
 
   const maquinaById = useMemo(() => {
@@ -253,6 +265,10 @@ export function MantenimientoFormClient({
   const submit = () => {
     setErrors({});
     start(async () => {
+      const withItem = repuestos.filter((l) => l.insumoId != null);
+      const lookup = new Map(insumos.map((i) => [i.id, i] as const));
+      const programaRevision =
+        esFinalizado && tipo !== "revisión" && programarRevision;
       const res = await createMantenimiento({
         maquinariaId,
         tipo,
@@ -265,6 +281,25 @@ export function MantenimientoFormClient({
         plantillaId,
         frecuenciaRevisionDias:
           tipo === "revisión" ? Number(revisionDias) || null : null,
+        // Datos de cierre: solo relevantes al crear directamente Finalizado.
+        fechaFinalizacion: esFinalizado ? fechaFinalizacion : "",
+        observacionCierre: esFinalizado ? observacionCierre : "",
+        programarRevision: programaRevision,
+        fechaProximaRevision: programaRevision ? fechaProximaRevision : "",
+        descripcionRevision: programaRevision ? descripcionRevision : "",
+        // Al crear Finalizado los insumos van en la misma transacción para
+        // que el consumo de stock sea atómico con el alta.
+        insumos: esFinalizado
+          ? withItem.map((l) => {
+              const src = lookup.get(l.insumoId as number);
+              return {
+                itemInventarioId: l.insumoId as number,
+                cantidad: l.qty,
+                unidadMedida: src?.unidadMedida ?? "",
+                costoUnitario: l.unitCost ?? src?.unitCost ?? 0,
+              };
+            })
+          : [],
       });
       if (!res.ok) {
         if (res.error === "invalid" && res.fieldErrors) {
@@ -277,10 +312,9 @@ export function MantenimientoFormClient({
         return;
       }
 
-      // Persist reserved repuestos (saveInsumos is a separate transactional action).
-      const withItem = repuestos.filter((l) => l.insumoId != null);
-      if (withItem.length > 0) {
-        const lookup = new Map(insumos.map((i) => [i.id, i] as const));
+      // Persist reserved repuestos (saveInsumos is a separate transactional
+      // action). Con estado Finalizado ya viajaron dentro del create.
+      if (!esFinalizado && withItem.length > 0) {
         const lines = withItem.map((l) => {
           const src = lookup.get(l.insumoId as number);
           return {
@@ -586,6 +620,101 @@ export function MantenimientoFormClient({
                   allowCreate={false}
                 />
               </div>
+
+              {esFinalizado ? (
+                <div className="flex flex-col gap-3 rounded-lg border border-warn/40 bg-warn-weak/60 p-3 sm:col-span-2">
+                  <div className="flex flex-col gap-0.5">
+                    <span className="text-sm font-medium">
+                      {tM("nuevo.cierre.titulo")}
+                    </span>
+                    <span className="text-xs text-muted-foreground">
+                      {tM("nuevo.cierre.aviso")}
+                    </span>
+                  </div>
+                  <div className="grid gap-3 sm:grid-cols-2">
+                    <div className="flex flex-col gap-1.5">
+                      <Label htmlFor="fecha-finalizacion">
+                        {tM("campos.fechaFinalizacion")}
+                      </Label>
+                      <Input
+                        id="fecha-finalizacion"
+                        type="date"
+                        value={fechaFinalizacion}
+                        onChange={(e) => setFechaFinalizacion(e.target.value)}
+                      />
+                    </div>
+                    <div className="flex flex-col gap-1.5 sm:col-span-2">
+                      <Label htmlFor="observacion-cierre">
+                        {tM("nuevo.cierre.observaciones")}
+                      </Label>
+                      <Textarea
+                        id="observacion-cierre"
+                        value={observacionCierre}
+                        onChange={(e) => setObservacionCierre(e.target.value)}
+                        rows={2}
+                        maxLength={2000}
+                        placeholder={tM("nuevo.cierre.observacionesPlaceholder")}
+                      />
+                    </div>
+                  </div>
+                  {tipo !== "revisión" ? (
+                    <div className="flex flex-col gap-3">
+                      <div className="flex items-start gap-2">
+                        <Checkbox
+                          id="programar-revision-alta"
+                          checked={programarRevision}
+                          onCheckedChange={(v) =>
+                            setProgramarRevision(v === true)
+                          }
+                          className="mt-0.5"
+                        />
+                        <div className="flex flex-col gap-0.5">
+                          <Label
+                            htmlFor="programar-revision-alta"
+                            className="font-normal"
+                          >
+                            {tM("revision.programar")}
+                          </Label>
+                          <span className="text-xs text-muted-foreground">
+                            {tM("revision.ayuda")}
+                          </span>
+                        </div>
+                      </div>
+                      {programarRevision ? (
+                        <div className="grid gap-3 sm:grid-cols-2">
+                          <div className="flex flex-col gap-1.5">
+                            <Label htmlFor="fecha-proxima-revision">
+                              {tM("revision.fecha")}
+                            </Label>
+                            <Input
+                              id="fecha-proxima-revision"
+                              type="date"
+                              value={fechaProximaRevision}
+                              onChange={(e) =>
+                                setFechaProximaRevision(e.target.value)
+                              }
+                            />
+                          </div>
+                          <div className="flex flex-col gap-1.5 sm:col-span-2">
+                            <Label htmlFor="descripcion-revision">
+                              {tM("revision.descripcion")}
+                            </Label>
+                            <Textarea
+                              id="descripcion-revision"
+                              value={descripcionRevision}
+                              onChange={(e) =>
+                                setDescripcionRevision(e.target.value)
+                              }
+                              rows={2}
+                              maxLength={500}
+                            />
+                          </div>
+                        </div>
+                      ) : null}
+                    </div>
+                  ) : null}
+                </div>
+              ) : null}
             </div>
           </FormCard>
         </div>
@@ -602,7 +731,17 @@ export function MantenimientoFormClient({
           <Button variant="outline" size="sm" asChild>
             <Link href="/mantenimiento">{tM("nuevo.cancelar")}</Link>
           </Button>
-          <Button size="sm" onClick={submit} disabled={pending}>
+          <Button
+            size="sm"
+            onClick={submit}
+            disabled={
+              pending ||
+              (esFinalizado &&
+                tipo !== "revisión" &&
+                programarRevision &&
+                !fechaProximaRevision)
+            }
+          >
             {tM("nuevo.crear")}
           </Button>
         </div>

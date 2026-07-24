@@ -70,6 +70,7 @@ import {
 import {
   MANT_PRIORIDADES,
   allowedTransitions,
+  isRevisionHecha,
   isTerminal,
   type MantTransition,
 } from "@/lib/mantenimiento/estado";
@@ -886,7 +887,9 @@ export function MantenimientoDetailClient({
             ) : (
               <ul className="flex flex-col divide-y divide-border">
                 {data.revisiones.map((r) => {
-                  const hecha = r.estado === "hecha";
+                  // "realizada" es el valor legacy escrito por ciclos de
+                  // revisión recurrente previos; se lee como hecha.
+                  const hecha = isRevisionHecha(r.estado);
                   return (
                     <li
                       key={r.id}

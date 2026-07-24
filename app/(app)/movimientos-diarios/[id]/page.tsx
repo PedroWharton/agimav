@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/db";
 import { hasPermission, requireViewOrRedirect } from "@/lib/rbac";
+import { canAccessUp } from "@/lib/up-scope";
 
 import { MovimientoDetailClient } from "./detail-client";
 
@@ -26,6 +27,10 @@ export default async function MovimientoDiarioDetailPage({
     include: { lineas: { orderBy: { id: "asc" } } },
   });
   if (!registro) notFound();
+
+  // WS-B3: un usuario con scoping per-UP no puede abrir el detalle de un
+  // movimiento fuera de sus unidades asignadas.
+  if (!(await canAccessUp(session, registro.unidadProductivaId))) notFound();
 
   return (
     <MovimientoDetailClient

@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { addDays, addMonths } from "date-fns";
 import { z } from "zod";
+import type { Session } from "next-auth";
 
 import type { Prisma } from "@/lib/generated/prisma/client";
 
@@ -13,14 +14,37 @@ import {
   requirePermission,
   userNameFromSession,
 } from "@/lib/rbac";
+import { canAccessUp } from "@/lib/up-scope";
 import {
   MANT_PRIORIDADES,
   MANT_TIPOS,
+  REVISION_ESTADO_HECHA,
+  REVISION_ESTADO_PENDIENTE,
   isActivo,
   isTerminal,
 } from "@/lib/mantenimiento/estado";
 
 import type { MantActionResult } from "./types";
+
+/**
+ * WS-B3 — guard de scope por Unidad Productiva para las actions de mutación.
+ * Carga la UP del mantenimiento target y valida acceso con `canAccessUp`.
+ * Devuelve el resultado de error a retornar, o `null` si puede continuar.
+ */
+async function upScopeError(
+  session: Session | null | undefined,
+  mantenimientoId: number,
+): Promise<Extract<MantActionResult, { ok: false }> | null> {
+  const mant = await prisma.mantenimiento.findUnique({
+    where: { id: mantenimientoId },
+    select: { unidadProductivaId: true },
+  });
+  if (!mant) return { ok: false, error: "not_found" };
+  if (!(await canAccessUp(session, mant.unidadProductivaId))) {
+    return { ok: false, error: "forbidden" };
+  }
+  return null;
+}
 
 function fieldErrorsFromZod(err: z.ZodError): Record<string, string> {
   const out: Record<string, string> = {};
@@ -87,6 +111,25 @@ const createSchema = z.object({
     .optional()
     .nullable()
     .transform((v) => v ?? null),
+  // ── Datos de cierre — solo aplican cuando estadoInicial === "Finalizado" ──
+  fechaFinalizacion: optionalDate,
+  observacionCierre: optionalText(2000),
+  programarRevision: z.boolean().default(false),
+  fechaProximaRevision: optionalDate,
+  descripcionRevision: optionalText(500),
+  // Insumos cargados en el alta. Cuando el estado inicial es Finalizado se
+  // crean con cantidadUtilizada = cantidad y se consumen en la misma
+  // transacción (mismo flujo que un finalizar normal).
+  insumos: z
+    .array(
+      z.object({
+        itemInventarioId: z.coerce.number().int().positive(),
+        cantidad: z.coerce.number().min(0).default(0),
+        unidadMedida: z.string().trim().max(50).default(""),
+        costoUnitario: z.coerce.number().min(0).default(0),
+      }),
+    )
+    .default([]),
 });
 
 const insumoSchema = z.object({
@@ -132,6 +175,12 @@ export async function createMantenimiento(
     };
   }
   const data = parsed.data;
+
+  // WS-B3: si el alta viene con una UP, tiene que ser accesible para el usuario.
+  if (!(await canAccessUp(session, data.unidadProductivaId))) {
+    return { ok: false, error: "forbidden" };
+  }
+
   const userName = userNameFromSession(session);
 
   const plantilla = data.plantillaId
@@ -154,6 +203,14 @@ export async function createMantenimiento(
       });
       const now = new Date();
       const estadoInicial = data.estadoInicial;
+      const esFinalizado = estadoInicial === "Finalizado";
+      // El diálogo de finalizar no ofrece programar revisión para las
+      // revisiones recurrentes; el alta como Finalizado tampoco.
+      const programaRevision =
+        esFinalizado &&
+        data.tipo !== "revisión" &&
+        data.programarRevision &&
+        data.fechaProximaRevision != null;
       const mant = await tx.mantenimiento.create({
         data: {
           tipo: data.tipo,
@@ -165,7 +222,16 @@ export async function createMantenimiento(
           estado: estadoInicial,
           fechaProgramada: data.fechaProgramada,
           fechaInicio: estadoInicial === "Pendiente" ? null : now,
-          fechaFinalizacion: estadoInicial === "Finalizado" ? now : null,
+          fechaFinalizacion: esFinalizado
+            ? (data.fechaFinalizacion ?? now)
+            : null,
+          programarRevision: programaRevision,
+          fechaProximaRevision: programaRevision
+            ? data.fechaProximaRevision
+            : null,
+          descripcionRevision: programaRevision
+            ? data.descripcionRevision
+            : null,
           creadoPor: userName,
           plantillaId: plantilla?.id ?? null,
           frecuenciaValor:
@@ -202,6 +268,61 @@ export async function createMantenimiento(
             : null,
         },
       });
+
+      // Insumos en el alta: con estado inicial Finalizado quedan con su
+      // cantidad como utilizada y se consumen acá mismo (misma transacción),
+      // igual que un finalizar normal. En cualquier otro estado quedan solo
+      // reservados (cantidadUtilizada = 0) y se consumen al finalizar.
+      if (data.insumos.length > 0) {
+        await tx.mantenimientoInsumo.createMany({
+          data: data.insumos.map((l) => ({
+            mantenimientoId: mant.id,
+            itemInventarioId: l.itemInventarioId,
+            cantidadSugerida: l.cantidad,
+            cantidadUtilizada: esFinalizado ? l.cantidad : 0,
+            unidadMedida: l.unidadMedida,
+            costoUnitario: l.costoUnitario,
+            costoTotal: esFinalizado ? l.cantidad * l.costoUnitario : 0,
+            precioPendiente: false,
+          })),
+        });
+      }
+
+      if (esFinalizado) {
+        await commitInsumosConsumption(tx, mant.id, userName ?? "—");
+
+        if (data.observacionCierre) {
+          await tx.mantenimientoHistorial.create({
+            data: {
+              mantenimientoId: mant.id,
+              tipoCambio: "observacion",
+              detalle: data.observacionCierre,
+              usuario: userName ?? "—",
+            },
+          });
+        }
+
+        if (programaRevision && data.fechaProximaRevision) {
+          await tx.mantenimientoRevision.create({
+            data: {
+              mantenimientoId: mant.id,
+              fechaProgramada: data.fechaProximaRevision,
+              descripcion: data.descripcionRevision,
+              estado: REVISION_ESTADO_PENDIENTE,
+            },
+          });
+          await tx.mantenimientoHistorial.create({
+            data: {
+              mantenimientoId: mant.id,
+              tipoCambio: "revision",
+              valorAnterior: null,
+              valorNuevo: null,
+              usuario: userName ?? "—",
+              detalle: "Revisión programada",
+            },
+          });
+        }
+      }
       return mant.id;
     });
     revalidatePath("/mantenimiento");
@@ -246,6 +367,9 @@ export async function updateMantenimientoHeader(
     return { ok: false, error: "forbidden" };
   }
 
+  const scopeErr = await upScopeError(session, id);
+  if (scopeErr) return scopeErr;
+
   const existing = await prisma.mantenimiento.findUnique({
     where: { id },
     select: {
@@ -271,6 +395,11 @@ export async function updateMantenimientoHeader(
     };
   }
   const data = parsed.data;
+
+  // WS-B3: tampoco se puede mover el registro a una UP inaccesible.
+  if (!(await canAccessUp(session, data.unidadProductivaId))) {
+    return { ok: false, error: "forbidden" };
+  }
   const userName = userNameFromSession(session) ?? "—";
 
   try {
@@ -370,6 +499,9 @@ export async function transitionEstado(
   } catch {
     return { ok: false, error: "forbidden" };
   }
+
+  const scopeErr = await upScopeError(session, id);
+  if (scopeErr) return scopeErr;
 
   const parsed = transitionSchema.safeParse(raw);
   if (!parsed.success) {
@@ -498,7 +630,7 @@ export async function transitionEstado(
               mantenimientoId: id,
               fechaProgramada: now,
               fechaRealizada: now,
-              estado: "realizada",
+              estado: REVISION_ESTADO_HECHA,
             },
           });
           await tx.mantenimientoHistorial.create({
@@ -522,7 +654,7 @@ export async function transitionEstado(
               mantenimientoId: id,
               fechaProgramada: parsed.data.fechaProximaRevision,
               descripcion: parsed.data.descripcionRevision,
-              estado: "pendiente",
+              estado: REVISION_ESTADO_PENDIENTE,
             },
           });
           await tx.mantenimientoHistorial.create({
@@ -622,6 +754,9 @@ export async function saveInsumos(
     return { ok: false, error: "forbidden" };
   }
 
+  const scopeErr = await upScopeError(session, id);
+  if (scopeErr) return scopeErr;
+
   const existing = await prisma.mantenimiento.findUnique({
     where: { id },
     select: { id: true, estado: true },
@@ -713,6 +848,9 @@ export async function saveTareas(
     return { ok: false, error: "forbidden" };
   }
 
+  const scopeErr = await upScopeError(session, id);
+  if (scopeErr) return scopeErr;
+
   const existing = await prisma.mantenimiento.findUnique({
     where: { id },
     select: { id: true, estado: true },
@@ -794,6 +932,9 @@ export async function addObservacion(
     return { ok: false, error: "forbidden" };
   }
 
+  const scopeErr = await upScopeError(session, id);
+  if (scopeErr) return scopeErr;
+
   const existing = await prisma.mantenimiento.findUnique({
     where: { id },
     select: { id: true },
@@ -862,6 +1003,9 @@ export async function agregarRevisiones(
     return { ok: false, error: "forbidden" };
   }
 
+  const scopeErr = await upScopeError(session, id);
+  if (scopeErr) return scopeErr;
+
   const existing = await prisma.mantenimiento.findUnique({
     where: { id },
     select: { id: true },
@@ -899,7 +1043,7 @@ export async function agregarRevisiones(
           mantenimientoId: id,
           fechaProgramada: f,
           descripcion: data.descripcion,
-          estado: "pendiente",
+          estado: REVISION_ESTADO_PENDIENTE,
         })),
       });
       await tx.mantenimientoHistorial.create({
@@ -953,6 +1097,9 @@ export async function marcarRevisionHecha(
   });
   if (!rev) return { ok: false, error: "not_found" };
 
+  const scopeErr = await upScopeError(session, rev.mantenimientoId);
+  if (scopeErr) return scopeErr;
+
   const userName = userNameFromSession(session) ?? "—";
   const { hecha } = parsed.data;
 
@@ -961,7 +1108,7 @@ export async function marcarRevisionHecha(
       await tx.mantenimientoRevision.update({
         where: { id: revisionId },
         data: {
-          estado: hecha ? "hecha" : "pendiente",
+          estado: hecha ? REVISION_ESTADO_HECHA : REVISION_ESTADO_PENDIENTE,
           fechaRealizada: hecha ? new Date() : null,
         },
       });
@@ -1000,6 +1147,9 @@ export async function eliminarRevision(
     select: { mantenimientoId: true },
   });
   if (!rev) return { ok: false, error: "not_found" };
+
+  const scopeErr = await upScopeError(session, rev.mantenimientoId);
+  if (scopeErr) return scopeErr;
 
   try {
     await prisma.mantenimientoRevision.delete({ where: { id: revisionId } });

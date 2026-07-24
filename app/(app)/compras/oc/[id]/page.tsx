@@ -98,7 +98,9 @@ export default async function OcDetailPage({
       id: d.id,
       itemCodigo: d.requisicionDetalle.item.codigo ?? "",
       itemDescripcion: d.requisicionDetalle.item.descripcion ?? "",
-      notasItem: d.requisicionDetalle.notasItem,
+      // OC-level nota wins; legacy lines (emitted before nota existed) fall
+      // back to the requisición note so nothing disappears from old OCs.
+      nota: d.nota ?? d.requisicionDetalle.notasItem,
       unidadMedida: d.requisicionDetalle.item.unidadMedida,
       cantidadSolicitada: d.cantidadSolicitada,
       cantidadRecibida: d.cantidadRecibida,

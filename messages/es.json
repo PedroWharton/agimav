@@ -551,7 +551,6 @@
       "mantPendientes": "Mant. pendientes",
       "mantPendientesCaption": "sin asignar o sin empezar",
       "facturacionMes": "Facturación del mes",
-      "facturacionMesCaption": "{count, plural, =0 {Sin facturas en {mes}} one {# factura · {mes}} other {# facturas · {mes}}}",
       "otEnCurso": "OT en curso",
       "otEnCursoCaption": "órdenes de trabajo abiertas"
     },
@@ -582,7 +581,7 @@
         "otEnCurso": "OT en curso",
         "otEnCursoCaption": "órdenes de trabajo abiertas",
         "facturacionMes": "Gastos",
-        "facturacionMesCaption": "{count, plural, =0 {Sin facturas en {mes}} one {# factura · {mes}} other {# facturas · {mes}}}"
+        "facturacionMesCaption": "{count, plural, =0 {Sin gastos registrados en {mes}} one {# comprobante · {mes}} other {# comprobantes · {mes}}}"
       },
       "mezcla": {
         "titulo": "Mezcla de mantenimientos",
@@ -601,12 +600,6 @@
         "subtitulo": "Mantenimientos pendientes + en proceso",
         "verMas": "Métricas por máquina"
       },
-      "otif": {
-        "titulo": "Performance de proveedores",
-        "subtitulo": "% recibido sobre pedido · OCs últimos 90 días",
-        "objetivo": "objetivo 90%",
-        "verMas": "Gasto por proveedor"
-      },
       "tecnicos": {
         "titulo": "Productividad de técnicos",
         "subtitulo": "Mantenimientos a cargo · últimos 90 días"
@@ -621,12 +614,6 @@
         "titulo": "Gasto mensual por rubro",
         "subtitulo": "Facturación por categoría de inventario · últimos 6 meses",
         "otros": "Otros"
-      },
-      "heatmap": {
-        "titulo": "Correctivos por máquina · calendario",
-        "subtitulo": "Top {count} máquinas × últimas {weeks} semanas",
-        "leyendaMenos": "Menos",
-        "leyendaMas": "Más"
       },
       "tipos": {
         "correctivo": "Correctivo",
@@ -722,6 +709,24 @@
         "porcentaje": "% del total",
         "requisiciones": "Requisiciones",
         "ultima": "Última actividad"
+      },
+      "detalle": {
+        "titulo": "Detalle de {nombre}",
+        "subtitulo": "Facturas y requisiciones que componen el total del período",
+        "verDetalle": "Ver detalle del usuario",
+        "verSolicitudes": "Ver solicitudes",
+        "cerrar": "Cerrar detalle",
+        "facturasTitulo": "{count, plural, =0 {Facturas} one {Facturas (#)} other {Facturas (#)}}",
+        "requisicionesTitulo": "{count, plural, =0 {Requisiciones} one {Requisiciones (#)} other {Requisiciones (#)}}",
+        "sinFacturas": "Sin facturas del usuario en el período.",
+        "sinRequisiciones": "Sin requisiciones del usuario en el período.",
+        "columnas": {
+          "numero": "N.º",
+          "proveedor": "Proveedor",
+          "fecha": "Fecha",
+          "total": "Total",
+          "estado": "Estado"
+        }
       }
     },
     "maquinaria": {
@@ -989,15 +994,17 @@
     },
     "preciosPendientes": {
       "titulo": "Precios pendientes",
-      "descripcion": "Insumos de mantenimiento consumidos cuyo costo todavía no se conoce.",
+      "descripcion": "Insumos de mantenimiento y de órdenes de trabajo cuyo costo todavía no se conoce.",
       "vacioTitulo": "Sin precios pendientes",
-      "vacioDescripcion": "No hay insumos de mantenimiento con el precio sin resolver.",
+      "vacioDescripcion": "No hay insumos de mantenimiento ni de órdenes de trabajo con el precio sin resolver.",
       "resolver": "Resolver",
       "resueltoOk": "Precio resuelto.",
       "precioInvalido": "Ingresá un precio válido.",
+      "origenMantenimiento": "Mantenimiento",
+      "origenOt": "OT",
       "columnas": {
         "item": "Ítem",
-        "mantenimiento": "Mantenimiento",
+        "origen": "Origen",
         "cantidad": "Cantidad",
         "precio": "Precio unitario"
       }
@@ -1034,7 +1041,24 @@
           "urgencia": "Urgencia",
           "solicitudes": "Solicitudes",
           "solicitudesCount": "{count, plural, one {# solicitud} other {# solicitudes}}",
-          "proveedor": "Proveedor"
+          "proveedor": "Proveedor",
+          "nota": "Nota"
+        },
+        "observaciones": {
+          "titulo": "Observaciones de las órdenes",
+          "ayuda": "Texto de cabecera para cada orden a emitir (una por proveedor). Se muestra en el detalle y en el PDF.",
+          "placeholder": "Observaciones para esta orden…"
+        },
+        "crearItem": {
+          "descripcion": "El ítem nuevo queda disponible en el inventario y seleccionado para esta línea."
+        },
+        "cambiarItem": {
+          "accion": "Cambiar ítem",
+          "titulo": "Cambiar ítem de la línea",
+          "descripcion": "Las líneas pendientes de «{item}» pasan a apuntar al ítem elegido en todas sus solicitudes.",
+          "placeholder": "Buscar ítem de inventario…",
+          "confirmar": "Cambiar ítem",
+          "toastOk": "Ítem actualizado en las líneas pendientes."
         },
         "bulk": {
           "seleccionados": "{count, plural, one {# ítem seleccionado} other {# ítems seleccionados}}",
@@ -1454,7 +1478,13 @@
       },
       "descripcionLabel": "Descripción detallada",
       "descripcionPlaceholder": "Instrucciones, observaciones o historial relevante para el técnico…",
-      "volver": "Volver a Mantenimiento"
+      "volver": "Volver a Mantenimiento",
+      "cierre": {
+        "titulo": "Datos de cierre",
+        "aviso": "Se crea ya finalizado: los repuestos cargados se consumen del stock con su cantidad.",
+        "observaciones": "Observaciones de cierre",
+        "observacionesPlaceholder": "Qué se hizo, resultado del trabajo…"
+      }
     },
     "columnas": {
       "numero": "Nº",
@@ -1767,7 +1797,7 @@
       "incluirCerradas": "Incluir cerradas"
     },
     "calendario": {
-      "descripcion": "{count, plural, =0 {Sin OTs creadas esta semana} one {# OT creada esta semana} other {# OTs creadas esta semana}}",
+      "descripcion": "{count, plural, =0 {Sin OTs esta semana} one {# OT esta semana} other {# OTs esta semana}}",
       "eventosCount": "{count, plural, one {# evento visible} other {# eventos visibles}}",
       "nav": {
         "anterior": "Semana anterior",

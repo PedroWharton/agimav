@@ -551,7 +551,6 @@
       "mantPendientes": "Pending maint.",
       "mantPendientesCaption": "unassigned or not started",
       "facturacionMes": "Monthly billing",
-      "facturacionMesCaption": "{count, plural, =0 {No invoices in {mes}} one {# invoice · {mes}} other {# invoices · {mes}}}",
       "otEnCurso": "WOs in progress",
       "otEnCursoCaption": "open work orders"
     },
@@ -582,7 +581,7 @@
         "otEnCurso": "WOs in progress",
         "otEnCursoCaption": "open work orders",
         "facturacionMes": "Spending",
-        "facturacionMesCaption": "{count, plural, =0 {No invoices in {mes}} one {# invoice · {mes}} other {# invoices · {mes}}}"
+        "facturacionMesCaption": "{count, plural, =0 {No spend recorded in {mes}} one {# document · {mes}} other {# documents · {mes}}}"
       },
       "mezcla": {
         "titulo": "Maintenance mix",
@@ -601,12 +600,6 @@
         "subtitulo": "Pending + in-progress maintenances",
         "verMas": "Machine metrics"
       },
-      "otif": {
-        "titulo": "Supplier performance",
-        "subtitulo": "% received vs. ordered · POs in the last 90 days",
-        "objetivo": "target 90%",
-        "verMas": "Supplier spend"
-      },
       "tecnicos": {
         "titulo": "Technician productivity",
         "subtitulo": "Maintenances assigned · last 90 days"
@@ -621,12 +614,6 @@
         "titulo": "Monthly spend by category",
         "subtitulo": "Billing by inventory category · last 6 months",
         "otros": "Other"
-      },
-      "heatmap": {
-        "titulo": "Corrective maintenances per machine · calendar",
-        "subtitulo": "Top {count} machines × last {weeks} weeks",
-        "leyendaMenos": "Less",
-        "leyendaMas": "More"
       },
       "tipos": {
         "correctivo": "Corrective",
@@ -721,6 +708,24 @@
         "porcentaje": "% of total",
         "requisiciones": "Requisitions",
         "ultima": "Last activity"
+      },
+      "detalle": {
+        "titulo": "Detail for {nombre}",
+        "subtitulo": "Invoices and requisitions behind the period total",
+        "verDetalle": "View user detail",
+        "verSolicitudes": "View requisitions",
+        "cerrar": "Close detail",
+        "facturasTitulo": "{count, plural, =0 {Invoices} one {Invoices (#)} other {Invoices (#)}}",
+        "requisicionesTitulo": "{count, plural, =0 {Requisitions} one {Requisitions (#)} other {Requisitions (#)}}",
+        "sinFacturas": "No invoices for this user in the period.",
+        "sinRequisiciones": "No requisitions for this user in the period.",
+        "columnas": {
+          "numero": "No.",
+          "proveedor": "Supplier",
+          "fecha": "Date",
+          "total": "Total",
+          "estado": "Status"
+        }
       }
     },
     "maquinaria": {
@@ -1026,11 +1031,31 @@
           "item": "Item",
           "cantidad": "Total qty.",
           "cantidadTotal": "Total quantity",
+          "cantidadSolicitada": "Requested qty.",
+          "cantidadCompra": "Quantity to buy",
+          "precioUnitario": "Unit price",
           "unidad": "Unit",
           "urgencia": "Urgency",
           "solicitudes": "Requests",
           "solicitudesCount": "{count, plural, one {# request} other {# requests}}",
-          "proveedor": "Supplier"
+          "proveedor": "Supplier",
+          "nota": "Note"
+        },
+        "observaciones": {
+          "titulo": "Order remarks",
+          "ayuda": "Header text for each order about to be issued (one per supplier). Shown on the detail page and the PDF.",
+          "placeholder": "Remarks for this order…"
+        },
+        "crearItem": {
+          "descripcion": "The new item becomes available in inventory and selected for this line."
+        },
+        "cambiarItem": {
+          "accion": "Change item",
+          "titulo": "Change the line's item",
+          "descripcion": "Pending lines for \"{item}\" will point to the chosen item across all their requests.",
+          "placeholder": "Search inventory item…",
+          "confirmar": "Change item",
+          "toastOk": "Item updated on the pending lines."
         },
         "bulk": {
           "seleccionados": "{count, plural, one {# item selected} other {# items selected}}",
@@ -1045,8 +1070,11 @@
           "emitirLinea": "{proveedor}: {count, plural, one {# item} other {# items}}",
           "emitidoExitoso": "{count, plural, one {# PO issued} other {# POs issued}}.",
           "faltanProveedores": "{count, plural, one {# selected item without supplier} other {# selected items without supplier}}.",
+          "faltanCantidades": "{count, plural, one {# selected item without quantity} other {# selected items without quantity}}.",
+          "faltanPrecios": "{count, plural, one {# item without price · stays pending} other {# items without price · stay pending}}",
           "nadaSeleccionado": "No items selected to issue.",
-          "itemDrained": "A selected item no longer has pending lines. Please refresh the page."
+          "itemDrained": "A selected item no longer has pending lines. Please refresh the page.",
+          "cantidadExcede": "The quantity to buy cannot exceed the requested quantity."
         },
         "vacio": {
           "titulo": "No lines pending assignment",
@@ -1747,7 +1775,7 @@
       "incluirCerradas": "Include closed"
     },
     "calendario": {
-      "descripcion": "{count, plural, =0 {No WOs created this week} one {# WO created this week} other {# WOs created this week}}",
+      "descripcion": "{count, plural, =0 {No WOs this week} one {# WO this week} other {# WOs this week}}",
       "eventosCount": "{count, plural, one {# visible event} other {# visible events}}",
       "nav": {
         "anterior": "Previous week",

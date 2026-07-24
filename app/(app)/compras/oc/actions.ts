@@ -11,7 +11,11 @@ import {
 } from "@/lib/rbac";
 import { formatOCNumber } from "@/lib/compras/oc-number";
 
-import type { EmitirOcsResult, OcActionResult } from "./types";
+import type {
+  CambiarItemPendienteResult,
+  EmitirOcsResult,
+  OcActionResult,
+} from "./types";
 
 export async function cancelarOC(id: number): Promise<OcActionResult> {
   const session = await auth();
@@ -95,6 +99,71 @@ export async function cancelarOC(id: number): Promise<OcActionResult> {
   }
 }
 
+const cambiarItemSchema = z.object({
+  itemId: z.coerce.number().int().positive(),
+  nuevoItemId: z.coerce.number().int().positive(),
+});
+
+/**
+ * Re-points every pending requisición line of `itemId` (within approved
+ * requisiciones — the same universe the pendientes tab aggregates) to
+ * `nuevoItemId`. Used from the OC pendientes flow when the buyer substitutes
+ * the requested item, e.g. with an item just created via quick-create.
+ */
+export async function cambiarItemPendiente(
+  raw: unknown,
+): Promise<CambiarItemPendienteResult> {
+  const session = await auth();
+  try {
+    requirePermission(session, "compras.oc.create");
+  } catch {
+    return { ok: false, error: "forbidden" };
+  }
+
+  const parsed = cambiarItemSchema.safeParse(raw);
+  if (!parsed.success || parsed.data.itemId === parsed.data.nuevoItemId) {
+    return { ok: false, error: "invalid" };
+  }
+  const { itemId, nuevoItemId } = parsed.data;
+
+  try {
+    const lineas = await prisma.$transaction(async (tx) => {
+      const nuevo = await tx.inventario.findUnique({
+        where: { id: nuevoItemId },
+        select: { id: true },
+      });
+      if (!nuevo) throw new Error("invalid");
+
+      const detalles = await tx.requisicionDetalle.findMany({
+        where: {
+          itemId,
+          estado: "Pendiente",
+          requisicion: {
+            estado: { in: ["Aprobada", "Asignado a Proveedor"] },
+          },
+        },
+        select: { id: true },
+      });
+      if (detalles.length === 0) throw new Error("item_drained");
+
+      await tx.requisicionDetalle.updateMany({
+        where: { id: { in: detalles.map((d) => d.id) } },
+        data: { itemId: nuevoItemId },
+      });
+      return detalles.length;
+    });
+
+    revalidatePath("/compras/oc");
+    revalidatePath("/compras/solicitudes");
+    return { ok: true, lineas };
+  } catch (e) {
+    const msg = e instanceof Error ? e.message : "unknown";
+    if (msg === "invalid") return { ok: false, error: "invalid" };
+    if (msg === "item_drained") return { ok: false, error: "item_drained" };
+    return { ok: false, error: "unknown" };
+  }
+}
+
 const emitirSchema = z.object({
   asignaciones: z
     .array(
@@ -103,9 +172,20 @@ const emitirSchema = z.object({
         proveedorId: z.coerce.number().int().positive(),
         cantidad: z.coerce.number().positive(),
         precioUnitario: z.coerce.number().min(0).default(0),
+        nota: z.string().trim().max(1000).optional(),
       }),
     )
     .min(1),
+  // Header-level observaciones for each OC about to be emitted (one OC per
+  // proveedor). Optional: proveedores without an entry get no observaciones.
+  observacionesPorProveedor: z
+    .array(
+      z.object({
+        proveedorId: z.coerce.number().int().positive(),
+        observaciones: z.string().trim().max(2000),
+      }),
+    )
+    .optional(),
 });
 
 export async function emitirOcsAgrupadas(
@@ -127,6 +207,7 @@ export async function emitirOcsAgrupadas(
     proveedorId: number;
     cantidad: number;
     precioUnitario: number;
+    nota: string | null;
   };
   const byItem = new Map<number, ItemConfig>();
   for (const a of parsed.data.asignaciones) {
@@ -134,9 +215,16 @@ export async function emitirOcsAgrupadas(
       proveedorId: a.proveedorId,
       cantidad: a.cantidad,
       precioUnitario: a.precioUnitario,
+      nota: a.nota?.trim() ? a.nota.trim() : null,
     });
   }
   if (byItem.size === 0) return { ok: false, error: "nothing_selected" };
+
+  const observacionesByProveedor = new Map<number, string>();
+  for (const o of parsed.data.observacionesPorProveedor ?? []) {
+    const obs = o.observaciones.trim();
+    if (obs) observacionesByProveedor.set(o.proveedorId, obs);
+  }
 
   try {
     const ocIds = await prisma.$transaction(async (tx) => {
@@ -183,6 +271,7 @@ export async function emitirOcsAgrupadas(
         itemId: number;
         cantidad: number;
         precioUnitario: number;
+        nota: string | null;
         detalles: DetalleSnapshot[];
       };
       const byProveedor = new Map<number, Map<number, LineGroup>>();
@@ -200,6 +289,7 @@ export async function emitirOcsAgrupadas(
             itemId: d.itemId,
             cantidad: cfg.cantidad,
             precioUnitario: cfg.precioUnitario,
+            nota: cfg.nota,
             detalles: [],
           };
           perItem.set(d.itemId, group);
@@ -233,6 +323,7 @@ export async function emitirOcsAgrupadas(
             comprador,
             creadoPor: comprador,
             totalEstimado: 0,
+            observaciones: observacionesByProveedor.get(proveedorId) ?? null,
           },
           select: { id: true },
         });
@@ -312,6 +403,7 @@ export async function emitirOcsAgrupadas(
                 cantidadRecibida: 0,
                 precioUnitario: group.precioUnitario,
                 total: lineTotal,
+                nota: group.nota,
               },
             });
           }
