@@ -112,10 +112,13 @@ traer a `main` solo la capa de base de la rama — las 2 carpetas de migración 
 modelos `agente_*` + la vista en `schema.prisma` — para que schema, historia y base
 coincidan. Es trabajo aparte; no es necesario para aplicar WS-A/WS-D.
 
-## WS-B — migraciones pendientes (agregado 2026-05-22)
+## ✅ WS-B — migraciones aplicadas (verificado 2026-07-24)
 
-WS-B (Slices B1+B2 `5699c43` y B3 `875da7b`) está commiteado pero sus dos
-migraciones **no** están aplicadas a producción:
+WS-B (Slices B1+B2 `5699c43` y B3 `875da7b`). Sus dos migraciones **ya están
+aplicadas a producción** — entraron con el mismo `migrate deploy` del 2026-05-22
+que aplicó las de WS-C (verificado 2026-07-24: `prisma migrate status` reporta
+23/23 migraciones aplicadas, "Database schema is up to date!"). El texto
+original de esta sección quedó desactualizado. Detalle de las migraciones:
 
 - `20260522020000_ws_b_drop_localidad` — **parcialmente destructiva**: dropea
   FKs, las columnas `localidad_id` y la tabla `localidades`. No es aditiva.

@@ -69,8 +69,8 @@ Slices A1–A4 shippeados a `main` (commits `a8d390e`–`3ae6058`).
 ### WS-B · Modelo organizacional + permisos por UP — ✅ COMPLETADA
 Slices B1+B2 (`5699c43`) y B3 (`875da7b`) shippeados a `main`. Las migraciones
 `20260522020000_ws_b_drop_localidad` y `20260522030000_ws_b3_usuario_unidad_productiva`
-quedan **pendientes de `migrate deploy` a producción** — ver
-`docs/runbook-migraciones-pendientes.md`.
+**se aplicaron a producción** el 2026-05-22 junto con las de WS-C (verificado
+2026-07-24 vía `migrate status`) — ver `docs/runbook-migraciones-pendientes.md`.
 
 - **B1+B2** — eliminada la tabla `localidades`. `localidad` es texto plano en
   UnidadProductiva/Proveedor/OrdenTrabajo; los selectores de FK pasaron a
